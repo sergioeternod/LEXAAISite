@@ -39,7 +39,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { auth, db } from './firebase';
-import { signInWithPopup, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const COLORS = ['#B3282D', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -73,6 +73,11 @@ export default function App() {
   const [aiSearchResults, setAiSearchResults] = useState<string | null>(null);
 
   useEffect(() => {
+    // Process redirect result if coming back from Google login
+    getRedirectResult(auth).catch((error) => {
+      console.error("Error from redirect login:", error);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
