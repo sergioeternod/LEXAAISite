@@ -39,7 +39,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const COLORS = ['#B3282D', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -111,10 +111,17 @@ export default function App() {
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    // Force account selection to prevent auto-login loops
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in", error);
+      // Fallback to redirect which is much more reliable on mobile and strict browsers
+      await signInWithRedirect(auth, provider);
+    } catch (error: any) {
+      console.error("Error signing in with redirect:", error);
+      alert(`Error al iniciar sesión: ${error.message || 'Intenta nuevamente más tarde.'}`);
     }
   };
 
