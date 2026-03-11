@@ -74,8 +74,13 @@ export default function App() {
 
   useEffect(() => {
     // Process redirect result if coming back from Google login
-    getRedirectResult(auth).catch((error) => {
+    getRedirectResult(auth).then((result) => {
+      if (result) {
+        console.log("Login exitoso por redirección", result.user.email);
+      }
+    }).catch((error) => {
       console.error("Error from redirect login:", error);
+      alert(`Error al regresar de Google: ${error.message}`);
     });
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -88,9 +93,9 @@ export default function App() {
           if (!userSnap.exists()) {
             await setDoc(userRef, {
               uid: currentUser.uid,
-              email: currentUser.email,
-              displayName: currentUser.displayName,
-              photoURL: currentUser.photoURL,
+              email: currentUser.email || '',
+              displayName: currentUser.displayName || 'Usuario',
+              photoURL: currentUser.photoURL || '',
               history: [],
               interests: [],
               savedExpedientes: [],
@@ -102,8 +107,9 @@ export default function App() {
             setSavedExpedientes(data.savedExpedientes || []);
             setSavedLegisladores(data.savedLegisladores || []);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error fetching user data:", error);
+          alert(`Error al cargar tu perfil: ${error.message}`);
         }
       } else {
         setUserHistory([]);
