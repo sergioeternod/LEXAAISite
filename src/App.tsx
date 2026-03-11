@@ -38,6 +38,59 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+
+const VoteChart = ({ favor, contra, abstencion }: { favor: number, contra: number, abstencion: number }) => {
+  const data = [
+    { name: 'A Favor', value: favor, color: '#10b981' }, // emerald-500
+    { name: 'En Contra', value: contra, color: '#ef4444' }, // red-500
+    { name: 'Abstención', value: abstencion, color: '#94a3b8' } // slate-400
+  ].filter(d => d.value > 0);
+
+  return (
+    <div className="h-64 w-full my-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+      <h4 className="text-sm font-semibold text-slate-700 text-center mb-2">Proyección / Resultado de Votación</h4>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={5}
+            dataKey="value"
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip 
+            formatter={(value: number) => [`${value} votos`, 'Cantidad']}
+            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+          />
+          <Legend verticalAlign="bottom" height={36} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const MarkdownComponents = {
+  code({node, inline, className, children, ...props}: any) {
+    const match = /language-(\w+)/.exec(className || '')
+    if (!inline && match && match[1] === 'json') {
+      try {
+        const data = JSON.parse(String(children).replace(/\n$/, ''));
+        if (data.type === 'vote_chart') {
+          return <VoteChart favor={data.favor} contra={data.contra} abstencion={data.abstencion} />;
+        }
+      } catch (e) {
+        // Fallback to standard code block
+      }
+    }
+    return <code className={className} {...props}>{children}</code>
+  }
+};
 import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -310,7 +363,13 @@ export default function App() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${searchQuery}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. Presenta un resumen estructurado con el nombre del legislador, su partido (si es posible) y su postura u opinión argumentativa sobre el tema. Usa formato Markdown.`;
+      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${searchQuery}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. Presenta un resumen estructurado con el nombre del legislador, su partido (si es posible) y su postura u opinión argumentativa sobre el tema. Asegúrate de incluir un análisis sobre el "impacto" de la medida discutida y los "actores involucrados" (quiénes la promueven, quiénes se oponen, a quiénes afecta). Usa formato Markdown.
+      
+      IMPORTANTE: Si en tu análisis mencionas resultados de votaciones pasadas o expectativas/tendencias de votación, DEBES incluir al final un bloque de código JSON exacto con este formato para renderizar una gráfica visual:
+      \`\`\`json
+      { "type": "vote_chart", "favor": 52, "contra": 18, "abstencion": 5 }
+      \`\`\`
+      Ajusta los números según corresponda a tu análisis.`;
       
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -355,10 +414,18 @@ export default function App() {
       Estado: ${selectedExpediente.estado_actual}
       Tema: ${selectedExpediente.tema_principal}
       Descripción: ${selectedExpediente.descripcion}
+      Impacto Score: ${selectedExpediente.impacto_score}/100
+      Actores Involucrados: ${selectedExpediente.actores ? selectedExpediente.actores.map((a: any) => `${a.nombre} (${a.rol} - ${a.partido})`).join(", ") : 'No especificados'}
       Resumen Ejecutivo: ${selectedExpediente.resumen_ia.ejecutivo}
       Evidencia clave: ${selectedExpediente.resumen_ia.evidencia.map((e: any) => e.texto).join(" | ")}
       
-      Responde a las preguntas del usuario basándote en esta información. Sé profesional, analítico, objetivo y conciso. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.`;
+      Responde a las preguntas del usuario basándote en esta información. Presta especial atención a detallar el impacto (basado en el Impacto Score) y los actores involucrados cuando se te pregunte. Sé profesional, analítico, objetivo y conciso. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.
+      
+      IMPORTANTE: Si en tu respuesta mencionas resultados de votaciones o tendencias/expectativas de votos, DEBES incluir un bloque de código JSON con este formato para que el sistema renderice una gráfica visual:
+      \`\`\`json
+      { "type": "vote_chart", "favor": 52, "contra": 18, "abstencion": 5 }
+      \`\`\`
+      Ajusta los números según la información del expediente o tu análisis.`;
 
       const contents = [
         ...chatMessages.filter(m => m.role !== 'model' || !m.text.includes('Hola, soy LEXA')).map(m => ({
@@ -976,7 +1043,7 @@ export default function App() {
             {aiSearchResults && (
               <div className="mt-6 bg-white rounded-xl p-6 border border-indigo-100 shadow-inner">
                 <div className="prose prose-sm max-w-none text-slate-700">
-                  <Markdown>{aiSearchResults}</Markdown>
+                  <Markdown components={MarkdownComponents}>{aiSearchResults}</Markdown>
                 </div>
               </div>
             )}
@@ -1211,7 +1278,9 @@ export default function App() {
                   {chatMessages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-2xl p-4 ${msg.role === 'user' ? 'bg-[#8B1A1A] text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'}`}>
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                        <div className="text-sm whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none">
+                          <Markdown components={MarkdownComponents}>{msg.text}</Markdown>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1709,11 +1778,7 @@ export default function App() {
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 mb-3">Resultados de la Votación</h3>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="flex items-center space-x-1 h-4 bg-slate-200 rounded-full overflow-hidden mb-4">
-                    <div style={{ width: `${(selectedVote.votos_favor / selectedVote.total_votos) * 100}%` }} className="bg-emerald-500 h-full" />
-                    <div style={{ width: `${(selectedVote.votos_contra / selectedVote.total_votos) * 100}%` }} className="bg-red-500 h-full" />
-                    <div style={{ width: `${(selectedVote.abstenciones / selectedVote.total_votos) * 100}%` }} className="bg-slate-400 h-full" />
-                  </div>
+                  <VoteChart favor={selectedVote.votos_favor} contra={selectedVote.votos_contra} abstencion={selectedVote.abstenciones} />
                   
                   <div className="grid grid-cols-3 gap-4 text-center mb-6">
                     <div>

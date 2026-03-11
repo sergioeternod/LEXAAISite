@@ -19,7 +19,10 @@ export const expedientes = [
     },
     actores: [
       { nombre: "Dip. Francisco Vázquez Rodríguez", rol: "Promovente", partido: "Morena" },
-      { nombre: "Comisión de Trabajo, Previsión y Seguridad Social", rol: "Dictaminadora", partido: "N/A" }
+      { nombre: "Comisión de Trabajo, Previsión y Seguridad Social", rol: "Dictaminadora", partido: "N/A" },
+      { nombre: "Sindicato de Maestros (SMSEM)", rol: "Grupo de Interés", partido: "N/A" },
+      { nombre: "SUTEYM", rol: "Grupo de Interés", partido: "N/A" },
+      { nombre: "Dip. Elías Rescala Jiménez", rol: "Oposición", partido: "PRI" }
     ],
     eventos: [
       { fecha: "2025-09-05", tipo: "Presentación", descripcion: "Presentación en el Pleno de la LXII Legislatura del Estado de México." },
@@ -49,7 +52,9 @@ export const expedientes = [
     },
     actores: [
       { nombre: "Dip. Maurilio Hernández González", rol: "Promovente", partido: "Morena" },
-      { nombre: "Comisión de Comunicaciones y Transportes", rol: "Dictaminadora", partido: "N/A" }
+      { nombre: "Comisión de Comunicaciones y Transportes", rol: "Dictaminadora", partido: "N/A" },
+      { nombre: "Cámara Nacional del Autotransporte de Pasaje y Turismo (CANAPAT)", rol: "Grupo de Interés", partido: "N/A" },
+      { nombre: "Colectivos Ciclistas del Edomex", rol: "Sociedad Civil", partido: "N/A" }
     ],
     eventos: [
       { fecha: "2025-10-12", tipo: "Presentación", descripcion: "Presentación en el Congreso Local." },
@@ -79,7 +84,10 @@ export const expedientes = [
     },
     actores: [
       { nombre: "Ejecutivo Estatal", rol: "Promovente", partido: "N/A" },
-      { nombre: "Comisión de Recursos Hidráulicos", rol: "Dictaminadora", partido: "N/A" }
+      { nombre: "Comisión de Recursos Hidráulicos", rol: "Dictaminadora", partido: "N/A" },
+      { nombre: "Dip. Francisco Vázquez Rodríguez", rol: "Apoyo Legislativo", partido: "Morena" },
+      { nombre: "Cámara Nacional de la Industria de Desarrollo y Promoción de Vivienda (CANADEVI)", rol: "Grupo de Interés", partido: "N/A" },
+      { nombre: "Organismos Operadores de Agua (ODAPAS)", rol: "Implementadores", partido: "N/A" }
     ],
     eventos: [
       { fecha: "2025-08-10", tipo: "Recepción", descripcion: "Recibida en la Legislatura del Estado." },
