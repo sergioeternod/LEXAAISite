@@ -388,11 +388,55 @@ export default function App() {
   useEffect(() => {
     if (selectedExpediente) {
       trackHistory('view_expediente', selectedExpediente.clave_oficial);
-      setChatMessages([{
-        role: 'model',
-        text: `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}. ¿Qué te gustaría saber sobre su impacto, contexto o actores involucrados?`
-      }]);
       setChatInput('');
+      
+      const generateInitialSummary = async () => {
+        setChatMessages([{
+          role: 'model',
+          text: `Generando resumen analítico del expediente ${selectedExpediente.clave_oficial}...`
+        }]);
+        
+        try {
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          const prompt = `Actúa como LEXA AI, un asistente experto en inteligencia legislativa del Estado de México.
+          Genera un resumen analítico y conciso del siguiente expediente:
+          Título: ${selectedExpediente.titulo}
+          Clave: ${selectedExpediente.clave_oficial}
+          Estado: ${selectedExpediente.estado_actual}
+          Tema: ${selectedExpediente.tema_principal}
+          Descripción: ${selectedExpediente.descripcion}
+          Impacto Score: ${selectedExpediente.impacto_score}/100
+          Actores Involucrados: ${selectedExpediente.actores ? selectedExpediente.actores.map((a: any) => `${a.nombre} (${a.rol} - ${a.partido})`).join(", ") : 'No especificados'}
+          Resumen Ejecutivo: ${selectedExpediente.resumen_ia.ejecutivo}
+          
+          Tu respuesta debe ser un resumen estructurado en Markdown que incluya:
+          1. Un saludo breve presentándote como LEXA.
+          2. El **contexto** general de la iniciativa.
+          3. El **impacto** proyectado (mencionando el Impacto Score).
+          4. Los **actores** clave involucrados.
+          5. Una pregunta final invitando al usuario a profundizar en algún aspecto.
+          
+          Sé profesional, analítico y directo.`;
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: prompt,
+          });
+
+          setChatMessages([{
+            role: 'model',
+            text: response.text || `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}.`
+          }]);
+        } catch (error) {
+          console.error("Error generating initial summary:", error);
+          setChatMessages([{
+            role: 'model',
+            text: `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}. (Hubo un error al generar el resumen automático).`
+          }]);
+        }
+      };
+
+      generateInitialSummary();
     }
   }, [selectedExpediente]);
 
@@ -428,7 +472,7 @@ export default function App() {
       Ajusta los números según la información del expediente o tu análisis.`;
 
       const contents = [
-        ...chatMessages.filter(m => m.role !== 'model' || !m.text.includes('Hola, soy LEXA')).map(m => ({
+        ...chatMessages.filter(m => !m.text.includes('Generando resumen analítico')).map(m => ({
           role: m.role === 'model' ? 'model' : 'user',
           parts: [{ text: m.text }]
         })),
