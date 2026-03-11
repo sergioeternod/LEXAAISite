@@ -414,9 +414,16 @@ export default function App() {
           2. El **contexto** general de la iniciativa.
           3. El **impacto** proyectado (mencionando el Impacto Score).
           4. Los **actores** clave involucrados.
-          5. Una pregunta final invitando al usuario a profundizar en algún aspecto.
+          5. La **intención de voto esperada** o el resultado de la última votación (simulada basada en el contexto político actual del Edomex).
+          6. Una pregunta final invitando al usuario a profundizar en algún aspecto.
           
-          Sé profesional, analítico y directo.`;
+          Sé profesional, analítico y directo.
+          
+          IMPORTANTE: DEBES incluir al final de tu respuesta un bloque de código JSON exacto con este formato para renderizar una gráfica visual de la intención de voto o resultado:
+          \`\`\`json
+          { "type": "vote_chart", "favor": 52, "contra": 18, "abstencion": 5 }
+          \`\`\`
+          Ajusta los números (que idealmente sumen los 75 diputados del Edomex) según tu análisis político de la viabilidad de la iniciativa.`;
 
           const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
