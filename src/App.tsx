@@ -39,7 +39,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { auth, db } from './firebase';
-import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const COLORS = ['#B3282D', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -73,16 +73,6 @@ export default function App() {
   const [aiSearchResults, setAiSearchResults] = useState<string | null>(null);
 
   useEffect(() => {
-    // Process redirect result if coming back from Google login
-    getRedirectResult(auth).then((result) => {
-      if (result) {
-        console.log("Login exitoso por redirección", result.user.email);
-      }
-    }).catch((error) => {
-      console.error("Error from redirect login:", error);
-      alert(`Error al regresar de Google: ${error.message}`);
-    });
-
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
@@ -122,17 +112,23 @@ export default function App() {
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    // Force account selection to prevent auto-login loops
     provider.setCustomParameters({
       prompt: 'select_account'
     });
     
     try {
-      // Fallback to redirect which is much more reliable on mobile and strict browsers
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
     } catch (error: any) {
-      console.error("Error signing in with redirect:", error);
-      alert(`Error al iniciar sesión: ${error.message || 'Intenta nuevamente más tarde.'}`);
+      console.error("Error signing in:", error);
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        const currentDomain = window.location.hostname;
+        alert(`¡ATENCIÓN!\n\nEl dominio actual (${currentDomain}) NO está autorizado en Firebase.\n\nDebes ir a la consola de Firebase -> Authentication -> Settings -> Authorized domains y agregar exactamente:\n\n${currentDomain}`);
+      } else if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+        alert("La ventana emergente fue bloqueada o la cerraste antes de terminar. Por favor, intenta de nuevo y permite las ventanas emergentes.");
+      } else {
+        alert(`Error al iniciar sesión: ${error.message || 'Intenta nuevamente más tarde.'}`);
+      }
     }
   };
 
@@ -566,7 +562,7 @@ export default function App() {
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
           <h3 className="text-lg font-semibold text-slate-900 mb-6">Actividad Legislativa (Últimos 4 meses)</h3>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={kpis.actividadMensual} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
@@ -583,7 +579,7 @@ export default function App() {
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
           <h3 className="text-lg font-semibold text-slate-900 mb-6">Distribución por Sector</h3>
           <div className="h-72 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
                 <Pie
                   data={kpis.sectoresTop}
