@@ -66,11 +66,17 @@ export default function App() {
   const [userHistory, setUserHistory] = useState<any[]>([]);
   const [savedExpedientes, setSavedExpedientes] = useState<string[]>([]);
   const [savedLegisladores, setSavedLegisladores] = useState<string[]>([]);
+  const [subscribedExpedientes, setSubscribedExpedientes] = useState<string[]>([]);
+  const [alertKeywords, setAlertKeywords] = useState<string[]>([]);
 
   // AI Search State
   const [isAiSearchActive, setIsAiSearchActive] = useState(false);
   const [isAiSearchLoading, setIsAiSearchLoading] = useState(false);
   const [aiSearchResults, setAiSearchResults] = useState<string | null>(null);
+
+  // Advanced Filters
+  const [filterStatus, setFilterStatus] = useState<string>('Todos');
+  const [filterDate, setFilterDate] = useState<string>('Todos');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -89,13 +95,17 @@ export default function App() {
               history: [],
               interests: [],
               savedExpedientes: [],
-              savedLegisladores: []
+              savedLegisladores: [],
+              subscribedExpedientes: [],
+              alertKeywords: []
             });
           } else {
             const data = userSnap.data();
             setUserHistory(data.history || []);
             setSavedExpedientes(data.savedExpedientes || []);
             setSavedLegisladores(data.savedLegisladores || []);
+            setSubscribedExpedientes(data.subscribedExpedientes || []);
+            setAlertKeywords(data.alertKeywords || []);
           }
         } catch (error: any) {
           console.error("Error fetching user data:", error);
@@ -105,6 +115,8 @@ export default function App() {
         setUserHistory([]);
         setSavedExpedientes([]);
         setSavedLegisladores([]);
+        setSubscribedExpedientes([]);
+        setAlertKeywords([]);
       }
     });
     return () => unsubscribe();
@@ -187,6 +199,46 @@ export default function App() {
       await updateDoc(userRef, { savedExpedientes: newSaved });
     } catch (error) {
       console.error("Error saving expediente", error);
+    }
+  };
+
+  const toggleSubscribeExpediente = async (id: string) => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    const isSubscribed = subscribedExpedientes.includes(id);
+    const newSubscribed = isSubscribed 
+      ? subscribedExpedientes.filter(e => e !== id) 
+      : [...subscribedExpedientes, id];
+    
+    setSubscribedExpedientes(newSubscribed);
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { subscribedExpedientes: newSubscribed });
+    } catch (error) {
+      console.error("Error subscribing to expediente", error);
+    }
+  };
+
+  const toggleAlertKeyword = async (keyword: string) => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    const isAlerted = alertKeywords.includes(keyword);
+    const newAlerts = isAlerted 
+      ? alertKeywords.filter(k => k !== keyword) 
+      : [...alertKeywords, keyword];
+    
+    setAlertKeywords(newAlerts);
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { alertKeywords: newAlerts });
+    } catch (error) {
+      console.error("Error toggling alert keyword", error);
     }
   };
 
@@ -308,9 +360,17 @@ export default function App() {
       
       Responde a las preguntas del usuario basándote en esta información. Sé profesional, analítico, objetivo y conciso. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.`;
 
+      const contents = [
+        ...chatMessages.filter(m => m.role !== 'model' || !m.text.includes('Hola, soy LEXA')).map(m => ({
+          role: m.role === 'model' ? 'model' : 'user',
+          parts: [{ text: m.text }]
+        })),
+        { role: 'user', parts: [{ text: userMsg }] }
+      ];
+
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: userMsg,
+        contents: contents,
         config: {
           systemInstruction: systemInstruction,
         }
@@ -759,17 +819,34 @@ export default function App() {
   );
 
   const renderExplorar = () => {
-    const filteredExpedientes = expedientes.filter(e => 
-      e.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.clave_oficial.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.tema_principal.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredExpedientes = expedientes.filter(e => {
+      const matchesSearch = e.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            e.clave_oficial.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            e.tema_principal.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = filterStatus === 'Todos' || e.estado_actual === filterStatus;
+      
+      let matchesDate = true;
+      if (filterDate !== 'Todos') {
+        const expDate = new Date(e.fecha_inicio);
+        const now = new Date();
+        if (filterDate === 'Último mes') {
+          matchesDate = (now.getTime() - expDate.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+        } else if (filterDate === 'Este año') {
+          matchesDate = expDate.getFullYear() === now.getFullYear();
+        }
+      }
 
-    const filteredLegisladores = legisladores.filter(l => 
-      l.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.partido.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.estado.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+
+    const filteredLegisladores = legisladores.filter(l => {
+      const matchesSearch = l.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            l.partido.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            l.estado.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesParty = filterParty === 'Todos' || l.partido === filterParty;
+      return matchesSearch && matchesParty;
+    });
 
     return (
       <div className="space-y-6 max-w-5xl mx-auto w-full">
@@ -794,7 +871,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex space-x-4">
+        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input 
@@ -806,10 +883,46 @@ export default function App() {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <button className="flex items-center space-x-2 bg-white border border-slate-200 px-6 py-3 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-            <Filter className="w-4 h-4" />
-            <span>Filtros</span>
-          </button>
+          {exploreMode === 'expedientes' ? (
+            <div className="flex space-x-3 overflow-x-auto pb-2 md:pb-0">
+              <select 
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm"
+              >
+                <option value="Todos">Estado (Todos)</option>
+                <option value="En Comisiones">En Comisiones</option>
+                <option value="Aprobada">Aprobada</option>
+                <option value="Rechazada">Rechazada</option>
+              </select>
+              <select 
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm"
+              >
+                <option value="Todos">Fecha (Todas)</option>
+                <option value="Último mes">Último mes</option>
+                <option value="Este año">Este año</option>
+              </select>
+            </div>
+          ) : (
+            <div className="flex space-x-3 overflow-x-auto pb-2 md:pb-0">
+              <select 
+                value={filterParty}
+                onChange={(e) => setFilterParty(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm"
+              >
+                <option value="Todos">Partido (Todos)</option>
+                <option value="MORENA">MORENA</option>
+                <option value="PRI">PRI</option>
+                <option value="PAN">PAN</option>
+                <option value="PVEM">PVEM</option>
+                <option value="PT">PT</option>
+                <option value="PRD">PRD</option>
+                <option value="MC">MC</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {user && userHistory.length > 0 && !searchQuery && (
@@ -975,6 +1088,7 @@ export default function App() {
     if (!selectedExpediente) return null;
     const exp = selectedExpediente;
     const isSaved = savedExpedientes.includes(exp.id);
+    const isSubscribed = subscribedExpedientes.includes(exp.id);
 
     return (
       <div className="space-y-6">
@@ -998,13 +1112,20 @@ export default function App() {
               </div>
               <h1 className="text-2xl font-bold text-slate-900 leading-tight max-w-3xl">{exp.titulo}</h1>
               
-              <div className="flex space-x-3 mt-6">
+              <div className="flex flex-wrap gap-3 mt-6">
                 <button 
                   onClick={() => toggleSaveExpediente(exp.id)}
                   className={`px-4 py-2 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-medium ${isSaved ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                 >
                   <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                   <span>{isSaved ? 'Guardado' : 'Guardar Expediente'}</span>
+                </button>
+                <button 
+                  onClick={() => toggleSubscribeExpediente(exp.id)}
+                  className={`px-4 py-2 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-medium ${isSubscribed ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <Bell className={`w-4 h-4 ${isSubscribed ? 'fill-current' : ''}`} />
+                  <span>{isSubscribed ? 'Suscrito a Alertas' : 'Activar Alertas'}</span>
                 </button>
                 <button onClick={() => exportToCSV(exp, `expediente_${exp.clave_oficial}`)} className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all shadow-sm flex items-center space-x-2 text-sm font-medium">
                   <FileDown className="w-4 h-4" />
@@ -1217,6 +1338,9 @@ export default function App() {
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                   <Bookmark className="w-3 h-3 mr-1" /> {savedExpedientes.length} Expedientes
                 </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                  <Bell className="w-3 h-3 mr-1" /> {subscribedExpedientes.length} Alertas
+                </span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
                   <Star className="w-3 h-3 mr-1" /> {savedLegisladores.length} Legisladores
                 </span>
@@ -1224,7 +1348,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Saved Expedientes */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
@@ -1247,6 +1371,35 @@ export default function App() {
                           </button>
                         </div>
                         <p className="text-sm font-medium text-slate-900 mt-1 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Subscribed Expedientes */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+                <Bell className="w-5 h-5 mr-2 text-amber-500" />
+                Alertas Activas
+              </h3>
+              {subscribedExpedientes.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-8">No tienes alertas activas para ningún expediente.</p>
+              ) : (
+                <div className="space-y-3">
+                  {subscribedExpedientes.map(id => {
+                    const exp = expedientes.find(e => e.id === id);
+                    if (!exp) return null;
+                    return (
+                      <div key={id} className="p-3 rounded-xl border border-amber-100 bg-amber-50/30 hover:bg-amber-50 transition-colors cursor-pointer group" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                        <div className="flex justify-between items-start">
+                          <span className="font-mono text-xs font-medium text-amber-700">{exp.clave_oficial}</span>
+                          <button onClick={(e) => { e.stopPropagation(); toggleSubscribeExpediente(id); }} className="text-amber-400 hover:text-red-500">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-medium text-slate-900 mt-1 line-clamp-2 group-hover:text-amber-700 transition-colors">{exp.titulo}</p>
                       </div>
                     );
                   })}
@@ -1382,40 +1535,96 @@ export default function App() {
         <button className="text-sm font-medium text-[#8B1A1A] hover:text-[#7A1315]">Marcar todas como leídas</button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="divide-y divide-slate-100">
-          {alertas.map(alerta => (
-            <div key={alerta.id} className={`p-5 flex gap-4 ${alerta.leida ? 'bg-white' : 'bg-red-50/30'}`}>
-              <div className="flex-shrink-0 mt-1">
-                {alerta.severidad === 'alta' ? (
-                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <ShieldAlert className="w-5 h-5 text-red-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="divide-y divide-slate-100">
+              {alertas.map(alerta => (
+                <div key={alerta.id} className={`p-5 flex gap-4 ${alerta.leida ? 'bg-white' : 'bg-red-50/30'}`}>
+                  <div className="flex-shrink-0 mt-1">
+                    {alerta.severidad === 'alta' ? (
+                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <ShieldAlert className="w-5 h-5 text-red-600" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Bell className="w-5 h-5 text-blue-600" />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-blue-600" />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-semibold text-slate-900">{alerta.tipo}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="font-mono text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{alerta.expediente}</span>
+                      </div>
+                      <span className="text-xs text-slate-500">{new Date(alerta.fecha).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-slate-600 mt-1 text-sm">{alerta.mensaje}</p>
+                    <div className="mt-3">
+                      <button className="text-sm font-medium text-[#8B1A1A] hover:text-[#7A1315]">Ver expediente</button>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-slate-900">{alerta.tipo}</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="font-mono text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{alerta.expediente}</span>
-                  </div>
-                  <span className="text-xs text-slate-500">{new Date(alerta.fecha).toLocaleDateString()}</span>
+                  {!alerta.leida && (
+                    <div className="w-2 h-2 rounded-full bg-[#8B1A1A] mt-2"></div>
+                  )}
                 </div>
-                <p className="text-slate-600 mt-1 text-sm">{alerta.mensaje}</p>
-                <div className="mt-3">
-                  <button className="text-sm font-medium text-[#8B1A1A] hover:text-[#7A1315]">Ver expediente</button>
-                </div>
-              </div>
-              {!alerta.leida && (
-                <div className="w-2 h-2 rounded-full bg-[#8B1A1A] mt-2"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+              <Search className="w-5 h-5 mr-2 text-slate-400" />
+              Alertas por Palabra Clave
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">
+              Recibe notificaciones cuando se publiquen nuevos expedientes que contengan estas palabras clave.
+            </p>
+            
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const input = e.currentTarget.elements.namedItem('keyword') as HTMLInputElement;
+                if (input.value.trim()) {
+                  toggleAlertKeyword(input.value.trim());
+                  input.value = '';
+                }
+              }}
+              className="flex space-x-2 mb-4"
+            >
+              <input 
+                type="text" 
+                name="keyword"
+                placeholder="Ej. Medio Ambiente, Presupuesto..." 
+                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A]"
+              />
+              <button type="submit" className="px-3 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-colors">
+                Agregar
+              </button>
+            </form>
+
+            <div className="flex flex-wrap gap-2">
+              {alertKeywords.length === 0 ? (
+                <span className="text-sm text-slate-400 italic">No hay palabras clave configuradas.</span>
+              ) : (
+                alertKeywords.map((keyword, idx) => (
+                  <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    {keyword}
+                    <button 
+                      onClick={() => toggleAlertKeyword(keyword)}
+                      className="ml-2 text-slate-400 hover:text-red-500 focus:outline-none"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))
               )}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
