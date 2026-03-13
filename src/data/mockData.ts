@@ -24,6 +24,11 @@ export const expedientes = [
       { nombre: "SUTEYM", rol: "Grupo de Interés", partido: "N/A" },
       { nombre: "Dip. Elías Rescala Jiménez", rol: "Oposición", partido: "PRI" }
     ],
+    video_youtube: {
+      id: "YYowyRSggAw",
+      titulo: "Sesión Deliberante - Reforma ISSEMyM",
+      vistas: "15,420"
+    },
     eventos: [
       { fecha: "2025-09-05", tipo: "Presentación", descripcion: "Presentación en el Pleno de la LXII Legislatura del Estado de México." },
       { fecha: "2025-09-20", tipo: "Parlamento Abierto", descripcion: "Foros con sindicatos de maestros y burócratas del Estado." }
@@ -56,6 +61,11 @@ export const expedientes = [
       { nombre: "Cámara Nacional del Autotransporte de Pasaje y Turismo (CANAPAT)", rol: "Grupo de Interés", partido: "N/A" },
       { nombre: "Colectivos Ciclistas del Edomex", rol: "Sociedad Civil", partido: "N/A" }
     ],
+    video_youtube: {
+      id: "ogwLBavDeMI",
+      titulo: "Foro: Ley de Movilidad y Seguridad Vial",
+      vistas: "8,930"
+    },
     eventos: [
       { fecha: "2025-10-12", tipo: "Presentación", descripcion: "Presentación en el Congreso Local." },
       { fecha: "2025-11-05", tipo: "Mesa Técnica", descripcion: "Reunión con líderes transportistas del Valle de México." }
@@ -89,6 +99,11 @@ export const expedientes = [
       { nombre: "Cámara Nacional de la Industria de Desarrollo y Promoción de Vivienda (CANADEVI)", rol: "Grupo de Interés", partido: "N/A" },
       { nombre: "Organismos Operadores de Agua (ODAPAS)", rol: "Implementadores", partido: "N/A" }
     ],
+    video_youtube: {
+      id: "kJXzEtQpTqU",
+      titulo: "Comisiones Unidas - Gestión del Agua",
+      vistas: "22,100"
+    },
     eventos: [
       { fecha: "2025-08-10", tipo: "Recepción", descripcion: "Recibida en la Legislatura del Estado." },
       { fecha: "2025-11-20", tipo: "Dictamen", descripcion: "Aprobación del dictamen en comisiones unidas." }
@@ -118,6 +133,11 @@ export const expedientes = [
       { nombre: "Secretaría de Finanzas del Edomex", rol: "Promovente", partido: "N/A" },
       { nombre: "Comisión de Planeación y Gasto Público", rol: "Dictaminadora", partido: "N/A" }
     ],
+    video_youtube: {
+      id: "-c3F29juPJM",
+      titulo: "Entrega del Paquete Fiscal 2026",
+      vistas: "45,200"
+    },
     eventos: [
       { fecha: "2025-11-21", tipo: "Paquete Económico", descripcion: "Entrega del Paquete Fiscal 2026 por parte del Secretario de Finanzas." }
     ],
@@ -167,7 +187,7 @@ export const votaciones = [
     abstenciones: 0,
     total_votos: 75,
     resumen_ia_votacion: "Debate crítico en el Congreso Local. La bancada de Morena, liderada por Francisco Vázquez, busca consensos con el PT y PVEM para aprobar el rescate financiero. La oposición (PRI, PAN) exige auditorías externas antes de aprobar incrementos a las cuotas.",
-    video_url: "https://www.youtube.com/embed/Y3DeQISJ1sA",
+    video_url: "https://www.youtube.com/embed/YYowyRSggAw",
     desglose_partidos: [
       { partido: "Morena", favor: 0, contra: 0, abstencion: 0, color: "#B3282D" },
       { partido: "PVEM", favor: 0, contra: 0, abstencion: 0, color: "#50B747" },
@@ -195,7 +215,7 @@ export const votaciones = [
     abstenciones: 5,
     total_votos: 75,
     resumen_ia_votacion: "Aprobada en el Pleno. Se lograron consensos importantes impulsados por la bancada mayoritaria para proteger los mantos acuíferos del Estado, aunque hubo disenso del PAN respecto a las restricciones a nuevos desarrollos inmobiliarios en Huixquilucan y Naucalpan.",
-    video_url: "https://www.youtube.com/embed/Y3DeQISJ1sA",
+    video_url: "https://www.youtube.com/embed/ogwLBavDeMI",
     desglose_partidos: [
       { partido: "Morena", favor: 35, contra: 0, abstencion: 0, color: "#B3282D" },
       { partido: "PVEM", favor: 10, contra: 0, abstencion: 0, color: "#50B747" },

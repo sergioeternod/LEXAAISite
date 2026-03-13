@@ -29,10 +29,13 @@ import {
   Download as DownloadIcon,
   FileDown,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Youtube,
+  Eye
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { expedientes, alertas, kpis, votaciones, resumenesSemanales, legisladores } from './data/mockData';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -40,37 +43,78 @@ import {
 } from 'recharts';
 
 const VoteChart = ({ favor, contra, abstencion }: { favor: number, contra: number, abstencion: number }) => {
+  const total = favor + contra + abstencion;
+  
   const data = [
-    { name: 'A Favor', value: favor, color: '#10b981' }, // emerald-500
-    { name: 'En Contra', value: contra, color: '#ef4444' }, // red-500
-    { name: 'Abstención', value: abstencion, color: '#94a3b8' } // slate-400
+    { name: 'A Favor', value: favor, color: '#10b981', percentage: ((favor/total)*100).toFixed(1) }, // emerald-500
+    { name: 'En Contra', value: contra, color: '#ef4444', percentage: ((contra/total)*100).toFixed(1) }, // red-500
+    { name: 'Abstención', value: abstencion, color: '#94a3b8', percentage: ((abstencion/total)*100).toFixed(1) } // slate-400
   ].filter(d => d.value > 0);
 
   return (
-    <div className="h-64 w-full my-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-      <h4 className="text-sm font-semibold text-slate-700 text-center mb-2">Proyección / Resultado de Votación</h4>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
-            paddingAngle={5}
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(value: number) => [`${value} votos`, 'Cantidad']}
-            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-          />
-          <Legend verticalAlign="bottom" height={36} />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="w-full my-8 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative flex flex-col items-center overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-50 to-transparent pointer-events-none"></div>
+      
+      <div className="relative z-10 w-full flex flex-col items-center">
+        <h4 className="text-sm font-bold text-slate-800 text-center mb-1 uppercase tracking-widest">Proyección de Votación</h4>
+        <p className="text-xs text-slate-400 mb-6 text-center font-medium">Distribución en el Pleno</p>
+        
+        <div className="w-full h-56 relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <defs>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="5" floodOpacity="0.15" />
+                </filter>
+              </defs>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="90%"
+                startAngle={180}
+                endAngle={0}
+                innerRadius={90}
+                outerRadius={130}
+                paddingAngle={4}
+                dataKey="value"
+                stroke="none"
+                cornerRadius={8}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} filter="url(#shadow)" />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number, name: string, props: any) => [`${value} votos (${props.payload.percentage}%)`, name]}
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', padding: '12px 16px' }}
+                itemStyle={{ fontWeight: 700, color: '#1e293b' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          
+          <div className="absolute left-1/2 bottom-[15%] transform -translate-x-1/2 text-center pointer-events-none flex flex-col items-center">
+            <span className="text-5xl font-black text-slate-800 tracking-tighter">{total}</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mt-1">Votos Totales</span>
+          </div>
+        </div>
+
+        {/* Custom Legend */}
+        <div className="w-full grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-100">
+          {data.map((item, idx) => (
+            <div key={idx} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 cursor-default group">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-3 h-3 rounded-full shadow-sm group-hover:scale-110 transition-transform" style={{ backgroundColor: item.color }}></div>
+                <span className="text-xs font-bold text-slate-700">{item.name}</span>
+              </div>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-2xl font-black text-slate-900">{item.value}</span>
+                <span className="text-xs font-semibold text-slate-400">({item.percentage}%)</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
@@ -363,7 +407,18 @@ export default function App() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${searchQuery}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. Presenta un resumen estructurado con el nombre del legislador, su partido (si es posible) y su postura u opinión argumentativa sobre el tema. Asegúrate de incluir un análisis sobre el "impacto" de la medida discutida y los "actores involucrados" (quiénes la promueven, quiénes se oponen, a quiénes afecta). Usa formato Markdown.
+      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${searchQuery}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. 
+      
+      Presenta un resumen estructurado. Para el análisis de posturas, DEBES usar una tabla Markdown correctamente formateada con saltos de línea, exactamente con esta estructura:
+
+      ### Análisis de Posturas Legislativas
+      
+      | Legislador | Grupo Parlamentario | Postura / Argumento Principal |
+      | :--- | :--- | :--- |
+      | Nombre 1 | Partido 1 | Argumento 1 |
+      | Nombre 2 | Partido 2 | Argumento 2 |
+      
+      Asegúrate de incluir también un análisis sobre el "impacto" de la medida discutida y los "actores involucrados" (quiénes la promueven, quiénes se oponen, a quiénes afecta). Usa formato Markdown.
       
       IMPORTANTE: Si en tu análisis mencionas resultados de votaciones pasadas o expectativas/tendencias de votación, DEBES incluir al final un bloque de código JSON exacto con este formato para renderizar una gráfica visual:
       \`\`\`json
@@ -505,10 +560,18 @@ export default function App() {
 
   const renderTopNav = () => (
     <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 relative">
-      <div className="flex items-center space-x-1 transform scale-y-[0.8] scale-x-[1.1] origin-left w-32">
+      <button 
+        onClick={() => {
+          setActiveTab('dashboard');
+          setSelectedExpediente(null);
+          setSelectedAlert(null);
+          setSelectedVote(null);
+        }}
+        className="flex items-center space-x-1 transform scale-y-[0.8] scale-x-[1.1] origin-left w-32 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
+      >
         <span className="text-2xl font-black text-[#333C45] tracking-tighter">LEXA</span>
         <span className="text-2xl font-black bg-gradient-to-r from-[#FF8B53] to-[#EB577A] text-transparent bg-clip-text tracking-tighter">AI</span>
-      </div>
+      </button>
       
       <nav className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-8">
         <button 
@@ -1094,7 +1157,7 @@ export default function App() {
             {aiSearchResults && (
               <div className="mt-6 bg-white rounded-xl p-6 border border-indigo-100 shadow-inner">
                 <div className="prose prose-sm max-w-none text-slate-700">
-                  <Markdown components={MarkdownComponents}>{aiSearchResults}</Markdown>
+                  <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{aiSearchResults}</Markdown>
                 </div>
               </div>
             )}
@@ -1330,7 +1393,7 @@ export default function App() {
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-2xl p-4 ${msg.role === 'user' ? 'bg-[#8B1A1A] text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'}`}>
                         <div className="text-sm whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none">
-                          <Markdown components={MarkdownComponents}>{msg.text}</Markdown>
+                          <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{msg.text}</Markdown>
                         </div>
                       </div>
                     </div>
@@ -1368,6 +1431,34 @@ export default function App() {
             </div>
 
             <div className="col-span-1 space-y-6">
+              {exp.video_youtube && (
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+                  <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
+                    <Youtube className="w-4 h-4 mr-2 text-red-600" />
+                    Video Destacado (Congreso Edomex)
+                  </h3>
+                  <div className="rounded-lg overflow-hidden border border-slate-200 bg-black aspect-video relative">
+                    <iframe 
+                      width="100%" 
+                      height="100%" 
+                      src={`https://www.youtube.com/embed/${exp.video_youtube.id}`} 
+                      title={exp.video_youtube.titulo}
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                    ></iframe>
+                  </div>
+                  <div className="mt-3 flex justify-between items-center">
+                    <span className="text-xs font-medium text-slate-700 line-clamp-1 flex-1 pr-2">{exp.video_youtube.titulo}</span>
+                    <span className="text-xs text-slate-500 flex items-center whitespace-nowrap">
+                      <Eye className="w-3 h-3 mr-1" />
+                      {exp.video_youtube.vistas}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
                 <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
                   <Users className="w-4 h-4 mr-2 text-slate-500" />
