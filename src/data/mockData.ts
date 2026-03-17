@@ -35,6 +35,21 @@ export const expedientes = [
     ],
     documentos: [
       { id: "doc-1", tipo: "Iniciativa", fecha: "2025-09-05", url: "#" }
+    ],
+    resultado_proyectado: {
+      descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
+      impacto_social: {
+        nivel: "Medio",
+        descripcion: "Beneficia al sector objetivo del estado directamente."
+      },
+      carga_regulatoria: {
+        nivel: "Moderada",
+        descripcion: "Ajustes normativos graduales."
+      }
+    },
+    documentacion_oficial: [
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
     ]
   },
   {
@@ -72,6 +87,21 @@ export const expedientes = [
     ],
     documentos: [
       { id: "doc-2", tipo: "Iniciativa", fecha: "2025-10-12", url: "#" }
+    ],
+    resultado_proyectado: {
+      descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
+      impacto_social: {
+        nivel: "Alto",
+        descripcion: "Beneficia directamente a millones de usuarios de transporte público."
+      },
+      carga_regulatoria: {
+        nivel: "Alta",
+        descripcion: "Requiere ajustes mayores en normativas de tránsito municipales."
+      }
+    },
+    documentacion_oficial: [
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
     ]
   },
   {
@@ -110,6 +140,21 @@ export const expedientes = [
     ],
     documentos: [
       { id: "doc-4", tipo: "Iniciativa de la Gobernadora", fecha: "2025-08-10", url: "#" }
+    ],
+    resultado_proyectado: {
+      descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
+      impacto_social: {
+        nivel: "Alto",
+        descripcion: "Beneficia a la población en zonas de estrés hídrico."
+      },
+      carga_regulatoria: {
+        nivel: "Alta",
+        descripcion: "Nuevas obligaciones para industrias y municipios."
+      }
+    },
+    documentacion_oficial: [
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
     ]
   },
   {
@@ -143,6 +188,21 @@ export const expedientes = [
     ],
     documentos: [
       { id: "doc-5", tipo: "Proyecto de Presupuesto", fecha: "2025-11-21", url: "#" }
+    ],
+    resultado_proyectado: {
+      descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
+      impacto_social: {
+        nivel: "Alto",
+        descripcion: "Impacta directamente en el presupuesto de programas sociales."
+      },
+      carga_regulatoria: {
+        nivel: "Baja",
+        descripcion: "Ajustes menores en la miscelánea fiscal."
+      }
+    },
+    documentacion_oficial: [
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
     ]
   }
 ];

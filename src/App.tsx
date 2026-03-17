@@ -46,74 +46,65 @@ const VoteChart = ({ favor, contra, abstencion }: { favor: number, contra: numbe
   const total = favor + contra + abstencion;
   
   const data = [
-    { name: 'A Favor', value: favor, color: '#10b981', percentage: ((favor/total)*100).toFixed(1) }, // emerald-500
-    { name: 'En Contra', value: contra, color: '#ef4444', percentage: ((contra/total)*100).toFixed(1) }, // red-500
-    { name: 'Abstención', value: abstencion, color: '#94a3b8', percentage: ((abstencion/total)*100).toFixed(1) } // slate-400
+    { name: 'A Favor', value: favor, color: '#e60000', percentage: Math.round((favor/total)*100), badgeBg: 'bg-red-50' },
+    { name: 'Abstenciones', value: abstencion, color: '#f59e0b', percentage: Math.round((abstencion/total)*100), badgeBg: 'bg-amber-50' },
+    { name: 'En Contra', value: contra, color: '#cbd5e1', percentage: Math.round((contra/total)*100), badgeBg: 'bg-slate-100' }
   ].filter(d => d.value > 0);
 
-  return (
-    <div className="w-full my-8 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative flex flex-col items-center overflow-hidden">
-      {/* Subtle background decoration */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-50 to-transparent pointer-events-none"></div>
-      
-      <div className="relative z-10 w-full flex flex-col items-center">
-        <h4 className="text-sm font-bold text-slate-800 text-center mb-1 uppercase tracking-widest">Proyección de Votación</h4>
-        <p className="text-xs text-slate-400 mb-6 text-center font-medium">Distribución en el Pleno</p>
-        
-        <div className="w-full h-56 relative">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <defs>
-                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="4" stdDeviation="5" floodOpacity="0.15" />
-                </filter>
-              </defs>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="90%"
-                startAngle={180}
-                endAngle={0}
-                innerRadius={90}
-                outerRadius={130}
-                paddingAngle={4}
-                dataKey="value"
-                stroke="none"
-                cornerRadius={8}
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} filter="url(#shadow)" />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value: number, name: string, props: any) => [`${value} votos (${props.payload.percentage}%)`, name]}
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', padding: '12px 16px' }}
-                itemStyle={{ fontWeight: 700, color: '#1e293b' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          
-          <div className="absolute left-1/2 bottom-[15%] transform -translate-x-1/2 text-center pointer-events-none flex flex-col items-center">
-            <span className="text-5xl font-black text-slate-800 tracking-tighter">{total}</span>
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mt-1">Votos Totales</span>
-          </div>
-        </div>
+  const maxPercentage = Math.max(...data.map(d => d.percentage));
 
-        {/* Custom Legend */}
-        <div className="w-full grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-100">
-          {data.map((item, idx) => (
-            <div key={idx} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:shadow-md hover:-translate-y-1 cursor-default group">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-3 h-3 rounded-full shadow-sm group-hover:scale-110 transition-transform" style={{ backgroundColor: item.color }}></div>
-                <span className="text-xs font-bold text-slate-700">{item.name}</span>
-              </div>
-              <div className="flex items-baseline space-x-1">
-                <span className="text-2xl font-black text-slate-900">{item.value}</span>
-                <span className="text-xs font-semibold text-slate-400">({item.percentage}%)</span>
-              </div>
-            </div>
-          ))}
+  return (
+    <div className="w-full max-w-sm mx-auto my-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+      <div className="mb-6">
+        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Tendencia</h4>
+        <h3 className="text-xl font-bold text-slate-900">Sentido de Votación</h3>
+      </div>
+      
+      <div className="relative w-full aspect-square max-h-64 mx-auto mb-8 flex items-center justify-center">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              startAngle={90}
+              endAngle={-270}
+              innerRadius="75%"
+              outerRadius="95%"
+              paddingAngle={0}
+              dataKey="value"
+              stroke="none"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value: number, name: string, props: any) => [`${value} votos (${props.payload.percentage}%)`, name]}
+              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+              itemStyle={{ fontWeight: 700, color: '#1e293b' }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-5xl font-black text-slate-900">{maxPercentage}%</span>
+          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Consenso AI</span>
         </div>
+      </div>
+
+      <div className="flex flex-col space-y-4 mt-auto">
+        {data.map((item, idx) => (
+          <div key={idx} className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+              <span className="text-sm text-slate-600">{item.name}</span>
+            </div>
+            <div className={`px-3 py-1 rounded-md text-sm font-bold ${item.badgeBg} text-slate-900`}>
+              {item.value}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -378,36 +369,42 @@ export default function App() {
     window.print();
   };
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) return;
+  const handleSearch = (query?: string) => {
+    const q = query || searchQuery;
+    if (!q.trim()) return;
     
-    trackHistory('search', searchQuery);
+    if (query) {
+      setSearchQuery(query);
+    }
+    
+    trackHistory('search', q);
     setCurrentView('explorar');
 
     // Detect if the query is a question or natural language prompt
-    const lowerQuery = searchQuery.toLowerCase().trim();
+    const lowerQuery = q.toLowerCase().trim();
     const isQuestion = lowerQuery.includes('?') || lowerQuery.includes('¿');
     const questionWords = ['qué', 'que', 'cómo', 'como', 'cuándo', 'cuando', 'quién', 'quien', 'por qué', 'por que', 'cuál', 'cual', 'cuánto', 'cuanto', 'analiza', 'resume', 'dime', 'explica', 'opinión', 'opinion'];
     const startsWithQuestionWord = questionWords.some(word => lowerQuery.startsWith(word));
     const isLongPhrase = lowerQuery.split(' ').length > 4;
 
     if (isQuestion || startsWithQuestionWord || isLongPhrase) {
-      handleAiSearch();
+      handleAiSearch(q);
     } else {
       setIsAiSearchActive(false);
       setAiSearchResults(null);
     }
   };
 
-  const handleAiSearch = async () => {
-    if (!searchQuery.trim()) return;
+  const handleAiSearch = async (query?: string) => {
+    const q = query || searchQuery;
+    if (!q.trim()) return;
     setIsAiSearchActive(true);
     setIsAiSearchLoading(true);
     setAiSearchResults(null);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${searchQuery}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. 
+      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${q}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. 
       
       Presenta un resumen estructurado. Para el análisis de posturas, DEBES usar una tabla Markdown correctamente formateada con saltos de línea, exactamente con esta estructura:
 
@@ -665,16 +662,16 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap justify-center gap-2 mt-6">
-            <button onClick={() => { setSearchQuery('Ley del ISSEMyM'); trackInterest('Ley del ISSEMyM'); handleSearch(); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
+            <button onClick={() => { trackInterest('Ley del ISSEMyM'); handleSearch('Ley del ISSEMyM'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
               #LeyDelISSEMyM
             </button>
-            <button onClick={() => { setSearchQuery('Paquete Fiscal 2026'); trackInterest('Paquete Fiscal 2026'); handleSearch(); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
+            <button onClick={() => { trackInterest('Paquete Fiscal 2026'); handleSearch('Paquete Fiscal 2026'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
               #PaqueteFiscal2026
             </button>
-            <button onClick={() => { setSearchQuery('Gestión del Agua'); trackInterest('Gestión del Agua'); handleSearch(); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
+            <button onClick={() => { trackInterest('Gestión del Agua'); handleSearch('Gestión del Agua'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
               #GestiónDelAgua
             </button>
-            <button onClick={() => { setSearchQuery('Movilidad Edomex'); trackInterest('Movilidad Edomex'); handleSearch(); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
+            <button onClick={() => { trackInterest('Movilidad Edomex'); handleSearch('Movilidad Edomex'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
               #MovilidadEdomex
             </button>
           </div>
@@ -772,8 +769,7 @@ export default function App() {
               <div 
                 key={idx} 
                 onClick={() => {
-                  setSearchQuery(item.query);
-                  handleSearch();
+                  handleSearch(item.query);
                 }}
                 className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md hover:border-[#8B1A1A]/30 transition-all cursor-pointer group flex flex-col justify-between h-32"
               >
@@ -1021,10 +1017,19 @@ export default function App() {
   );
 
   const renderExplorar = () => {
+    const normalizeText = (text: string) => {
+      return text.toLowerCase()
+        .replace(/edomex/g, 'estado de méxico')
+        .replace(/#/g, '')
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    };
+
     const filteredExpedientes = expedientes.filter(e => {
-      const matchesSearch = e.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            e.clave_oficial.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            e.tema_principal.toLowerCase().includes(searchQuery.toLowerCase());
+      const normalizedQuery = normalizeText(searchQuery);
+      const combinedText = normalizeText(`${e.titulo} ${e.descripcion} ${e.tema_principal} ${e.clave_oficial}`);
+      
+      const searchTerms = normalizedQuery.split(' ').filter(term => term.length > 0);
+      const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => combinedText.includes(term));
       
       const matchesStatus = filterStatus === 'Todos' || e.estado_actual === filterStatus;
       
@@ -1043,9 +1048,12 @@ export default function App() {
     });
 
     const filteredLegisladores = legisladores.filter(l => {
-      const matchesSearch = l.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            l.partido.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            l.estado.toLowerCase().includes(searchQuery.toLowerCase());
+      const normalizedQuery = normalizeText(searchQuery);
+      const combinedText = normalizeText(`${l.nombre} ${l.partido} ${l.estado}`);
+      
+      const searchTerms = normalizedQuery.split(' ').filter(term => term.length > 0);
+      const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => combinedText.includes(term));
+      
       const matchesParty = filterParty === 'Todos' || l.partido === filterParty;
       return matchesSearch && matchesParty;
     });
@@ -1135,7 +1143,7 @@ export default function App() {
             {Array.from(new Set(userHistory.filter(h => h.type === 'search').map(h => h.query))).slice(-5).reverse().map((query, idx) => (
               <button 
                 key={idx}
-                onClick={() => { setSearchQuery(query as string); handleSearch(); }}
+                onClick={() => { handleSearch(query as string); }}
                 className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-full transition-colors"
               >
                 {query as string}
@@ -1370,7 +1378,7 @@ export default function App() {
               </div>
 
               <div>
-                <div className="flex items-center space-x-2 mb-4">
+                <div className="flex items-center space-x-2 mb-4 mt-8 pt-8 border-t border-slate-100">
                   <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
                     <Clock className="w-4 h-4 text-blue-600" />
                   </div>
@@ -1522,6 +1530,58 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          {exp.resultado_proyectado && (
+            <div className="mt-8 pt-8 border-t border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900 mb-4">Resultado Proyectado</h3>
+              <p className="text-slate-600 mb-6">{exp.resultado_proyectado.descripcion}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-red-50/50 border border-red-100 rounded-xl p-5">
+                  <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">Impacto Social</h4>
+                  <p className="text-sm font-bold text-slate-900">
+                    {exp.resultado_proyectado.impacto_social.nivel}: <span className="font-medium text-slate-700">{exp.resultado_proyectado.impacto_social.descripcion}</span>
+                  </p>
+                </div>
+                <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-5 relative group">
+                  <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2">Carga Regulatoria</h4>
+                  <p className="text-sm font-bold text-slate-900">
+                    {exp.resultado_proyectado.carga_regulatoria.nivel}: <span className="font-medium text-slate-700">{exp.resultado_proyectado.carga_regulatoria.descripcion}</span>
+                  </p>
+                  
+                  {/* Tooltip for Carga Regulatoria */}
+                  <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 shadow-lg rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-64 flex items-start space-x-2">
+                    <p className="text-xs text-slate-600 flex-1">Cambia tu idioma en cualquier momento desde el menú de ayuda</p>
+                    <X className="w-4 h-4 text-slate-400 mt-0.5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {exp.documentacion_oficial && (
+            <div className="mt-8 pt-8 border-t border-slate-100">
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-4">Documentación Oficial</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {exp.documentacion_oficial.map((doc: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:shadow-sm transition-all cursor-pointer group">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{doc.nombre}</p>
+                        <p className="text-xs text-slate-400">{doc.tamaño} • {doc.año}</p>
+                      </div>
+                    </div>
+                    <button className="text-slate-400 hover:text-slate-600 p-2">
+                      <DownloadIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
