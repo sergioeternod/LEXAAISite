@@ -869,28 +869,32 @@ export default function App() {
                     <div 
                       key={voto.id} 
                       onClick={() => setSelectedVote(voto)}
-                      className="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-pointer group"
+                      className="bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-morena-200 transition-colors">{voto.expediente}</span>
-                        <span className="text-xs text-slate-400">{voto.fecha}</span>
+                      <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r transition-all ${
+                        estado === 'Aprobada' ? 'from-emerald-200 to-emerald-100 group-hover:from-emerald-500 group-hover:to-emerald-400' : 
+                        estado === 'Rechazada' ? 'from-red-200 to-red-100 group-hover:from-red-500 group-hover:to-red-400' : 
+                        'from-amber-200 to-amber-100 group-hover:from-amber-500 group-hover:to-amber-400'
+                      }`}></div>
+                      <div className="flex justify-between items-start mb-3 mt-1">
+                        <span className="text-xs font-mono font-bold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors">{voto.expediente}</span>
+                        <span className="text-xs font-medium text-slate-400">{voto.fecha}</span>
                       </div>
-                      <p className="text-sm font-medium text-slate-800 mb-3 line-clamp-2 group-hover:text-morena-600 transition-colors">{voto.titulo}</p>
+                      <p className="text-sm font-bold text-slate-900 mb-4 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1">{voto.titulo}</p>
                       
                       {estado !== 'En Debate' && (
-                        <div className="flex items-center space-x-1 text-xs">
-                          <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden flex">
-                            <div style={{ width: `${(voto.votos_favor / voto.total_votos) * 100}%` }} className="bg-emerald-500 h-full" />
-                            <div style={{ width: `${(voto.votos_contra / voto.total_votos) * 100}%` }} className="bg-red-500 h-full" />
-                            <div style={{ width: `${(voto.abstenciones / voto.total_votos) * 100}%` }} className="bg-slate-400 h-full" />
+                        <div className="mt-auto pt-4 border-t border-slate-100">
+                          <div className="flex items-center space-x-1 text-xs mb-2">
+                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                              <div style={{ width: `${(voto.votos_favor / voto.total_votos) * 100}%` }} className="bg-emerald-500 h-full" />
+                              <div style={{ width: `${(voto.votos_contra / voto.total_votos) * 100}%` }} className="bg-red-500 h-full" />
+                              <div style={{ width: `${(voto.abstenciones / voto.total_votos) * 100}%` }} className="bg-slate-400 h-full" />
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {estado !== 'En Debate' && (
-                        <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                          <span className="text-emerald-600 font-medium">{voto.votos_favor} Favor</span>
-                          <span className="text-red-600 font-medium">{voto.votos_contra} Contra</span>
+                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                            <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{voto.votos_favor} Favor</span>
+                            <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded">{voto.votos_contra} Contra</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -900,6 +904,40 @@ export default function App() {
                       No hay votaciones recientes en este estado
                     </div>
                   )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Canal del Congreso - Videos Destacados */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <Youtube className="w-5 h-5 mr-2 text-red-600" />
+            Canal del Congreso - Videos Destacados
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {expedientes.slice(0, 3).map((exp) => (
+            <div 
+              key={exp.id} 
+              onClick={() => setSelectedExpediente(exp)}
+              className="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-pointer group flex flex-col"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
+                <span className="text-xs text-slate-400 flex items-center"><Eye className="w-3 h-3 mr-1"/> {exp.video_youtube.vistas}</span>
+              </div>
+              <p className="text-sm font-medium text-slate-800 mb-3 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1">{exp.video_youtube.titulo}</p>
+              
+              <div className="aspect-video bg-black rounded-lg overflow-hidden relative mt-auto border border-slate-200">
+                <img src={`https://img.youtube.com/vi/${exp.video_youtube.id}/mqdefault.jpg`} alt={exp.video_youtube.titulo} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-10 h-10 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <div className="w-0 h-0 border-t-4 border-t-transparent border-l-6 border-l-white border-b-4 border-b-transparent ml-1"></div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -918,29 +956,28 @@ export default function App() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {resumenesSemanales.map((resumen, idx) => (
-            <div key={idx} className={`relative p-6 rounded-2xl ${idx === 0 ? 'bg-morena-50/50 border border-morena-100' : 'bg-slate-50 border border-slate-100'}`}>
-              <div className="absolute top-0 right-0 p-4">
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${idx === 0 ? 'bg-morena-100 text-morena-700' : 'bg-slate-200 text-slate-600'}`}>
+            <div 
+              key={idx} 
+              className="bg-slate-50 p-6 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-default group flex flex-col relative"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A] transition-colors">{resumen.periodo}</span>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${idx === 0 ? 'bg-red-50 text-[#8B1A1A]' : 'bg-slate-200 text-slate-600'}`}>
                   {idx === 0 ? 'En Curso' : 'Pasada'}
                 </span>
               </div>
               
-              <h4 className="text-base font-semibold text-slate-900 mb-1">{resumen.periodo}</h4>
-              <div className="h-1 w-12 bg-morena-500 rounded-full mb-4 opacity-20"></div>
+              <p className="text-sm font-medium text-slate-800 mb-4 line-clamp-3 group-hover:text-[#8B1A1A] transition-colors">{resumen.resumen}</p>
               
-              <p className="text-slate-700 text-sm leading-relaxed mb-6">
-                {resumen.resumen}
-              </p>
-              
-              <div>
-                <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Puntos Clave</h5>
-                <ul className="space-y-2">
+              <div className="mt-auto pt-4 border-t border-slate-200/60">
+                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Puntos Clave</h5>
+                <ul className="space-y-1.5">
                   {resumen.puntos_clave.map((punto, i) => (
-                    <li key={i} className="flex items-start space-x-2 text-sm text-slate-600">
-                      <div className="w-1.5 h-1.5 rounded-full bg-morena-400 mt-1.5 flex-shrink-0" />
-                      <span>{punto}</span>
+                    <li key={i} className="flex items-start space-x-2 text-xs text-slate-600">
+                      <div className="w-1 h-1 rounded-full bg-[#8B1A1A] mt-1.5 flex-shrink-0" />
+                      <span className="line-clamp-1">{punto}</span>
                     </li>
                   ))}
                 </ul>
@@ -950,50 +987,34 @@ export default function App() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+        <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold text-slate-900">Últimos Expedientes Actualizados</h3>
-          <button onClick={() => setCurrentView('explorar')} className="text-sm font-medium text-morena-600 hover:text-morena-700">Ver todos</button>
+          <button onClick={() => setCurrentView('explorar')} className="text-sm font-medium text-[#8B1A1A] hover:text-red-800">Ver todos</button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <th className="p-4 font-medium">Folio</th>
-                <th className="p-4 font-medium">Título</th>
-                <th className="p-4 font-medium">Tema</th>
-                <th className="p-4 font-medium">Estado</th>
-                <th className="p-4 font-medium text-right">Riesgo</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {expedientes.slice(0, 3).map((exp) => (
-                <tr key={exp.id} onClick={() => setSelectedExpediente(exp)} className="hover:bg-slate-50 cursor-pointer transition-colors group">
-                  <td className="p-4 font-mono text-sm font-medium text-slate-900">{exp.clave_oficial}</td>
-                  <td className="p-4 text-sm text-slate-700 font-medium group-hover:text-morena-600 transition-colors line-clamp-1 max-w-md">{exp.titulo}</td>
-                  <td className="p-4">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-morena-50 text-morena-700">
-                      {exp.tema_principal}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-                      {exp.estado_actual}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className={`inline-flex items-center justify-center w-7 h-7 rounded text-xs font-bold ${
-                      exp.impacto_score >= 80 ? 'bg-red-50 text-red-700' :
-                      exp.impacto_score >= 60 ? 'bg-amber-50 text-amber-700' :
-                      'bg-emerald-50 text-emerald-700'
-                    }`}>
-                      {exp.impacto_score}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {expedientes.slice(0, 3).map((exp) => (
+            <div 
+              key={exp.id} 
+              onClick={() => setSelectedExpediente(exp)}
+              className="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-pointer group flex flex-col"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
+                <span className="text-xs text-slate-400">{exp.fecha_inicio}</span>
+              </div>
+              <p className="text-sm font-medium text-slate-800 mb-3 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1">{exp.titulo}</p>
+              
+              <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-200/60">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-50 text-[#8B1A1A]">
+                  {exp.tema_principal}
+                </span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">
+                  {exp.estado_actual}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -1165,57 +1186,45 @@ export default function App() {
         )}
 
         {exploreMode === 'expedientes' ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-100 bg-slate-50/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <div className="col-span-2">Folio / Fecha</div>
-              <div className="col-span-5">Título y Resumen</div>
-              <div className="col-span-2">Tema / Sector</div>
-              <div className="col-span-2">Estado</div>
-              <div className="col-span-1 text-right">Riesgo</div>
-            </div>
-            
-            <div className="divide-y divide-slate-100">
-              {filteredExpedientes.map(exp => (
-                <div 
-                  key={exp.id} 
-                  onClick={() => setSelectedExpediente(exp)}
-                  className="grid grid-cols-12 gap-4 p-4 hover:bg-slate-50 cursor-pointer transition-colors items-center group"
-                >
-                  <div className="col-span-2">
-                    <div className="font-mono text-sm font-medium text-slate-900">{exp.clave_oficial}</div>
-                    <div className="text-xs text-slate-500 mt-1">{exp.fecha_inicio}</div>
-                  </div>
-                  <div className="col-span-5 pr-4">
-                    <div className="font-medium text-slate-900 line-clamp-1 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</div>
-                    <div className="text-sm text-slate-500 mt-1 line-clamp-1">{exp.descripcion}</div>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-[#8B1A1A]">
-                      {exp.tema_principal}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredExpedientes.map(exp => (
+              <div 
+                key={exp.id} 
+                onClick={() => setSelectedExpediente(exp)}
+                className="bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-200 to-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all"></div>
+                <div className="flex justify-between items-start mb-3 mt-1">
+                  <span className="text-xs font-mono font-bold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
+                  <span className="text-xs font-medium text-slate-400">{exp.fecha_inicio}</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</h3>
+                <p className="text-sm text-slate-500 mb-4 line-clamp-2 flex-1">{exp.descripcion}</p>
+                
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-red-50 text-[#8B1A1A]">
+                    {exp.tema_principal}
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">
                       {exp.estado_actual}
                     </span>
-                  </div>
-                  <div className="col-span-1 text-right">
-                    <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ${
-                      exp.impacto_score >= 80 ? 'bg-red-50 text-red-700' :
-                      exp.impacto_score >= 60 ? 'bg-amber-50 text-amber-700' :
-                      'bg-emerald-50 text-emerald-700'
+                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold ${
+                      exp.impacto_score >= 80 ? 'bg-red-100 text-red-700' :
+                      exp.impacto_score >= 60 ? 'bg-amber-100 text-amber-700' :
+                      'bg-emerald-100 text-emerald-700'
                     }`}>
                       {exp.impacto_score}
                     </div>
                   </div>
                 </div>
-              ))}
-              {filteredExpedientes.length === 0 && (
-                <div className="p-8 text-center text-slate-500">
-                  No se encontraron expedientes que coincidan con la búsqueda.
-                </div>
-              )}
-            </div>
+              </div>
+            ))}
+            {filteredExpedientes.length === 0 && (
+              <div className="col-span-full p-12 text-center bg-white rounded-2xl border border-slate-100">
+                <p className="text-slate-500 font-medium">No se encontraron expedientes que coincidan con la búsqueda.</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1223,10 +1232,11 @@ export default function App() {
               <div 
                 key={leg.id}
                 onClick={() => setSelectedLegislator(leg)}
-                className="bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
+                className="bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
               >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-200 to-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all"></div>
                 <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: leg.color }}></div>
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-4 mt-1">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-500" style={{ color: leg.color, backgroundColor: `${leg.color}15` }}>
                       {leg.avatar}
@@ -1238,19 +1248,19 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Asistencia</div>
+                <div className="grid grid-cols-2 gap-4 mb-4 flex-1">
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Asistencia</div>
                     <div className="text-lg font-bold text-slate-900">{leg.asistencia}%</div>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Lealtad</div>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Lealtad</div>
                     <div className="text-lg font-bold text-slate-900">{leg.lealtad}%</div>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-500">
-                  <span className="font-semibold">Comisiones:</span> {leg.comisiones.join(", ")}
+                <div className="text-xs text-slate-500 mt-auto pt-4 border-t border-slate-100">
+                  <span className="font-bold text-slate-700">Comisiones:</span> {leg.comisiones.join(", ")}
                 </div>
               </div>
             ))}
@@ -1574,14 +1584,15 @@ export default function App() {
                     const exp = expedientes.find(e => e.id === id);
                     if (!exp) return null;
                     return (
-                      <div key={id} className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
-                        <div className="flex justify-between items-start">
-                          <span className="font-mono text-xs font-medium text-slate-500">{exp.clave_oficial}</span>
-                          <button onClick={(e) => { e.stopPropagation(); toggleSaveExpediente(id); }} className="text-slate-400 hover:text-red-500">
-                            <X className="w-4 h-4" />
+                      <div key={id} className="p-4 rounded-xl border border-slate-100 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-[#8B1A1A] transition-colors"></div>
+                        <div className="flex justify-between items-start pl-2">
+                          <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
+                          <button onClick={(e) => { e.stopPropagation(); toggleSaveExpediente(id); }} className="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 hover:bg-red-50">
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <p className="text-sm font-medium text-slate-900 mt-1 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</p>
+                        <p className="text-sm font-bold text-slate-800 mt-2 pl-2 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</p>
                       </div>
                     );
                   })}
@@ -1603,14 +1614,15 @@ export default function App() {
                     const exp = expedientes.find(e => e.id === id);
                     if (!exp) return null;
                     return (
-                      <div key={id} className="p-3 rounded-xl border border-amber-100 bg-amber-50/30 hover:bg-amber-50 transition-colors cursor-pointer group" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
-                        <div className="flex justify-between items-start">
-                          <span className="font-mono text-xs font-medium text-amber-700">{exp.clave_oficial}</span>
-                          <button onClick={(e) => { e.stopPropagation(); toggleSubscribeExpediente(id); }} className="text-amber-400 hover:text-red-500">
-                            <X className="w-4 h-4" />
+                      <div key={id} className="p-4 rounded-xl border border-amber-100 bg-amber-50/30 hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-amber-200 group-hover:bg-amber-500 transition-colors"></div>
+                        <div className="flex justify-between items-start pl-2">
+                          <span className="font-mono text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 group-hover:border-amber-400 transition-colors">{exp.clave_oficial}</span>
+                          <button onClick={(e) => { e.stopPropagation(); toggleSubscribeExpediente(id); }} className="text-amber-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 hover:bg-red-50">
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <p className="text-sm font-medium text-slate-900 mt-1 line-clamp-2 group-hover:text-amber-700 transition-colors">{exp.titulo}</p>
+                        <p className="text-sm font-bold text-slate-800 mt-2 pl-2 line-clamp-2 group-hover:text-amber-700 transition-colors">{exp.titulo}</p>
                       </div>
                     );
                   })}
@@ -1632,18 +1644,19 @@ export default function App() {
                     const leg = legisladores.find(l => l.id === id);
                     if (!leg) return null;
                     return (
-                      <div key={id} className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between group" onClick={() => { setSelectedLegislator(leg); setCurrentView('explorar'); setExploreMode('legisladores'); }}>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
+                      <div key={id} className="p-4 rounded-xl border border-slate-100 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-between group relative overflow-hidden" onClick={() => { setSelectedLegislator(leg); setCurrentView('explorar'); setExploreMode('legisladores'); }}>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-[#8B1A1A] transition-colors"></div>
+                        <div className="flex items-center space-x-3 pl-2">
+                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-slate-50 shadow-sm">
                             <img src={leg.avatar} alt={leg.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{leg.nombre}</p>
-                            <p className="text-xs text-slate-500">{leg.partido} • {leg.estado}</p>
+                            <p className="text-sm font-bold text-slate-800 group-hover:text-[#8B1A1A] transition-colors">{leg.nombre}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{leg.partido} • {leg.estado}</p>
                           </div>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); toggleSaveLegislador(id); }} className="text-slate-400 hover:text-red-500 p-1">
-                          <X className="w-4 h-4" />
+                        <button onClick={(e) => { e.stopPropagation(); toggleSaveLegislador(id); }} className="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 hover:bg-red-50">
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     );
@@ -1747,43 +1760,69 @@ export default function App() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="divide-y divide-slate-100">
-              {alertas.map(alerta => (
-                <div key={alerta.id} className={`p-5 flex gap-4 ${alerta.leida ? 'bg-white' : 'bg-red-50/30'}`}>
-                  <div className="flex-shrink-0 mt-1">
-                    {alerta.severidad === 'alta' ? (
-                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <ShieldAlert className="w-5 h-5 text-red-600" />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-blue-600" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-slate-900">{alerta.tipo}</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="font-mono text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{alerta.expediente}</span>
-                      </div>
-                      <span className="text-xs text-slate-500">{new Date(alerta.fecha).toLocaleDateString()}</span>
+        <div className="lg:col-span-2 space-y-4">
+          {alertas.map(alerta => {
+            const exp = expedientes.find(e => e.clave_oficial === alerta.expediente);
+            
+            return (
+            <div 
+              key={alerta.id} 
+              onClick={() => {
+                if (exp) {
+                  setSelectedExpediente(exp);
+                  setCurrentView('explorar');
+                }
+              }}
+              className={`p-5 rounded-2xl border transition-all cursor-pointer group relative overflow-hidden ${alerta.leida ? 'bg-white border-slate-100 hover:shadow-md hover:-translate-y-0.5' : 'bg-red-50/30 border-red-100 shadow-sm hover:shadow-md hover:-translate-y-0.5'}`}
+            >
+              <div className={`absolute top-0 left-0 w-1 h-full transition-colors ${alerta.leida ? 'bg-slate-200 group-hover:bg-[#8B1A1A]' : 'bg-red-400 group-hover:bg-red-600'}`}></div>
+              <div className="flex gap-4 pl-2">
+                <div className="flex-shrink-0 mt-1">
+                  {alerta.severidad === 'alta' ? (
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center border border-red-200 shadow-sm">
+                      <ShieldAlert className="w-5 h-5 text-red-600" />
                     </div>
-                    <p className="text-slate-600 mt-1 text-sm">{alerta.mensaje}</p>
-                    <div className="mt-3">
-                      <button className="text-sm font-medium text-[#8B1A1A] hover:text-[#7A1315]">Ver expediente</button>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200 shadow-sm">
+                      <Bell className="w-5 h-5 text-blue-600" />
                     </div>
-                  </div>
-                  {!alerta.leida && (
-                    <div className="w-2 h-2 rounded-full bg-[#8B1A1A] mt-2"></div>
                   )}
                 </div>
-              ))}
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{alerta.tipo}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{alerta.expediente}</span>
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">{new Date(alerta.fecha).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-slate-600 text-sm mb-3">{alerta.mensaje}</p>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+                    {exp ? (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedExpediente(exp);
+                          setCurrentView('explorar');
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-wider text-[#8B1A1A] hover:text-[#7A1315] transition-colors"
+                      >
+                        Ver expediente
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sin expediente asociado</span>
+                    )}
+                    {!alerta.leida && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700">
+                        Nueva
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )})}
         </div>
 
         <div className="space-y-6">
