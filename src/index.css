@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
@@ -17,9 +17,28 @@
   --color-morena-800: #701418;
   --color-morena-900: #601417;
   --color-morena-950: #360608;
+
+  --color-paper: #f9fafb;
+  --color-ink: #0f172a;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.data-value {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
 }
 
 @media print {
+  @page {
+    size: landscape;
+  }
   body {
     background-color: white !important;
   }

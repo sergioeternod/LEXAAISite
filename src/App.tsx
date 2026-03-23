@@ -41,6 +41,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+import { auth, db } from './firebase';
+import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const VoteChart = ({ favor, contra, abstencion }: { favor: number, contra: number, abstencion: number }) => {
   const total = favor + contra + abstencion;
@@ -126,9 +129,6 @@ const MarkdownComponents = {
     return <code className={className} {...props}>{children}</code>
   }
 };
-import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const COLORS = ['#B3282D', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -369,34 +369,23 @@ export default function App() {
     window.print();
   };
 
-  const handleSearch = (query?: string) => {
-    const q = query || searchQuery;
+  const handleSearch = (query?: string | any) => {
+    const q = typeof query === 'string' ? query : searchQuery;
     if (!q.trim()) return;
     
-    if (query) {
+    if (typeof query === 'string') {
       setSearchQuery(query);
     }
     
     trackHistory('search', q);
     setCurrentView('explorar');
 
-    // Detect if the query is a question or natural language prompt
-    const lowerQuery = q.toLowerCase().trim();
-    const isQuestion = lowerQuery.includes('?') || lowerQuery.includes('¿');
-    const questionWords = ['qué', 'que', 'cómo', 'como', 'cuándo', 'cuando', 'quién', 'quien', 'por qué', 'por que', 'cuál', 'cual', 'cuánto', 'cuanto', 'analiza', 'resume', 'dime', 'explica', 'opinión', 'opinion'];
-    const startsWithQuestionWord = questionWords.some(word => lowerQuery.startsWith(word));
-    const isLongPhrase = lowerQuery.split(' ').length > 4;
-
-    if (isQuestion || startsWithQuestionWord || isLongPhrase) {
-      handleAiSearch(q);
-    } else {
-      setIsAiSearchActive(false);
-      setAiSearchResults(null);
-    }
+    // Siempre ejecutar búsqueda por IA directamente
+    handleAiSearch(q);
   };
 
-  const handleAiSearch = async (query?: string) => {
-    const q = query || searchQuery;
+  const handleAiSearch = async (query?: string | any) => {
+    const q = typeof query === 'string' ? query : searchQuery;
     if (!q.trim()) return;
     setIsAiSearchActive(true);
     setIsAiSearchLoading(true);
@@ -556,39 +545,38 @@ export default function App() {
   };
 
   const renderTopNav = () => (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 relative">
+    <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
       <button 
         onClick={() => {
-          setActiveTab('dashboard');
+          setCurrentView('dashboard');
           setSelectedExpediente(null);
-          setSelectedAlert(null);
           setSelectedVote(null);
         }}
         className="flex items-center space-x-1 transform scale-y-[0.8] scale-x-[1.1] origin-left w-32 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
       >
-        <span className="text-2xl font-black text-[#333C45] tracking-tighter">LEXA</span>
+        <span className="text-2xl font-black text-slate-900 tracking-tighter">LEXA</span>
         <span className="text-2xl font-black bg-gradient-to-r from-[#FF8B53] to-[#EB577A] text-transparent bg-clip-text tracking-tighter">AI</span>
       </button>
       
-      <nav className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-8">
+      <nav className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-2 bg-slate-100/50 p-1 rounded-full border border-slate-200  shadow-sm">
         <button 
           onClick={() => { setCurrentView('dashboard'); setSelectedExpediente(null); }}
-          className={`font-medium text-sm transition-colors ${currentView === 'dashboard' ? 'text-black' : 'text-slate-500 hover:text-black'}`}
+          className={`px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ${currentView === 'dashboard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
         >
           Panel
         </button>
         <button 
           onClick={() => { setCurrentView('explorar'); setSelectedExpediente(null); }}
-          className={`font-medium text-sm transition-colors ${currentView === 'explorar' ? 'text-black' : 'text-slate-500 hover:text-black'}`}
+          className={`px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ${currentView === 'explorar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
         >
           Historial
         </button>
         <button 
           onClick={() => { setCurrentView('alertas'); setSelectedExpediente(null); }}
-          className={`font-medium text-sm transition-colors flex items-center space-x-1.5 ${currentView === 'alertas' ? 'text-black' : 'text-slate-500 hover:text-black'}`}
+          className={`px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${currentView === 'alertas' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
         >
           <span>Alertas</span>
-          <span className="flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#8B1A1A] rounded-full">
+          <span className="flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#8B1A1A] rounded-full shadow-sm">
             2
           </span>
         </button>
@@ -614,7 +602,7 @@ export default function App() {
             <div className="h-9 w-9 rounded-full overflow-hidden border border-slate-200 cursor-pointer">
               <img src={user.photoURL || "https://picsum.photos/seed/user/100/100"} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
-            <div className="absolute right-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+            <div className="absolute right-0 top-10 mt-2 w-48 bg-white rounded-xl shadow-sm border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
               <div className="p-3 border-b border-slate-100">
                 <p className="text-sm font-medium text-slate-900 truncate">{user.displayName || 'Usuario'}</p>
                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
@@ -639,111 +627,99 @@ export default function App() {
   );
 
   const renderDashboard = () => (
-    <div className="space-y-12 max-w-5xl mx-auto pt-8 pb-16">
+    <div className="space-y-12 max-w-5xl mx-auto pt-8 pb-16 animate-in fade-in duration-500">
       {/* Hero Section */}
-      <div className="text-center space-y-8">
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight max-w-3xl mx-auto leading-tight">
-          Explora el historial legislativo con inteligencia artificial
+      <div className="text-center space-y-8 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-100/40 rounded-full blur-3xl -z-10"></div>
+        <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
+          Explora el historial legislativo con <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B1A1A] to-[#D9131C]">inteligencia artificial</span>
         </h1>
         
-        <div className="max-w-2xl mx-auto relative">
-          <div className="relative flex items-center w-full h-14 rounded-full bg-white shadow-lg border border-slate-100 overflow-hidden pl-6 pr-2">
-            <Search className="w-5 h-5 text-slate-400" />
+        <div className="max-w-2xl mx-auto relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#8B1A1A]/20 to-[#D9131C]/20 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
+          <div className="relative flex items-center w-full h-16 rounded-full bg-white border border-slate-200 shadow-sm overflow-hidden pl-6 pr-2">
+            <Search className="w-6 h-6 text-slate-400" />
             <input 
               type="text" 
               placeholder="Busca por tema, legislador o palabra clave..."
-              className="w-full h-full bg-transparent border-none focus:outline-none focus:ring-0 px-4 text-slate-700 placeholder-slate-400"
+              className="w-full h-full bg-transparent border-none focus:outline-none focus:ring-0 px-4 text-slate-700 placeholder-slate-400 text-lg"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <button onClick={handleSearch} className="h-10 px-6 bg-[#8B1A1A] hover:bg-[#701515] text-white font-medium rounded-full transition-colors whitespace-nowrap">
+            <button onClick={handleSearch} className="h-12 px-8 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-full transition-all shadow-sm hover:shadow-sm whitespace-nowrap">
               Consultar
-            </button>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-2 mt-6">
-            <button onClick={() => { trackInterest('Ley del ISSEMyM'); handleSearch('Ley del ISSEMyM'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
-              #LeyDelISSEMyM
-            </button>
-            <button onClick={() => { trackInterest('Paquete Fiscal 2026'); handleSearch('Paquete Fiscal 2026'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
-              #PaqueteFiscal2026
-            </button>
-            <button onClick={() => { trackInterest('Gestión del Agua'); handleSearch('Gestión del Agua'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
-              #GestiónDelAgua
-            </button>
-            <button onClick={() => { trackInterest('Movilidad Edomex'); handleSearch('Movilidad Edomex'); }} className="px-4 py-1.5 rounded-full border border-slate-200 text-sm text-slate-600 hover:border-[#8B1A1A] hover:text-[#8B1A1A] transition-colors bg-white">
-              #MovilidadEdomex
             </button>
           </div>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl flex flex-col justify-between group  transition-all duration-300">
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Última votación relevante</h3>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <FileText className="w-5 h-5 text-slate-400" />
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Última votación relevante</h3>
+              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                <FileText className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-sm text-slate-900 font-medium mb-4 line-clamp-2">
+            <p className="text-lg font-bold text-slate-900 mb-4 line-clamp-2 leading-tight">
               Reforma al Artículo 4 Constitucional en materia de bienestar
             </p>
           </div>
-          <div className="flex items-end justify-between">
-            <div className="text-3xl font-bold text-emerald-600">68%</div>
-            <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">A FAVOR</div>
+          <div className="mt-4 pt-6 border-t border-slate-100/50 flex items-end justify-between">
+            <div className="text-4xl font-mono font-light text-emerald-600 tracking-tighter">68%</div>
+            <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">A FAVOR</div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl flex flex-col justify-between group  transition-all duration-300">
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Aprobada</h3>
-              <div className="p-2 bg-slate-50 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aprobada</h3>
+              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-lg font-bold text-slate-900 mb-4 line-clamp-2 leading-tight">
               Iniciativa con proyecto de decreto por el que se expide la Ley General de Aguas
             </p>
           </div>
-          <div className="flex items-end justify-between">
-            <div className="text-3xl font-bold text-slate-900">82%</div>
-            <div className="text-xs font-medium text-slate-500">Consenso</div>
+          <div className="mt-4 pt-6 border-t border-slate-100/50 flex items-end justify-between">
+            <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">82%</div>
+            <div className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">CONSENSO</div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Tendencias</h3>
-            <div className="p-2 bg-slate-50 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-[#8B1A1A]" />
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl flex flex-col justify-between group  transition-all duration-300">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tendencias</h3>
+            <div className="p-2.5 bg-red-50 text-[#8B1A1A] rounded-xl">
+              <TrendingUp className="w-5 h-5" />
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-slate-400 w-4">1</span>
-                <span className="text-sm font-medium text-slate-700">Energía Renovable</span>
+          <div className="space-y-5 mt-2">
+            <div className="flex items-center justify-between group/item">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-mono font-bold text-slate-300">01</span>
+                <span className="text-base font-medium text-slate-700 group-hover/item:text-[#8B1A1A] transition-colors">Energía Renovable</span>
               </div>
-              <span className="text-xs font-bold text-emerald-600">+24%</span>
+              <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+24%</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-slate-400 w-4">2</span>
-                <span className="text-sm font-medium text-slate-700">Ciberseguridad</span>
+            <div className="flex items-center justify-between group/item">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-mono font-bold text-slate-300">02</span>
+                <span className="text-base font-medium text-slate-700 group-hover/item:text-[#8B1A1A] transition-colors">Ciberseguridad</span>
               </div>
-              <span className="text-xs font-bold text-emerald-600">+18%</span>
+              <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+18%</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-slate-400 w-4">3</span>
-                <span className="text-sm font-medium text-slate-700">Movilidad Urbana</span>
+            <div className="flex items-center justify-between group/item">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-mono font-bold text-slate-300">03</span>
+                <span className="text-base font-medium text-slate-700 group-hover/item:text-[#8B1A1A] transition-colors">Movilidad Urbana</span>
               </div>
-              <span className="text-xs font-bold text-emerald-600">+12%</span>
+              <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+12%</span>
             </div>
           </div>
         </div>
@@ -751,41 +727,44 @@ export default function App() {
 
       {/* Tu Actividad Reciente (Solo usuarios registrados) */}
       {user && userHistory.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-slate-900 flex items-center">
-              <Clock className="w-5 h-5 mr-2 text-[#8B1A1A]" />
+        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-200/40 to-transparent rounded-bl-full -z-10"></div>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold text-slate-900 flex items-center">
+              <Clock className="w-6 h-6 mr-3 text-[#8B1A1A]" />
               Tu Actividad Reciente
             </h3>
             <button 
               onClick={() => setCurrentView('explorar')}
-              className="text-sm font-medium text-[#8B1A1A] hover:text-[#701515] transition-colors"
+              className="text-sm font-bold text-[#8B1A1A] hover:text-[#701515] transition-colors uppercase tracking-wider flex items-center"
             >
               Ver todo el historial
+              <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {userHistory.slice().reverse().slice(0, 4).map((item, idx) => (
               <div 
                 key={idx} 
                 onClick={() => {
                   handleSearch(item.query);
                 }}
-                className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md hover:border-[#8B1A1A]/30 transition-all cursor-pointer group flex flex-col justify-between h-32"
+                className="p-6 rounded-2xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col justify-between h-40 relative overflow-hidden"
               >
-                <div className="flex items-start justify-between">
-                  <div className={`p-2 rounded-lg ${item.type === 'search' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                    {item.type === 'search' ? <Search className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
+                <div className="flex items-start justify-between mt-1">
+                  <div className={`p-3 rounded-xl shadow-sm border ${item.type === 'search' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'}`}>
+                    {item.type === 'search' ? <Search className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                   </div>
-                  <span className="text-xs font-medium text-slate-400">
+                  <span className="text-xs font-mono font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                     {new Date(item.timestamp).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
                   </span>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                <div className="mt-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
                     {item.type === 'search' ? 'Búsqueda' : 'Expediente'}
                   </p>
-                  <p className="text-sm font-medium text-slate-900 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">
+                  <p className="text-sm font-bold text-slate-800 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors leading-snug">
                     {item.query}
                   </p>
                 </div>
@@ -795,9 +774,9 @@ export default function App() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900 mb-6">Actividad Legislativa (Últimos 4 meses)</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl">
+          <h3 className="text-xl font-bold text-slate-900 mb-8">Actividad Legislativa <span className="text-sm font-sans font-normal text-slate-500 ml-2">(Últimos 4 meses)</span></h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={kpis.actividadMensual} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
@@ -813,8 +792,8 @@ export default function App() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900 mb-6">Distribución por Sector</h3>
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl">
+          <h3 className="text-xl font-bold text-slate-900 mb-8">Distribución por Sector</h3>
           <div className="h-72 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
@@ -840,63 +819,75 @@ export default function App() {
       </div>
 
       {/* Votaciones Recientes */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-6">Votaciones Recientes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center">
+            <Activity className="w-6 h-6 mr-3 text-[#8B1A1A]" />
+            Votaciones Recientes
+          </h3>
+          <button 
+            onClick={() => setCurrentView('explorar')}
+            className="text-sm font-bold text-[#8B1A1A] hover:text-[#701515] transition-colors uppercase tracking-wider flex items-center"
+          >
+            Ver todas
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {['En Debate', 'Aprobada', 'Rechazada'].map((estado) => (
-            <div key={estado} className="space-y-4">
-              <div className={`flex items-center space-x-2 pb-2 border-b-2 ${
-                estado === 'Aprobada' ? 'border-emerald-500' : 
-                estado === 'Rechazada' ? 'border-red-500' : 
-                'border-amber-500'
+            <div key={estado} className="space-y-5">
+              <div className={`flex items-center space-x-3 pb-3 border-b-2 ${
+                estado === 'Aprobada' ? 'border-emerald-500/30' : 
+                estado === 'Rechazada' ? 'border-red-500/30' : 
+                'border-amber-500/30'
               }`}>
-                <div className={`w-3 h-3 rounded-full ${
-                  estado === 'Aprobada' ? 'bg-emerald-500' : 
-                  estado === 'Rechazada' ? 'bg-red-500' : 
-                  'bg-amber-500'
+                <div className={`w-3 h-3 rounded-full shadow-sm ${
+                  estado === 'Aprobada' ? 'bg-emerald-500 shadow-emerald-500/50' : 
+                  estado === 'Rechazada' ? 'bg-red-500 shadow-red-500/50' : 
+                  'bg-amber-500 shadow-amber-500/50'
                 }`} />
-                <h4 className="font-semibold text-slate-700">{estado}</h4>
+                <h4 className="font-bold text-slate-800 tracking-wide">{estado}</h4>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {votaciones
                   .filter(v => v.estado === estado)
                   .map(voto => (
                     <div 
                       key={voto.id} 
                       onClick={() => setSelectedVote(voto)}
-                      className="bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
+                      className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl hover:shadow-sm  transition-all cursor-pointer group flex flex-col relative overflow-hidden"
                     >
-                      <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r transition-all ${
-                        estado === 'Aprobada' ? 'from-emerald-200 to-emerald-100 group-hover:from-emerald-500 group-hover:to-emerald-400' : 
-                        estado === 'Rechazada' ? 'from-red-200 to-red-100 group-hover:from-red-500 group-hover:to-red-400' : 
-                        'from-amber-200 to-amber-100 group-hover:from-amber-500 group-hover:to-amber-400'
+                      <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r transition-all ${
+                        estado === 'Aprobada' ? 'from-emerald-300 to-emerald-200 group-hover:from-emerald-500 group-hover:to-emerald-400' : 
+                        estado === 'Rechazada' ? 'from-red-300 to-red-200 group-hover:from-red-500 group-hover:to-red-400' : 
+                        'from-amber-300 to-amber-200 group-hover:from-amber-500 group-hover:to-amber-400'
                       }`}></div>
-                      <div className="flex justify-between items-start mb-3 mt-1">
-                        <span className="text-xs font-mono font-bold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors">{voto.expediente}</span>
+                      <div className="flex justify-between items-start mb-4 mt-2">
+                        <span className="text-xs font-mono font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors shadow-sm">{voto.expediente}</span>
                         <span className="text-xs font-medium text-slate-400">{voto.fecha}</span>
                       </div>
-                      <p className="text-sm font-bold text-slate-900 mb-4 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1">{voto.titulo}</p>
+                      <p className="text-sm font-bold text-slate-900 mb-5 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1 leading-snug">{voto.titulo}</p>
                       
                       {estado !== 'En Debate' && (
-                        <div className="mt-auto pt-4 border-t border-slate-100">
-                          <div className="flex items-center space-x-1 text-xs mb-2">
-                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                        <div className="mt-auto pt-5 border-t border-slate-100/50">
+                          <div className="flex items-center space-x-1 text-xs mb-3">
+                            <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden flex ">
                               <div style={{ width: `${(voto.votos_favor / voto.total_votos) * 100}%` }} className="bg-emerald-500 h-full" />
                               <div style={{ width: `${(voto.votos_contra / voto.total_votos) * 100}%` }} className="bg-red-500 h-full" />
-                              <div style={{ width: `${(voto.abstenciones / voto.total_votos) * 100}%` }} className="bg-slate-400 h-full" />
+                              <div style={{ width: `${(voto.abstenciones / voto.total_votos) * 100}%` }} className="bg-slate-300 h-full" />
                             </div>
                           </div>
-                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                            <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{voto.votos_favor} Favor</span>
-                            <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded">{voto.votos_contra} Contra</span>
+                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+                            <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">{voto.votos_favor} Favor</span>
+                            <span className="text-red-700 bg-red-50 px-2.5 py-1 rounded-md border border-red-100">{voto.votos_contra} Contra</span>
                           </div>
                         </div>
                       )}
                     </div>
                   ))}
                   {votaciones.filter(v => v.estado === estado).length === 0 && (
-                    <div className="text-center py-8 text-slate-400 text-sm italic">
+                    <div className="text-center py-10 text-slate-400 text-sm italic bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                       No hay votaciones recientes en este estado
                     </div>
                   )}
@@ -907,31 +898,40 @@ export default function App() {
       </div>
 
       {/* Canal del Congreso - Videos Destacados */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-slate-900 flex items-center">
-            <Youtube className="w-5 h-5 mr-2 text-red-600" />
-            Canal del Congreso - Videos Destacados
+      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-red-100/40 to-transparent rounded-bl-full -z-10"></div>
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center">
+            <Youtube className="w-6 h-6 mr-3 text-red-600" />
+            Canal del Congreso <span className="text-sm font-sans font-normal text-slate-500 ml-2">- Videos Destacados</span>
           </h3>
+          <button 
+            onClick={() => setCurrentView('explorar')}
+            className="text-sm font-bold text-red-600 hover:text-red-800 transition-colors uppercase tracking-wider flex items-center"
+          >
+            Ver más videos
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {expedientes.slice(0, 3).map((exp) => (
             <div 
               key={exp.id} 
               onClick={() => setSelectedExpediente(exp)}
-              className="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-pointer group flex flex-col"
+              className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden bg-white"
             >
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
-                <span className="text-xs text-slate-400 flex items-center"><Eye className="w-3 h-3 mr-1"/> {exp.video_youtube.vistas}</span>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-200 to-red-100 group-hover:from-red-600 group-hover:to-red-500 transition-all duration-500"></div>
+              <div className="flex justify-between items-start mb-4 mt-1">
+                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 group-hover:border-red-600/30 group-hover:text-red-600 transition-colors shadow-sm">{exp.clave_oficial}</span>
+                <span className="text-xs font-medium text-slate-500 flex items-center bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-100"><Eye className="w-3.5 h-3.5 mr-1.5 text-slate-400"/> {exp.video_youtube.vistas}</span>
               </div>
-              <p className="text-sm font-medium text-slate-800 mb-3 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1">{exp.video_youtube.titulo}</p>
+              <p className="text-sm font-bold text-slate-800 mb-5 line-clamp-2 group-hover:text-red-600 transition-colors flex-1 leading-snug">{exp.video_youtube.titulo}</p>
               
-              <div className="aspect-video bg-black rounded-lg overflow-hidden relative mt-auto border border-slate-200">
-                <img src={`https://img.youtube.com/vi/${exp.video_youtube.id}/mqdefault.jpg`} alt={exp.video_youtube.titulo} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+              <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative mt-auto border border-slate-200  group-hover:shadow-sm transition-shadow">
+                <img src={`https://img.youtube.com/vi/${exp.video_youtube.id}/mqdefault.jpg`} alt={exp.video_youtube.titulo} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <div className="w-0 h-0 border-t-4 border-t-transparent border-l-6 border-l-white border-b-4 border-b-transparent ml-1"></div>
+                  <div className="w-14 h-14 bg-red-600/90  rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300 border border-white/20">
+                    <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
                   </div>
                 </div>
               </div>
@@ -941,39 +941,41 @@ export default function App() {
       </div>
 
       {/* Resumen Legislativo Semanal */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-morena-50 rounded-lg">
-            <Bot className="w-6 h-6 text-morena-600" />
+      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100/40 to-transparent rounded-bl-full -z-10"></div>
+        <div className="flex items-center space-x-4 mb-8">
+          <div className="p-3 bg-indigo-50 rounded-2xl shadow-sm border border-indigo-100/50">
+            <Bot className="w-7 h-7 text-indigo-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">Resumen Legislativo Semanal (IA)</h3>
-            <p className="text-sm text-slate-500">Generado automáticamente por LEXA AI</p>
+            <h3 className="text-xl font-bold text-slate-900">Resumen Legislativo Semanal (IA)</h3>
+            <p className="text-sm font-medium text-slate-500 mt-1">Generado automáticamente por LEXA AI</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {resumenesSemanales.map((resumen, idx) => (
             <div 
               key={idx} 
-              className="bg-slate-50 p-6 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-default group flex flex-col relative"
+              className="bg-white border border-slate-200 shadow-sm p-8 rounded-2xl hover:shadow-sm transition-all duration-300 cursor-default group flex flex-col relative overflow-hidden bg-white"
             >
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A] transition-colors">{resumen.periodo}</span>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${idx === 0 ? 'bg-red-50 text-[#8B1A1A]' : 'bg-slate-200 text-slate-600'}`}>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-200 to-indigo-100 group-hover:from-indigo-600 group-hover:to-indigo-500 transition-all duration-500"></div>
+              <div className="flex justify-between items-start mb-6 mt-1">
+                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 group-hover:border-indigo-600/30 group-hover:text-indigo-600 transition-colors shadow-sm">{resumen.periodo}</span>
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${idx === 0 ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                   {idx === 0 ? 'En Curso' : 'Pasada'}
                 </span>
               </div>
               
-              <p className="text-sm font-medium text-slate-800 mb-4 line-clamp-3 group-hover:text-[#8B1A1A] transition-colors">{resumen.resumen}</p>
+              <p className="text-sm text-slate-800 mb-6 line-clamp-3 group-hover:text-indigo-900 transition-colors leading-relaxed">{resumen.resumen}</p>
               
-              <div className="mt-auto pt-4 border-t border-slate-200/60">
-                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Puntos Clave</h5>
-                <ul className="space-y-1.5">
+              <div className="mt-auto pt-5 border-t border-slate-100/50">
+                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Puntos Clave</h5>
+                <ul className="space-y-2.5">
                   {resumen.puntos_clave.map((punto, i) => (
-                    <li key={i} className="flex items-start space-x-2 text-xs text-slate-600">
-                      <div className="w-1 h-1 rounded-full bg-[#8B1A1A] mt-1.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{punto}</span>
+                    <li key={i} className="flex items-start space-x-3 text-xs font-medium text-slate-600">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/70 mt-1 flex-shrink-0 shadow-sm" />
+                      <span className="line-clamp-2 leading-snug group-hover:text-slate-800 transition-colors">{punto}</span>
                     </li>
                   ))}
                 </ul>
@@ -983,29 +985,37 @@ export default function App() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-slate-900">Últimos Expedientes Actualizados</h3>
-          <button onClick={() => setCurrentView('explorar')} className="text-sm font-medium text-[#8B1A1A] hover:text-red-800">Ver todos</button>
+      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-100/40 to-transparent rounded-bl-full -z-10"></div>
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center">
+            <FileText className="w-6 h-6 mr-3 text-amber-600" />
+            Últimos Expedientes Actualizados
+          </h3>
+          <button onClick={() => setCurrentView('explorar')} className="text-sm font-bold text-amber-600 hover:text-amber-800 transition-colors uppercase tracking-wider flex items-center">
+            Ver todos
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {expedientes.slice(0, 3).map((exp) => (
             <div 
               key={exp.id} 
               onClick={() => setSelectedExpediente(exp)}
-              className="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow cursor-pointer group flex flex-col"
+              className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden bg-white"
             >
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
-                <span className="text-xs text-slate-400">{exp.fecha_inicio}</span>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-200 to-amber-100 group-hover:from-amber-500 group-hover:to-amber-400 transition-all duration-500"></div>
+              <div className="flex justify-between items-start mb-4 mt-1">
+                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 group-hover:border-amber-500/30 group-hover:text-amber-600 transition-colors shadow-sm">{exp.clave_oficial}</span>
+                <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-100">{exp.fecha_inicio}</span>
               </div>
-              <p className="text-sm font-medium text-slate-800 mb-3 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors flex-1">{exp.titulo}</p>
+              <p className="text-sm font-bold text-slate-800 mb-5 line-clamp-2 group-hover:text-amber-700 transition-colors flex-1 leading-snug">{exp.titulo}</p>
               
-              <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-200/60">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-50 text-[#8B1A1A]">
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100/50">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
                   {exp.tema_principal}
                 </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">
                   {exp.estado_actual}
                 </span>
               </div>
@@ -1059,35 +1069,35 @@ export default function App() {
     });
 
     return (
-      <div className="space-y-6 max-w-5xl mx-auto w-full">
-        <div className="flex justify-between items-end mb-8">
+      <div className="space-y-8 max-w-5xl mx-auto w-full">
+        <div className="flex justify-between items-end mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Historial Legislativo</h1>
-            <p className="text-slate-500 mt-2">Busca iniciativas, dictámenes y legisladores con inteligencia semántica.</p>
+            <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Historial Legislativo</h1>
+            <p className="text-slate-500 mt-3 text-lg">Busca iniciativas, dictámenes y legisladores con inteligencia semántica.</p>
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-lg">
+          <div className="flex bg-slate-200/50 p-1.5 rounded-xl border border-slate-200 ">
             <button 
               onClick={() => setExploreMode('expedientes')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${exploreMode === 'expedientes' ? 'bg-white text-[#8B1A1A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-5 py-2.5 text-sm font-bold uppercase tracking-widest rounded-lg transition-all ${exploreMode === 'expedientes' ? 'bg-white text-[#8B1A1A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Expedientes
             </button>
             <button 
               onClick={() => setExploreMode('legisladores')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${exploreMode === 'legisladores' ? 'bg-white text-[#8B1A1A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-5 py-2.5 text-sm font-bold uppercase tracking-widest rounded-lg transition-all ${exploreMode === 'legisladores' ? 'bg-white text-[#8B1A1A] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Legisladores
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+        <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-2xl flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 shadow-sm">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8B1A1A] w-6 h-6" />
             <input 
               type="text" 
               placeholder={exploreMode === 'expedientes' ? "Buscar por tema, palabra clave o folio..." : "Buscar por nombre, partido o estado..."}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] transition-all shadow-sm"
+              className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/30 focus:border-[#8B1A1A] transition-all  text-lg placeholder:text-slate-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -1098,7 +1108,7 @@ export default function App() {
               <select 
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm"
+                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/30 focus:border-[#8B1A1A] shadow-sm cursor-pointer"
               >
                 <option value="Todos">Estado (Todos)</option>
                 <option value="En Comisiones">En Comisiones</option>
@@ -1108,7 +1118,7 @@ export default function App() {
               <select 
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm"
+                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/30 focus:border-[#8B1A1A] shadow-sm cursor-pointer"
               >
                 <option value="Todos">Fecha (Todas)</option>
                 <option value="Último mes">Último mes</option>
@@ -1120,7 +1130,7 @@ export default function App() {
               <select 
                 value={filterParty}
                 onChange={(e) => setFilterParty(e.target.value)}
-                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm"
+                className="bg-white border border-slate-200 text-slate-700 rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/30 focus:border-[#8B1A1A] shadow-sm cursor-pointer"
               >
                 <option value="Todos">Partido (Todos)</option>
                 <option value="MORENA">MORENA</option>
@@ -1153,30 +1163,35 @@ export default function App() {
         )}
 
         {searchQuery.trim() && (
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-indigo-900 flex items-center">
-                  <Sparkles className="w-5 h-5 mr-2 text-indigo-600" />
-                  Análisis de Opiniones con IA
-                </h3>
-                <p className="text-sm text-indigo-700 mt-1">
-                  Analiza versiones estenográficas para identificar las posturas de los legisladores sobre "{searchQuery}", excluyendo alusiones personales.
-                </p>
+          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100/40 to-transparent rounded-bl-full -z-10"></div>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-indigo-50 rounded-2xl shadow-sm border border-indigo-100/50">
+                  <Sparkles className="w-7 h-7 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Análisis de Opiniones con IA
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500 mt-1">
+                    Analiza versiones estenográficas para identificar las posturas de los legisladores sobre "{searchQuery}".
+                  </p>
+                </div>
               </div>
               <button 
                 onClick={handleAiSearch}
                 disabled={isAiSearchLoading}
-                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                className="flex items-center justify-center space-x-2 bg-indigo-600 hover:from-indigo-700 hover:to-indigo-800 text-white px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
               >
                 {isAiSearchLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Analizando...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-5 h-5" />
                     <span>Generar Análisis</span>
                   </>
                 )}
@@ -1184,8 +1199,8 @@ export default function App() {
             </div>
             
             {aiSearchResults && (
-              <div className="mt-6 bg-white rounded-xl p-6 border border-indigo-100 shadow-inner">
-                <div className="prose prose-sm max-w-none text-slate-700">
+              <div className="mt-8 bg-white  rounded-2xl p-8 border border-indigo-100/50 ">
+                <div className="prose prose-sm md:prose-base max-w-none text-slate-700 prose-headings:prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-800 prose-strong:text-slate-900">
                   <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{aiSearchResults}</Markdown>
                 </div>
               </div>
@@ -1194,33 +1209,33 @@ export default function App() {
         )}
 
         {exploreMode === 'expedientes' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredExpedientes.map(exp => (
               <div 
                 key={exp.id} 
                 onClick={() => setSelectedExpediente(exp)}
-                className="bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
+                className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-200 to-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all"></div>
-                <div className="flex justify-between items-start mb-3 mt-1">
-                  <span className="text-xs font-mono font-bold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
+                <div className="flex justify-between items-start mb-4 mt-2">
+                  <span className="text-xs font-mono font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors shadow-sm">{exp.clave_oficial}</span>
                   <span className="text-xs font-medium text-slate-400">{exp.fecha_inicio}</span>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</h3>
-                <p className="text-sm text-slate-500 mb-4 line-clamp-2 flex-1">{exp.descripcion}</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-3 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors leading-snug">{exp.titulo}</h3>
+                <p className="text-sm text-slate-500 mb-6 line-clamp-3 flex-1 leading-relaxed">{exp.descripcion}</p>
                 
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-red-50 text-[#8B1A1A]">
+                <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100/50">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-red-50 text-[#8B1A1A] border border-red-100">
                     {exp.tema_principal}
                   </span>
                   <div className="flex items-center space-x-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">
                       {exp.estado_actual}
                     </span>
-                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold ${
-                      exp.impacto_score >= 80 ? 'bg-red-100 text-red-700' :
-                      exp.impacto_score >= 60 ? 'bg-amber-100 text-amber-700' :
-                      'bg-emerald-100 text-emerald-700'
+                    <div className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold shadow-sm border ${
+                      exp.impacto_score >= 80 ? 'bg-red-50 text-red-700 border-red-200' :
+                      exp.impacto_score >= 60 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      'bg-emerald-50 text-emerald-700 border-emerald-200'
                     }`}>
                       {exp.impacto_score}
                     </div>
@@ -1229,52 +1244,52 @@ export default function App() {
               </div>
             ))}
             {filteredExpedientes.length === 0 && (
-              <div className="col-span-full p-12 text-center bg-white rounded-2xl border border-slate-100">
-                <p className="text-slate-500 font-medium">No se encontraron expedientes que coincidan con la búsqueda.</p>
+              <div className="col-span-full p-16 text-center bg-white border border-slate-200 shadow-sm rounded-3xl border border-dashed border-slate-300">
+                <p className="text-slate-500 font-medium text-lg">No se encontraron expedientes que coincidan con la búsqueda.</p>
               </div>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredLegisladores.map(leg => (
               <div 
                 key={leg.id}
                 onClick={() => setSelectedLegislator(leg)}
-                className="bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
+                className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-200 to-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all"></div>
-                <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: leg.color }}></div>
-                <div className="flex items-start justify-between mb-4 mt-1">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-500" style={{ color: leg.color, backgroundColor: `${leg.color}15` }}>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
+                <div className="absolute top-0 left-0 w-1.5 h-full opacity-70 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: leg.color }}></div>
+                <div className="flex items-start justify-between mb-6 mt-2 pl-2">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-500  border border-white/50" style={{ color: leg.color, backgroundColor: `${leg.color}15` }}>
                       {leg.avatar}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{leg.nombre}</h3>
-                      <p className="text-sm text-slate-500">{leg.partido} • {leg.estado}</p>
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors leading-tight">{leg.nombre}</h3>
+                      <p className="text-sm font-medium text-slate-500 mt-1">{leg.partido} • {leg.estado}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-4 flex-1">
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Asistencia</div>
-                    <div className="text-lg font-bold text-slate-900">{leg.asistencia}%</div>
+                <div className="grid grid-cols-2 gap-4 mb-6 flex-1 pl-2">
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Asistencia</div>
+                    <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.asistencia}%</div>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Lealtad</div>
-                    <div className="text-lg font-bold text-slate-900">{leg.lealtad}%</div>
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Lealtad</div>
+                    <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.lealtad}%</div>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-500 mt-auto pt-4 border-t border-slate-100">
-                  <span className="font-bold text-slate-700">Comisiones:</span> {leg.comisiones.join(", ")}
+                <div className="text-xs text-slate-500 mt-auto pt-5 border-t border-slate-100/50 pl-2">
+                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Comisiones:</span> <span className="font-medium">{leg.comisiones.join(", ")}</span>
                 </div>
               </div>
             ))}
             {filteredLegisladores.length === 0 && (
-              <div className="col-span-full p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-100">
-                No se encontraron legisladores que coincidan con la búsqueda.
+              <div className="col-span-full p-16 text-center text-slate-500 bg-white border border-slate-200 shadow-sm rounded-3xl border border-dashed border-slate-300">
+                <p className="font-medium text-lg">No se encontraron legisladores que coincidan con la búsqueda.</p>
               </div>
             )}
           </div>
@@ -1297,78 +1312,79 @@ export default function App() {
           <span className="font-medium text-slate-900">{exp.clave_oficial}</span>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="flex justify-between items-start mb-6">
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
+          <div className="flex justify-between items-start mb-8 mt-2">
             <div>
-              <div className="flex items-center space-x-3 mb-3">
-                <span className="font-mono text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">{exp.clave_oficial}</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-[#8B1A1A]">
+              <div className="flex items-center space-x-3 mb-4">
+                <span className="font-mono text-sm font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">{exp.clave_oficial}</span>
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-red-50 text-[#8B1A1A] border border-red-100 shadow-sm">
                   {exp.tema_principal}
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 shadow-sm">
                   {exp.estado_actual}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight max-w-3xl">{exp.titulo}</h1>
+              <h1 className="text-3xl font-bold text-slate-900 leading-tight max-w-4xl tracking-tight">{exp.titulo}</h1>
               
-              <div className="flex flex-wrap gap-3 mt-6">
+              <div className="flex flex-wrap gap-3 mt-8">
                 <button 
                   onClick={() => toggleSaveExpediente(exp.id)}
-                  className={`px-4 py-2 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-medium ${isSaved ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  className={`px-5 py-2.5 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide ${isSaved ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm'}`}
                 >
                   <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                   <span>{isSaved ? 'Guardado' : 'Guardar Expediente'}</span>
                 </button>
                 <button 
                   onClick={() => toggleSubscribeExpediente(exp.id)}
-                  className={`px-4 py-2 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-medium ${isSubscribed ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  className={`px-5 py-2.5 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide ${isSubscribed ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm'}`}
                 >
                   <Bell className={`w-4 h-4 ${isSubscribed ? 'fill-current' : ''}`} />
                   <span>{isSubscribed ? 'Suscrito a Alertas' : 'Activar Alertas'}</span>
                 </button>
-                <button onClick={() => exportToCSV(exp, `expediente_${exp.clave_oficial}`)} className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all shadow-sm flex items-center space-x-2 text-sm font-medium">
+                <button onClick={() => exportToCSV(exp, `expediente_${exp.clave_oficial}`)} className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide">
                   <FileDown className="w-4 h-4" />
                   <span>Exportar CSV</span>
                 </button>
-                <button onClick={exportSummaryToPDF} className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all shadow-sm flex items-center space-x-2 text-sm font-medium">
+                <button onClick={exportSummaryToPDF} className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide">
                   <DownloadIcon className="w-4 h-4" />
                   <span>Descargar PDF</span>
                 </button>
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <div className="text-sm font-medium text-slate-500 mb-1">Impacto Regulatorio</div>
-              <div className={`text-3xl font-bold ${
+            <div className="flex flex-col items-end bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Impacto Regulatorio</div>
+              <div className={`text-4xl font-mono font-light tracking-tighter ${
                 exp.impacto_score >= 80 ? 'text-red-600' :
                 exp.impacto_score >= 60 ? 'text-amber-600' :
                 'text-emerald-600'
               }`}>
-                {exp.impacto_score}<span className="text-lg text-slate-400 font-normal">/100</span>
+                {exp.impacto_score}<span className="text-xl text-slate-400 font-normal">/100</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 mt-8 border-t border-slate-100 pt-8">
-            <div className="col-span-2 space-y-8">
+          <div className="grid grid-cols-3 gap-10 mt-10 border-t border-slate-200 pt-10">
+            <div className="col-span-2 space-y-10">
               <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-[#8B1A1A]" />
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shadow-sm">
+                    <BookOpen className="w-5 h-5 text-[#8B1A1A]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Resumen IA (Ejecutivo)</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Resumen IA (Ejecutivo)</h3>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                  <p className="text-slate-700 leading-relaxed">{exp.resumen_ia.ejecutivo}</p>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                  <p className="text-slate-700 leading-relaxed text-lg">{exp.resumen_ia.ejecutivo}</p>
                   
-                  <div className="mt-6">
-                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Evidencia Extraída (NLP)</h4>
-                    <div className="space-y-3">
+                  <div className="mt-8">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Evidencia Extraída (NLP)</h4>
+                    <div className="space-y-4">
                       {exp.resumen_ia.evidencia.map((ev, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 text-sm">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                        <div key={idx} className="flex items-start space-x-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100/50">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-slate-600 italic">"{ev.texto}"</p>
-                            <span className="text-xs font-mono text-slate-400 mt-1 block">Ref: {ev.chunk_id}</span>
+                            <p className="text-slate-600 italic text-base leading-relaxed">"{ev.texto}"</p>
+                            <span className="text-[10px] font-mono font-bold text-slate-400 mt-2 block uppercase tracking-wider">Ref: {ev.chunk_id}</span>
                           </div>
                         </div>
                       ))}
@@ -1378,39 +1394,42 @@ export default function App() {
               </div>
 
               <div>
-                <div className="flex items-center space-x-2 mb-4 mt-8 pt-8 border-t border-slate-100">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center space-x-3 mb-6 mt-10 pt-10 border-t border-slate-200">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100 shadow-sm">
+                    <Clock className="w-5 h-5 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Timeline Legislativo</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Timeline Legislativo</h3>
                 </div>
-                <div className="relative border-l-2 border-slate-100 ml-4 space-y-6">
+                <div className="relative border-l-2 border-slate-200 ml-5 space-y-8">
                   {exp.eventos.map((evento, idx) => (
-                    <div key={idx} className="relative pl-6">
-                      <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-blue-500"></div>
-                      <div className="text-sm font-medium text-blue-600 mb-0.5">{evento.fecha}</div>
-                      <div className="text-base font-semibold text-slate-900">{evento.tipo}</div>
-                      <div className="text-sm text-slate-500 mt-1">{evento.descripcion}</div>
+                    <div key={idx} className="relative pl-8">
+                      <div className="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-white border-[3px] border-blue-500 shadow-sm"></div>
+                      <div className="text-xs font-mono font-bold text-blue-600 mb-1 uppercase tracking-wider">{evento.fecha}</div>
+                      <div className="text-lg font-bold text-slate-900 mb-1">{evento.tipo}</div>
+                      <div className="text-base text-slate-600 leading-relaxed">{evento.descripcion}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Chat Section */}
-              <div className="mt-8 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col h-[500px] chat-section">
-                <div className="bg-[#8B1A1A] p-4 flex items-center space-x-3 text-white">
-                  <Bot className="w-6 h-6" />
+              <div className="mt-12 bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden border border-slate-200 shadow-sm flex flex-col h-[600px] chat-section relative">
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#8B1A1A] to-red-500"></div>
+                <div className="bg-white  p-5 border-b border-slate-200 flex items-center space-x-4 mt-1.5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#8B1A1A] flex items-center justify-center shadow-sm">
+                    <Bot className="w-6 h-6 text-white" />
+                  </div>
                   <div>
-                    <h3 className="font-semibold">LEXA AI - Asistente Legislativo</h3>
-                    <p className="text-red-100 text-xs">Análisis contextual y raciocinio sobre este expediente</p>
+                    <h3 className="font-bold text-slate-900 text-lg">LEXA AI - Asistente Legislativo</h3>
+                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mt-0.5">Análisis contextual y raciocinio sobre este expediente</p>
                   </div>
                 </div>
                 
-                <div className="flex-1 p-4 overflow-y-auto bg-slate-50 space-y-4 flex flex-col">
+                <div className="flex-1 p-6 overflow-y-auto bg-slate-50/50 space-y-6 flex flex-col">
                   {chatMessages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-2xl p-4 ${msg.role === 'user' ? 'bg-[#8B1A1A] text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'}`}>
-                        <div className="text-sm whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none">
+                      <div className={`max-w-[85%] rounded-3xl p-5 shadow-sm ${msg.role === 'user' ? 'bg-[#8B1A1A] text-white rounded-br-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm'}`}>
+                        <div className="text-base whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none">
                           <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{msg.text}</Markdown>
                         </div>
                       </div>
@@ -1418,44 +1437,45 @@ export default function App() {
                   ))}
                   {isChatLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-none p-4 shadow-sm flex items-center space-x-3">
-                        <Loader2 className="w-4 h-4 text-[#8B1A1A] animate-spin" />
-                        <span className="text-sm font-medium text-slate-500">LEXA está analizando...</span>
+                      <div className="bg-white border border-slate-200 rounded-3xl rounded-bl-sm p-5 shadow-sm flex items-center space-x-4">
+                        <Loader2 className="w-5 h-5 text-[#8B1A1A] animate-spin" />
+                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">LEXA está analizando...</span>
                       </div>
                     </div>
                   )}
                 </div>
                 
-                <div className="p-4 bg-white border-t border-slate-100">
-                  <div className="flex items-center space-x-2">
+                <div className="p-5 bg-white  border-t border-slate-200">
+                  <div className="flex items-center space-x-3">
                     <input 
                       type="text" 
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder="Pregunta sobre impactos, actores o contexto..."
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A]"
+                      className="flex-1 bg-white border border-slate-200 rounded-2xl px-5 py-4 text-base focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm transition-all"
                     />
                     <button 
                       onClick={handleSendMessage}
                       disabled={isChatLoading || !chatInput.trim()}
-                      className="bg-[#8B1A1A] text-white p-3 rounded-xl hover:bg-[#7A1315] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="bg-[#8B1A1A] hover:bg-[#7A1315] text-white p-4 rounded-2xl hover:shadow-sm  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all"
                     >
-                      <Send className="w-5 h-5" />
+                      <Send className="w-6 h-6" />
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="col-span-1 space-y-6">
+            <div className="col-span-1 space-y-8">
               {exp.video_youtube && (
-                <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
-                    <Youtube className="w-4 h-4 mr-2 text-red-600" />
-                    Video Destacado (Congreso Edomex)
+                <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-red-600/20 group-hover:bg-red-600 transition-colors"></div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
+                    <Youtube className="w-5 h-5 mr-3 text-red-600" />
+                    Video Destacado
                   </h3>
-                  <div className="rounded-lg overflow-hidden border border-slate-200 bg-black aspect-video relative">
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 aspect-video relative ">
                     <iframe 
                       width="100%" 
                       height="100%" 
@@ -1467,31 +1487,32 @@ export default function App() {
                       className="absolute inset-0 w-full h-full"
                     ></iframe>
                   </div>
-                  <div className="mt-3 flex justify-between items-center">
-                    <span className="text-xs font-medium text-slate-700 line-clamp-1 flex-1 pr-2">{exp.video_youtube.titulo}</span>
-                    <span className="text-xs text-slate-500 flex items-center whitespace-nowrap">
-                      <Eye className="w-3 h-3 mr-1" />
+                  <div className="mt-4 flex justify-between items-start">
+                    <span className="text-sm font-bold text-slate-800 line-clamp-2 flex-1 pr-3 leading-snug">{exp.video_youtube.titulo}</span>
+                    <span className="text-xs font-mono font-bold text-slate-500 flex items-center whitespace-nowrap bg-slate-100 px-2 py-1 rounded-md">
+                      <Eye className="w-3.5 h-3.5 mr-1.5" />
                       {exp.video_youtube.vistas}
                     </span>
                   </div>
                 </div>
               )}
 
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
-                  <Users className="w-4 h-4 mr-2 text-slate-500" />
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
+                <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center uppercase tracking-wider mt-1">
+                  <Users className="w-5 h-5 mr-3 text-slate-500" />
                   Actores Clave
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-5">
                   {exp.actores.map((actor, idx) => (
-                    <div key={idx} className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-900">{actor.nombre}</span>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xs text-slate-500">{actor.rol}</span>
+                    <div key={idx} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                      <span className="text-base font-bold text-slate-900">{actor.nombre}</span>
+                      <div className="flex items-center space-x-2 mt-1.5">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{actor.rol}</span>
                         {actor.partido !== 'N/A' && (
                           <>
                             <span className="text-slate-300">•</span>
-                            <span className="text-xs font-medium text-slate-600">{actor.partido}</span>
+                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">{actor.partido}</span>
                           </>
                         )}
                       </div>
@@ -1500,29 +1521,33 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center">
-                  <FileText className="w-4 h-4 mr-2 text-slate-500" />
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
+                <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
+                  <FileText className="w-5 h-5 mr-3 text-slate-500" />
                   Documentos Originales
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {exp.documentos.map((doc, idx) => (
-                    <a key={idx} href={doc.url} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-[#8B1A1A]/30 transition-colors group">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="w-4 h-4 text-slate-400 group-hover:text-[#8B1A1A]" />
-                        <span className="text-sm font-medium text-slate-700 group-hover:text-[#8B1A1A]">{doc.tipo}</span>
+                    <a key={idx} href={doc.url} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#8B1A1A]/30 hover:bg-white hover:shadow-sm transition-all group">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-red-50 transition-colors">
+                          <FileText className="w-5 h-5 text-slate-400 group-hover:text-[#8B1A1A] transition-colors" />
+                        </div>
+                        <span className="text-sm font-bold text-slate-700 group-hover:text-[#8B1A1A] transition-colors">{doc.tipo}</span>
                       </div>
-                      <Download className="w-4 h-4 text-slate-400 group-hover:text-[#8B1A1A]" />
+                      <Download className="w-5 h-5 text-slate-400 group-hover:text-[#8B1A1A] transition-colors" />
                     </a>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-900 mb-3">Sectores Afectados</h3>
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
+                <h3 className="text-sm font-bold text-slate-900 mb-5 uppercase tracking-wider mt-1">Sectores Afectados</h3>
+                <div className="flex flex-wrap gap-2.5">
                   {exp.sectores_afectados.map((sector, idx) => (
-                    <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-slate-200 text-slate-600">
+                    <span key={idx} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 shadow-sm">
                       {sector}
                     </span>
                   ))}
@@ -1532,27 +1557,27 @@ export default function App() {
           </div>
 
           {exp.resultado_proyectado && (
-            <div className="mt-8 pt-8 border-t border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900 mb-4">Resultado Proyectado</h3>
-              <p className="text-slate-600 mb-6">{exp.resultado_proyectado.descripcion}</p>
+            <div className="mt-10 pt-10 border-t border-slate-200">
+              <h3 className="text-2xl font-bold text-slate-900 mb-5">Resultado Proyectado</h3>
+              <p className="text-slate-600 mb-8 text-lg leading-relaxed">{exp.resultado_proyectado.descripcion}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-red-50/50 border border-red-100 rounded-xl p-5">
-                  <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">Impacto Social</h4>
-                  <p className="text-sm font-bold text-slate-900">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                  <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-3">Impacto Social</h4>
+                  <p className="text-base font-bold text-slate-900">
                     {exp.resultado_proyectado.impacto_social.nivel}: <span className="font-medium text-slate-700">{exp.resultado_proyectado.impacto_social.descripcion}</span>
                   </p>
                 </div>
-                <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-5 relative group">
-                  <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2">Carga Regulatoria</h4>
-                  <p className="text-sm font-bold text-slate-900">
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm relative group">
+                  <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-3">Carga Regulatoria</h4>
+                  <p className="text-base font-bold text-slate-900">
                     {exp.resultado_proyectado.carga_regulatoria.nivel}: <span className="font-medium text-slate-700">{exp.resultado_proyectado.carga_regulatoria.descripcion}</span>
                   </p>
                   
                   {/* Tooltip for Carga Regulatoria */}
-                  <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 shadow-lg rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-64 flex items-start space-x-2">
-                    <p className="text-xs text-slate-600 flex-1">Cambia tu idioma en cualquier momento desde el menú de ayuda</p>
-                    <X className="w-4 h-4 text-slate-400 mt-0.5" />
+                  <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 shadow-sm rounded-2xl p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 w-72 flex items-start space-x-3">
+                    <p className="text-sm text-slate-600 flex-1 leading-relaxed">Cambia tu idioma en cualquier momento desde el menú de ayuda</p>
+                    <X className="w-5 h-5 text-slate-400 mt-0.5" />
                   </div>
                 </div>
               </div>
@@ -1560,24 +1585,24 @@ export default function App() {
           )}
 
           {exp.documentacion_oficial && (
-            <div className="mt-8 pt-8 border-t border-slate-100">
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-4">Documentación Oficial</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-10 pt-10 border-t border-slate-200">
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Documentación Oficial</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {exp.documentacion_oficial.map((doc: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:shadow-sm transition-all cursor-pointer group">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5 text-red-500" />
+                  <a key={idx} href={doc.url} download={doc.nombre} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-5 rounded-3xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm transition-all cursor-pointer group shadow-sm">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0 border border-red-100 group-hover:bg-[#8B1A1A] transition-colors">
+                        <FileText className="w-6 h-6 text-red-500 group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{doc.nombre}</p>
-                        <p className="text-xs text-slate-400">{doc.tamaño} • {doc.año}</p>
+                        <p className="text-base font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{doc.nombre}</p>
+                        <p className="text-sm font-medium text-slate-500 mt-0.5">{doc.tamaño} • {doc.año}</p>
                       </div>
                     </div>
-                    <button className="text-slate-400 hover:text-slate-600 p-2">
-                      <DownloadIcon className="w-4 h-4" />
-                    </button>
-                  </div>
+                    <div className="text-slate-400 group-hover:text-[#8B1A1A] p-3 rounded-xl group-hover:bg-red-50 transition-colors">
+                      <DownloadIcon className="w-5 h-5" />
+                    </div>
+                  </a>
                 ))}
               </div>
             </div>
@@ -1588,71 +1613,74 @@ export default function App() {
   };
 
   const renderPerfil = () => (
-    <div className="space-y-8 max-w-4xl mx-auto w-full pb-16">
+    <div className="space-y-8 max-w-5xl mx-auto w-full pb-16 animate-in fade-in duration-300">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Mi Perfil</h1>
-          <p className="text-slate-500 mt-2">Gestiona tus preferencias, alertas y elementos guardados.</p>
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Mi Perfil</h1>
+          <p className="text-slate-500 mt-2 text-lg">Gestiona tus preferencias, alertas y elementos guardados.</p>
         </div>
       </div>
 
       {!user ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
-          <UserCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Inicia sesión para ver tu perfil</h2>
-          <p className="text-slate-500 mb-6 max-w-md mx-auto">Guarda expedientes, sigue a legisladores y configura alertas personalizadas sobre los temas que te interesan.</p>
-          <button onClick={handleLogin} className="px-6 py-3 bg-[#8B1A1A] hover:bg-[#701515] text-white font-medium rounded-xl transition-colors shadow-sm">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-16 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100"></div>
+          <UserCircle className="w-20 h-20 text-slate-300 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">Inicia sesión para ver tu perfil</h2>
+          <p className="text-slate-500 mb-8 max-w-lg mx-auto text-lg leading-relaxed">Guarda expedientes, sigue a legisladores y configura alertas personalizadas sobre los temas que te interesan.</p>
+          <button onClick={handleLogin} className="px-8 py-4 bg-[#8B1A1A] hover:bg-[#7A1315] hover:shadow-sm  text-white font-bold tracking-wide rounded-2xl transition-all shadow-sm text-lg">
             Iniciar Sesión con Google
           </button>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* User Info Card */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex items-center space-x-6">
-            <div className="h-24 w-24 rounded-full overflow-hidden border-4 border-slate-50 shadow-sm">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 flex items-center space-x-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#8B1A1A]"></div>
+            <div className="h-28 w-28 rounded-full overflow-hidden border-4 border-white shadow-sm">
               <img src={user.photoURL || "https://picsum.photos/seed/user/200/200"} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{user.displayName || 'Usuario'}</h2>
-              <p className="text-slate-500">{user.email}</p>
-              <div className="mt-4 flex space-x-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                  <Bookmark className="w-3 h-3 mr-1" /> {savedExpedientes.length} Expedientes
+              <h2 className="text-3xl font-bold text-slate-900 mb-1">{user.displayName || 'Usuario'}</h2>
+              <p className="text-slate-500 text-lg">{user.email}</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
+                  <Bookmark className="w-4 h-4 mr-2" /> {savedExpedientes.length} Expedientes
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                  <Bell className="w-3 h-3 mr-1" /> {subscribedExpedientes.length} Alertas
+                <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 text-amber-700 border border-amber-100 shadow-sm">
+                  <Bell className="w-4 h-4 mr-2" /> {subscribedExpedientes.length} Alertas
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
-                  <Star className="w-3 h-3 mr-1" /> {savedLegisladores.length} Legisladores
+                <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-purple-50 text-purple-700 border border-purple-100 shadow-sm">
+                  <Star className="w-4 h-4 mr-2" /> {savedLegisladores.length} Legisladores
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Saved Expedientes */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-                <Bookmark className="w-5 h-5 mr-2 text-[#8B1A1A]" />
+            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-blue-200"></div>
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                <Bookmark className="w-6 h-6 mr-3 text-blue-600" />
                 Expedientes Guardados
               </h3>
               {savedExpedientes.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-8">No tienes expedientes guardados aún.</p>
+                <p className="text-base text-slate-500 text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No tienes expedientes guardados aún.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {savedExpedientes.map(id => {
                     const exp = expedientes.find(e => e.id === id);
                     if (!exp) return null;
                     return (
-                      <div key={id} className="p-4 rounded-xl border border-slate-100 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
-                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-[#8B1A1A] transition-colors"></div>
-                        <div className="flex justify-between items-start pl-2">
-                          <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 group-hover:border-[#8B1A1A]/30 group-hover:text-[#8B1A1A] transition-colors">{exp.clave_oficial}</span>
-                          <button onClick={(e) => { e.stopPropagation(); toggleSaveExpediente(id); }} className="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 hover:bg-red-50">
-                            <X className="w-3.5 h-3.5" />
+                      <div key={id} className="p-5 rounded-2xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm  transition-all duration-300 cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors duration-300"></div>
+                        <div className="flex justify-between items-start pl-3">
+                          <span className="font-mono text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm group-hover:border-blue-200 group-hover:text-blue-600 transition-colors">{exp.clave_oficial}</span>
+                          <button onClick={(e) => { e.stopPropagation(); toggleSaveExpediente(id); }} className="text-slate-400 hover:text-red-500 transition-colors bg-slate-50 rounded-full p-1.5 hover:bg-red-50">
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="text-sm font-bold text-slate-800 mt-2 pl-2 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</p>
+                        <p className="text-base font-bold text-slate-800 mt-3 pl-3 line-clamp-2 group-hover:text-blue-700 transition-colors leading-snug">{exp.titulo}</p>
                       </div>
                     );
                   })}
@@ -1661,28 +1689,29 @@ export default function App() {
             </div>
 
             {/* Subscribed Expedientes */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-                <Bell className="w-5 h-5 mr-2 text-amber-500" />
+            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-amber-200"></div>
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                <Bell className="w-6 h-6 mr-3 text-amber-500" />
                 Alertas Activas
               </h3>
               {subscribedExpedientes.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-8">No tienes alertas activas para ningún expediente.</p>
+                <p className="text-base text-slate-500 text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No tienes alertas activas para ningún expediente.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {subscribedExpedientes.map(id => {
                     const exp = expedientes.find(e => e.id === id);
                     if (!exp) return null;
                     return (
-                      <div key={id} className="p-4 rounded-xl border border-amber-100 bg-amber-50/30 hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
-                        <div className="absolute top-0 left-0 w-1 h-full bg-amber-200 group-hover:bg-amber-500 transition-colors"></div>
-                        <div className="flex justify-between items-start pl-2">
-                          <span className="font-mono text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 group-hover:border-amber-400 transition-colors">{exp.clave_oficial}</span>
-                          <button onClick={(e) => { e.stopPropagation(); toggleSubscribeExpediente(id); }} className="text-amber-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 hover:bg-red-50">
-                            <X className="w-3.5 h-3.5" />
+                      <div key={id} className="p-5 rounded-2xl border border-amber-100/60 bg-amber-50/30 hover:bg-white hover:shadow-sm  transition-all duration-300 cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-200 group-hover:bg-amber-500 transition-colors duration-300"></div>
+                        <div className="flex justify-between items-start pl-3">
+                          <span className="font-mono text-xs font-bold text-amber-700 bg-white px-2.5 py-1 rounded-lg border border-amber-200/50 shadow-sm group-hover:border-amber-300 transition-colors">{exp.clave_oficial}</span>
+                          <button onClick={(e) => { e.stopPropagation(); toggleSubscribeExpediente(id); }} className="text-amber-400 hover:text-red-500 transition-colors bg-white rounded-full p-1.5 hover:bg-red-50 shadow-sm">
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="text-sm font-bold text-slate-800 mt-2 pl-2 line-clamp-2 group-hover:text-amber-700 transition-colors">{exp.titulo}</p>
+                        <p className="text-base font-bold text-slate-800 mt-3 pl-3 line-clamp-2 group-hover:text-amber-700 transition-colors leading-snug">{exp.titulo}</p>
                       </div>
                     );
                   })}
@@ -1691,32 +1720,33 @@ export default function App() {
             </div>
 
             {/* Saved Legisladores */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-                <Star className="w-5 h-5 mr-2 text-[#8B1A1A]" />
+            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-purple-200"></div>
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                <Star className="w-6 h-6 mr-3 text-purple-600" />
                 Legisladores en Seguimiento
               </h3>
               {savedLegisladores.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-8">No sigues a ningún legislador aún.</p>
+                <p className="text-base text-slate-500 text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No sigues a ningún legislador aún.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {savedLegisladores.map(id => {
                     const leg = legisladores.find(l => l.id === id);
                     if (!leg) return null;
                     return (
-                      <div key={id} className="p-4 rounded-xl border border-slate-100 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-between group relative overflow-hidden" onClick={() => { setSelectedLegislator(leg); setCurrentView('explorar'); setExploreMode('legisladores'); }}>
-                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-[#8B1A1A] transition-colors"></div>
-                        <div className="flex items-center space-x-3 pl-2">
-                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-slate-50 shadow-sm">
+                      <div key={id} className="p-5 rounded-2xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm  transition-all duration-300 cursor-pointer flex items-center justify-between group relative overflow-hidden" onClick={() => { setSelectedLegislator(leg); setCurrentView('explorar'); setExploreMode('legisladores'); }}>
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-purple-500 transition-colors duration-300"></div>
+                        <div className="flex items-center space-x-4 pl-3">
+                          <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
                             <img src={leg.avatar} alt={leg.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-800 group-hover:text-[#8B1A1A] transition-colors">{leg.nombre}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{leg.partido} • {leg.estado}</p>
+                            <p className="text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors leading-tight">{leg.nombre}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{leg.partido} • {leg.estado}</p>
                           </div>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); toggleSaveLegislador(id); }} className="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 hover:bg-red-50">
-                          <X className="w-3.5 h-3.5" />
+                        <button onClick={(e) => { e.stopPropagation(); toggleSaveLegislador(id); }} className="text-slate-400 hover:text-red-500 transition-colors bg-slate-50 rounded-full p-1.5 hover:bg-red-50">
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     );
@@ -1744,61 +1774,64 @@ export default function App() {
           Volver a Legisladores
         </button>
 
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-8 flex flex-col md:flex-row gap-8 items-start">
-            <div className="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden border-4 border-slate-50 shadow-sm flex-shrink-0">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
+          <div className="absolute top-0 left-0 w-2 h-full opacity-70" style={{ backgroundColor: selectedLegislator.color }}></div>
+          <div className="p-10 flex flex-col md:flex-row gap-10 items-start pl-12">
+            <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl overflow-hidden border-4 border-white shadow-sm flex-shrink-0 relative group">
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"></div>
               <img src={selectedLegislator.foto} alt={selectedLegislator.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{selectedLegislator.nombre}</h1>
-                  <div className="flex items-center space-x-3 mt-2">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-800">
+                  <h1 className="text-4xl font-bold text-slate-900 tracking-tight leading-tight">{selectedLegislator.nombre}</h1>
+                  <div className="flex items-center space-x-3 mt-4">
+                    <span className="inline-flex items-center px-4 py-1.5 rounded-lg text-sm font-bold tracking-wide shadow-sm border border-white/50" style={{ backgroundColor: `${selectedLegislator.color}15`, color: selectedLegislator.color }}>
                       {selectedLegislator.partido}
                     </span>
-                    <span className="text-slate-400">•</span>
-                    <span className="text-slate-600 font-medium">{selectedLegislator.estado}</span>
-                    <span className="text-slate-400">•</span>
-                    <span className="text-slate-600">{selectedLegislator.tipo}</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-600 font-bold uppercase tracking-wider text-sm">{selectedLegislator.estado}</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-500 font-medium text-sm">{selectedLegislator.tipo}</span>
                   </div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <button 
                     onClick={() => toggleSaveLegislador(selectedLegislator.id)}
-                    className={`p-2.5 rounded-xl border transition-all shadow-sm flex items-center space-x-2 ${isSaved ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                    className={`px-5 py-2.5 rounded-xl border transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide ${isSaved ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm'}`}
                   >
                     <Star className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
-                    <span className="text-sm font-medium hidden sm:inline">{isSaved ? 'Siguiendo' : 'Seguir'}</span>
+                    <span className="hidden sm:inline">{isSaved ? 'Siguiendo' : 'Seguir'}</span>
                   </button>
-                  <button onClick={() => exportToCSV(selectedLegislator, `legislador_${selectedLegislator.id}`)} className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                  <button onClick={() => exportToCSV(selectedLegislator, `legislador_${selectedLegislator.id}`)} className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm">
                     <DownloadIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 mt-8">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Asistencia</p>
-                  <p className="text-2xl font-bold text-slate-900">{selectedLegislator.asistencia}%</p>
+              <div className="grid grid-cols-3 gap-6 mt-10">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Asistencia</p>
+                  <p className="text-3xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.asistencia}%</p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Iniciativas</p>
-                  <p className="text-2xl font-bold text-slate-900">{selectedLegislator.iniciativas_presentadas}</p>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Iniciativas</p>
+                  <p className="text-3xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.iniciativas_presentadas}</p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Aprobadas</p>
-                  <p className="text-2xl font-bold text-emerald-600">{selectedLegislator.iniciativas_aprobadas}</p>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Aprobadas</p>
+                  <p className="text-3xl font-mono font-light text-emerald-600 tracking-tighter">{selectedLegislator.iniciativas_aprobadas}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="border-t border-slate-100 p-8">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Comisiones</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="border-t border-slate-200 p-10 bg-slate-50/50">
+            <h3 className="text-xl font-bold text-slate-900 mb-6">Comisiones</h3>
+            <div className="flex flex-wrap gap-3">
               {selectedLegislator.comisiones.map((comision: string, idx: number) => (
-                <span key={idx} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium border border-blue-100">
+                <span key={idx} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm hover:border-[#8B1A1A]/30 hover:text-[#8B1A1A] transition-colors cursor-default">
                   {comision}
                 </span>
               ))}
@@ -1810,17 +1843,17 @@ export default function App() {
   };
 
   const renderAlertas = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="space-y-8 max-w-6xl mx-auto w-full pb-16 animate-in fade-in duration-300">
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Centro de Alertas</h1>
-          <p className="text-slate-500 mt-1">Notificaciones sobre cambios de estado, nuevos documentos y riesgos.</p>
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Centro de Alertas</h1>
+          <p className="text-slate-500 mt-2 text-lg">Notificaciones sobre cambios de estado, nuevos documentos y riesgos.</p>
         </div>
-        <button className="text-sm font-medium text-[#8B1A1A] hover:text-[#7A1315]">Marcar todas como leídas</button>
+        <button className="text-sm font-bold uppercase tracking-wider text-[#8B1A1A] hover:text-[#7A1315] bg-red-50 px-4 py-2 rounded-xl border border-red-100 transition-colors shadow-sm">Marcar todas como leídas</button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-5">
           {alertas.map(alerta => {
             const exp = expedientes.find(e => e.clave_oficial === alerta.expediente);
             
@@ -1833,32 +1866,32 @@ export default function App() {
                   setCurrentView('explorar');
                 }
               }}
-              className={`p-5 rounded-2xl border transition-all cursor-pointer group relative overflow-hidden ${alerta.leida ? 'bg-white border-slate-100 hover:shadow-md hover:-translate-y-0.5' : 'bg-red-50/30 border-red-100 shadow-sm hover:shadow-md hover:-translate-y-0.5'}`}
+              className={`bg-white border border-slate-200 shadow-sm p-6 rounded-3xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${alerta.leida ? 'border-slate-200 hover:shadow-sm ' : 'bg-red-50/30 border-red-200/60 shadow-sm hover:shadow-sm '}`}
             >
-              <div className={`absolute top-0 left-0 w-1 h-full transition-colors ${alerta.leida ? 'bg-slate-200 group-hover:bg-[#8B1A1A]' : 'bg-red-400 group-hover:bg-red-600'}`}></div>
-              <div className="flex gap-4 pl-2">
+              <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors duration-300 ${alerta.leida ? 'bg-slate-200 group-hover:bg-[#8B1A1A]' : 'bg-red-400 group-hover:bg-red-600'}`}></div>
+              <div className="flex gap-5 pl-3">
                 <div className="flex-shrink-0 mt-1">
                   {alerta.severidad === 'alta' ? (
-                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center border border-red-200 shadow-sm">
-                      <ShieldAlert className="w-5 h-5 text-red-600" />
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center border border-red-100 shadow-sm group-hover:bg-red-100 transition-colors">
+                      <ShieldAlert className="w-6 h-6 text-red-600" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200 shadow-sm">
-                      <Bell className="w-5 h-5 text-blue-600" />
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100 shadow-sm group-hover:bg-blue-100 transition-colors">
+                      <Bell className="w-6 h-6 text-blue-600" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{alerta.tipo}</span>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="font-bold text-slate-900 text-lg group-hover:text-[#8B1A1A] transition-colors">{alerta.tipo}</span>
                       <span className="text-slate-300">•</span>
-                      <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{alerta.expediente}</span>
+                      <span className="font-mono text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm">{alerta.expediente}</span>
                     </div>
-                    <span className="text-xs font-medium text-slate-400">{new Date(alerta.fecha).toLocaleDateString()}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg">{new Date(alerta.fecha).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-slate-600 text-sm mb-3">{alerta.mensaje}</p>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+                  <p className="text-slate-600 text-base leading-relaxed mb-4">{alerta.mensaje}</p>
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100/50">
                     {exp ? (
                       <button 
                         onClick={(e) => {
@@ -1866,15 +1899,15 @@ export default function App() {
                           setSelectedExpediente(exp);
                           setCurrentView('explorar');
                         }}
-                        className="text-[10px] font-bold uppercase tracking-wider text-[#8B1A1A] hover:text-[#7A1315] transition-colors"
+                        className="text-[10px] font-bold uppercase tracking-widest text-[#8B1A1A] hover:text-[#7A1315] transition-colors flex items-center"
                       >
-                        Ver expediente
+                        Ver expediente <ChevronRight className="w-3 h-3 ml-1" />
                       </button>
                     ) : (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sin expediente asociado</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sin expediente asociado</span>
                     )}
                     {!alerta.leida && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700">
+                      <span className="inline-flex items-center px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-red-50 text-red-700 border border-red-100 shadow-sm">
                         Nueva
                       </span>
                     )}
@@ -1885,13 +1918,14 @@ export default function App() {
           )})}
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-              <Search className="w-5 h-5 mr-2 text-slate-400" />
+        <div className="space-y-8">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
+            <h3 className="text-xl font-bold text-slate-900 mb-5 flex items-center">
+              <Search className="w-6 h-6 mr-3 text-slate-400" />
               Alertas por Palabra Clave
             </h3>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-base text-slate-600 mb-6 leading-relaxed">
               Recibe notificaciones cuando se publiquen nuevos expedientes que contengan estas palabras clave.
             </p>
             
@@ -1904,31 +1938,31 @@ export default function App() {
                   input.value = '';
                 }
               }}
-              className="flex space-x-2 mb-4"
+              className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mb-6"
             >
               <input 
                 type="text" 
                 name="keyword"
                 placeholder="Ej. Medio Ambiente, Presupuesto..." 
-                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A]"
+                className="flex-1 px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm transition-all placeholder:text-slate-400"
               />
-              <button type="submit" className="px-3 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-colors">
-                Agregar
+              <button type="submit" className="px-8 py-3.5 bg-slate-800 text-white rounded-2xl text-sm font-bold tracking-wide hover:from-slate-700 hover:to-slate-800 hover:shadow-sm  transition-all whitespace-nowrap">
+                Agregar Alerta
               </button>
             </form>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {alertKeywords.length === 0 ? (
                 <span className="text-sm text-slate-400 italic">No hay palabras clave configuradas.</span>
               ) : (
                 alertKeywords.map((keyword, idx) => (
-                  <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                  <span key={idx} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 shadow-sm group">
                     {keyword}
                     <button 
                       onClick={() => toggleAlertKeyword(keyword)}
-                      className="ml-2 text-slate-400 hover:text-red-500 focus:outline-none"
+                      className="ml-3 text-slate-400 hover:text-red-500 focus:outline-none bg-slate-50 rounded-full p-1 group-hover:bg-red-50 transition-colors"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </span>
                 ))
@@ -1941,9 +1975,11 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[var(--color-paper)] flex flex-col font-sans selection:bg-[#8B1A1A]/20 selection:text-[#8B1A1A]">
       {renderTopNav()}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent pointer-events-none -z-10"></div>
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto">
             {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
@@ -1958,40 +1994,40 @@ export default function App() {
 
       {/* Vote Details Modal */}
       {selectedVote && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-start sticky top-0 bg-white z-10">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4  animate-in fade-in duration-300">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl shadow-sm max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-white/20">
+            <div className="p-8 border-b border-slate-200 flex justify-between items-start sticky top-0 bg-white  z-10">
               <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    selectedVote.estado === 'Aprobada' ? 'bg-emerald-50 text-emerald-700' : 
-                    selectedVote.estado === 'Rechazada' ? 'bg-red-50 text-red-700' : 
-                    'bg-amber-50 text-amber-700'
+                <div className="flex items-center space-x-3 mb-3">
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest shadow-sm ${
+                    selectedVote.estado === 'Aprobada' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 
+                    selectedVote.estado === 'Rechazada' ? 'bg-red-50 text-red-700 border border-red-100' : 
+                    'bg-amber-50 text-amber-700 border border-amber-100'
                   }`}>
                     {selectedVote.estado}
                   </span>
-                  <span className="text-slate-400">•</span>
-                  <span className="text-sm text-slate-500">{selectedVote.fecha}</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-sm font-bold text-slate-500">{selectedVote.fecha}</span>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">{selectedVote.titulo}</h2>
-                <p className="text-sm text-slate-500 font-mono mt-1">{selectedVote.expediente}</p>
+                <h2 className="text-2xl font-bold text-slate-900 leading-tight">{selectedVote.titulo}</h2>
+                <p className="text-sm text-slate-500 font-mono mt-2 bg-slate-50 inline-block px-2 py-1 rounded border border-slate-200">{selectedVote.expediente}</p>
               </div>
               <button 
                 onClick={() => setSelectedVote(null)}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2.5 hover:bg-slate-100 rounded-full transition-colors bg-white shadow-sm border border-slate-200"
               >
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
             
-            <div className="p-6 space-y-6">
+            <div className="p-8 space-y-8 bg-slate-50/30">
               {/* Video Section */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
-                  <h3 className="text-sm font-semibold text-slate-900">Canal del Congreso - Grabación de la Sesión</h3>
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Canal del Congreso - Grabación de la Sesión</h3>
                 </div>
-                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden relative shadow-lg">
+                <div className="aspect-video bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm border border-slate-200">
                   <iframe 
                     width="100%" 
                     height="100%" 
@@ -2005,53 +2041,56 @@ export default function App() {
               </div>
 
               {/* AI Summary */}
-              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Bot className="w-5 h-5 text-[#8B1A1A]" />
-                  <h3 className="font-semibold text-red-900">Resumen del Debate (IA)</h3>
+              <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl p-6 border border-red-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#8B1A1A]"></div>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 bg-white rounded-xl shadow-sm border border-red-100">
+                    <Bot className="w-5 h-5 text-[#8B1A1A]" />
+                  </div>
+                  <h3 className="font-bold text-xl text-slate-900">Resumen del Debate (IA)</h3>
                 </div>
-                <p className="text-red-800 text-sm leading-relaxed">
+                <p className="text-slate-700 text-base leading-relaxed pl-1">
                   {selectedVote.resumen_ia_votacion}
                 </p>
               </div>
 
               {/* Voting Results */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 mb-3">Resultados de la Votación</h3>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resultados de la Votación</h3>
+                <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl shadow-sm">
                   <VoteChart favor={selectedVote.votos_favor} contra={selectedVote.votos_contra} abstencion={selectedVote.abstenciones} />
                   
-                  <div className="grid grid-cols-3 gap-4 text-center mb-6">
-                    <div>
-                      <div className="text-2xl font-bold text-emerald-600">{selectedVote.votos_favor}</div>
-                      <div className="text-xs font-medium text-slate-500 uppercase">A Favor</div>
+                  <div className="grid grid-cols-3 gap-6 text-center mb-8 mt-6">
+                    <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
+                      <div className="text-3xl font-mono font-light text-emerald-600 tracking-tighter">{selectedVote.votos_favor}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">A Favor</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-red-600">{selectedVote.votos_contra}</div>
-                      <div className="text-xs font-medium text-slate-500 uppercase">En Contra</div>
+                    <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                      <div className="text-3xl font-mono font-light text-red-600 tracking-tighter">{selectedVote.votos_contra}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">En Contra</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-slate-500">{selectedVote.abstenciones}</div>
-                      <div className="text-xs font-medium text-slate-400 uppercase">Abstenciones</div>
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="text-3xl font-mono font-light text-slate-600 tracking-tighter">{selectedVote.abstenciones}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Abstenciones</div>
                     </div>
                   </div>
 
                   {/* Party Breakdown */}
                   {selectedVote.desglose_partidos && (
-                    <div className="border-t border-slate-200 pt-4">
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">Desglose por Partido</h4>
-                      <div className="space-y-3">
+                    <div className="border-t border-slate-200 pt-6">
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Desglose por Partido</h4>
+                      <div className="space-y-4">
                         {selectedVote.desglose_partidos.map((partido: any, idx: number) => (
                           <div key={idx} className="flex items-center text-sm">
-                            <div className="w-16 font-semibold text-slate-700 flex items-center">
-                              <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: partido.color }}></div>
+                            <div className="w-20 font-bold text-slate-700 flex items-center">
+                              <div className="w-2.5 h-2.5 rounded-full mr-3 shadow-sm" style={{ backgroundColor: partido.color }}></div>
                               {partido.partido}
                             </div>
-                            <div className="flex-1 flex items-center space-x-1 h-6 bg-slate-100 rounded overflow-hidden mx-2">
+                            <div className="flex-1 flex items-center space-x-1 h-8 bg-slate-100 rounded-lg overflow-hidden mx-4 ">
                               {partido.favor > 0 && (
                                 <div 
                                   style={{ width: `${(partido.favor / (partido.favor + partido.contra + partido.abstencion)) * 100}%` }} 
-                                  className="h-full bg-emerald-500/80 flex items-center justify-center text-[10px] text-white font-medium"
+                                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 flex items-center justify-center text-xs text-white font-bold"
                                 >
                                   {partido.favor}
                                 </div>
@@ -2059,7 +2098,7 @@ export default function App() {
                               {partido.contra > 0 && (
                                 <div 
                                   style={{ width: `${(partido.contra / (partido.favor + partido.contra + partido.abstencion)) * 100}%` }} 
-                                  className="h-full bg-red-500/80 flex items-center justify-center text-[10px] text-white font-medium"
+                                  className="h-full bg-gradient-to-r from-red-500 to-red-400 flex items-center justify-center text-xs text-white font-bold"
                                 >
                                   {partido.contra}
                                 </div>
@@ -2067,13 +2106,13 @@ export default function App() {
                               {partido.abstencion > 0 && (
                                 <div 
                                   style={{ width: `${(partido.abstencion / (partido.favor + partido.contra + partido.abstencion)) * 100}%` }} 
-                                  className="h-full bg-slate-400/80 flex items-center justify-center text-[10px] text-white font-medium"
+                                  className="h-full bg-gradient-to-r from-slate-400 to-slate-300 flex items-center justify-center text-xs text-white font-bold"
                                 >
                                   {partido.abstencion}
                                 </div>
                               )}
                             </div>
-                            <div className="w-12 text-right text-xs text-slate-500">
+                            <div className="w-12 text-right text-sm font-mono font-bold text-slate-500">
                               {partido.favor + partido.contra + partido.abstencion}
                             </div>
                           </div>
@@ -2148,82 +2187,87 @@ export default function App() {
       )}
       {/* Legislator Detail Modal */}
       {selectedLegislator && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-start sticky top-0 bg-white z-10">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-2xl font-bold text-slate-500" style={{ color: selectedLegislator.color, backgroundColor: `${selectedLegislator.color}15` }}>
+        <div className="fixed inset-0 bg-slate-900/60  z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white/90  rounded-3xl shadow-sm border border-white/50 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300 relative">
+            <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
+            <div className="absolute top-0 left-0 w-2 h-full opacity-70" style={{ backgroundColor: selectedLegislator.color }}></div>
+            
+            <div className="p-8 border-b border-slate-200 flex justify-between items-start sticky top-0 bg-white  z-10 pl-10">
+              <div className="flex items-center space-x-6">
+                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-3xl font-bold text-slate-500  border-2 border-white" style={{ color: selectedLegislator.color, backgroundColor: `${selectedLegislator.color}15` }}>
                   {selectedLegislator.avatar}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{selectedLegislator.nombre}</h2>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                  <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{selectedLegislator.nombre}</h2>
+                  <div className="flex items-center space-x-3 mt-2">
+                    <span className="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm border border-white/50" style={{ backgroundColor: `${selectedLegislator.color}15`, color: selectedLegislator.color }}>
                       {selectedLegislator.partido}
                     </span>
-                    <span className="text-sm text-slate-500">• {selectedLegislator.estado}</span>
-                    <span className="text-sm text-slate-500">• {selectedLegislator.tipo_eleccion}</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">{selectedLegislator.estado}</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-sm font-medium text-slate-500">{selectedLegislator.tipo_eleccion}</span>
                   </div>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedLegislator(null)}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+                className="p-2.5 hover:bg-slate-100 rounded-full transition-colors bg-white shadow-sm border border-slate-200"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Asistencia</div>
-                  <div className="text-2xl font-bold text-slate-900">{selectedLegislator.asistencia}%</div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
-                    <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${selectedLegislator.asistencia}%` }}></div>
+            <div className="p-10 overflow-y-auto bg-slate-50/30 pl-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Asistencia</div>
+                  <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.asistencia}%</div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 mt-4 ">
+                    <div className="bg-emerald-500 h-2 rounded-full shadow-sm" style={{ width: `${selectedLegislator.asistencia}%` }}></div>
                   </div>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Lealtad Partidista</div>
-                  <div className="text-2xl font-bold text-slate-900">{selectedLegislator.lealtad}%</div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
-                    <div className="bg-[#8B1A1A] h-1.5 rounded-full" style={{ width: `${selectedLegislator.lealtad}%` }}></div>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Lealtad Partidista</div>
+                  <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.lealtad}%</div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 mt-4 ">
+                    <div className="bg-[#8B1A1A] h-2 rounded-full shadow-sm" style={{ width: `${selectedLegislator.lealtad}%` }}></div>
                   </div>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Iniciativas Votadas</div>
-                  <div className="text-2xl font-bold text-slate-900">{selectedLegislator.historial_votos.length}</div>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Iniciativas Votadas</div>
+                  <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.historial_votos.length}</div>
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Historial de Votaciones</h3>
-              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <h3 className="text-xl font-bold text-slate-900 mb-6">Historial de Votaciones</h3>
+              <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
+                  <thead className="bg-slate-50/80 text-[10px] text-slate-400 uppercase font-bold tracking-widest border-b border-slate-200">
                     <tr>
-                      <th className="px-4 py-3">Fecha</th>
-                      <th className="px-4 py-3">Iniciativa</th>
-                      <th className="px-4 py-3 text-center">Sentido del Voto</th>
+                      <th className="px-6 py-4">Fecha</th>
+                      <th className="px-6 py-4">Iniciativa</th>
+                      <th className="px-6 py-4 text-center">Sentido del Voto</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100/50">
                     {selectedLegislator.historial_votos.map((voto: any, idx: number) => {
                       const votacionInfo = votaciones.find(v => v.id === voto.votacion_id);
                       return (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                        <tr key={idx} className="hover:bg-white transition-colors">
+                          <td className="px-6 py-4 text-slate-500 whitespace-nowrap font-medium">
                             {votacionInfo ? votacionInfo.fecha : 'N/A'}
                           </td>
-                          <td className="px-4 py-3 font-medium text-slate-900">
+                          <td className="px-6 py-4 font-bold text-slate-800">
                             {votacionInfo ? votacionInfo.titulo : 'Votación no encontrada'}
-                            {votacionInfo && <div className="text-xs text-slate-400 font-normal mt-0.5">{votacionInfo.expediente}</div>}
+                            {votacionInfo && <div className="text-xs text-slate-400 font-mono mt-1 bg-white/50 inline-block px-2 py-0.5 rounded border border-slate-200">{votacionInfo.expediente}</div>}
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium capitalize ${
-                              voto.sentido === 'favor' ? 'bg-emerald-50 text-emerald-700' :
-                              voto.sentido === 'contra' ? 'bg-red-50 text-red-700' :
-                              voto.sentido === 'abstencion' ? 'bg-slate-100 text-slate-600' :
-                              'bg-amber-50 text-amber-700'
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest border shadow-sm ${
+                              voto.sentido === 'favor' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                              voto.sentido === 'contra' ? 'bg-red-50 text-red-700 border-red-100' :
+                              voto.sentido === 'abstencion' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                              'bg-amber-50 text-amber-700 border-amber-100'
                             }`}>
                               {voto.sentido === 'favor' ? 'A Favor' : 
                                voto.sentido === 'contra' ? 'En Contra' : 

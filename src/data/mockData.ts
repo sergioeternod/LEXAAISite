@@ -34,7 +34,7 @@ export const expedientes = [
       { fecha: "2025-09-20", tipo: "Parlamento Abierto", descripcion: "Foros con sindicatos de maestros y burócratas del Estado." }
     ],
     documentos: [
-      { id: "doc-1", tipo: "Iniciativa", fecha: "2025-09-05", url: "#" }
+      { id: "doc-1", tipo: "Iniciativa", fecha: "2025-09-05", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -48,8 +48,8 @@ export const expedientes = [
       }
     },
     documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ]
   },
   {
@@ -86,7 +86,7 @@ export const expedientes = [
       { fecha: "2025-11-05", tipo: "Mesa Técnica", descripcion: "Reunión con líderes transportistas del Valle de México." }
     ],
     documentos: [
-      { id: "doc-2", tipo: "Iniciativa", fecha: "2025-10-12", url: "#" }
+      { id: "doc-2", tipo: "Iniciativa", fecha: "2025-10-12", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -100,8 +100,8 @@ export const expedientes = [
       }
     },
     documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ]
   },
   {
@@ -139,7 +139,7 @@ export const expedientes = [
       { fecha: "2025-11-20", tipo: "Dictamen", descripcion: "Aprobación del dictamen en comisiones unidas." }
     ],
     documentos: [
-      { id: "doc-4", tipo: "Iniciativa de la Gobernadora", fecha: "2025-08-10", url: "#" }
+      { id: "doc-4", tipo: "Iniciativa de la Gobernadora", fecha: "2025-08-10", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -153,8 +153,8 @@ export const expedientes = [
       }
     },
     documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ]
   },
   {
@@ -187,7 +187,7 @@ export const expedientes = [
       { fecha: "2025-11-21", tipo: "Paquete Económico", descripcion: "Entrega del Paquete Fiscal 2026 por parte del Secretario de Finanzas." }
     ],
     documentos: [
-      { id: "doc-5", tipo: "Proyecto de Presupuesto", fecha: "2025-11-21", url: "#" }
+      { id: "doc-5", tipo: "Proyecto de Presupuesto", fecha: "2025-11-21", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -201,8 +201,8 @@ export const expedientes = [
       }
     },
     documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026" }
+      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ]
   }
 ];
@@ -260,8 +260,8 @@ export const votaciones = [
     detalle_legisladores: [
       { nombre: "Francisco Vázquez", partido: "Morena", voto: "pendiente", avatar: "FV", color: "#B3282D" },
       { nombre: "Elías Rescala", partido: "PRI", voto: "pendiente", avatar: "ER", color: "#00953B" },
-      { nombre: "Enrique Vargas", partido: "PAN", voto: "pendiente", avatar: "EV", color: "#0057A0" },
-      { nombre: "Maurilio Hernández", partido: "Morena", voto: "pendiente", avatar: "MH", color: "#B3282D" }
+      { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "pendiente", avatar: "PF", color: "#0057A0" },
+      { nombre: "José Couttolenc", partido: "PVEM", voto: "pendiente", avatar: "JC", color: "#50B747" }
     ]
   },
   {
@@ -285,8 +285,8 @@ export const votaciones = [
     ],
     detalle_legisladores: [
       { nombre: "Francisco Vázquez", partido: "Morena", voto: "favor", avatar: "FV", color: "#B3282D" },
-      { nombre: "Maurilio Hernández", partido: "Morena", voto: "favor", avatar: "MH", color: "#B3282D" },
-      { nombre: "Enrique Vargas", partido: "PAN", voto: "contra", avatar: "EV", color: "#0057A0" },
+      { nombre: "José Couttolenc", partido: "PVEM", voto: "favor", avatar: "JC", color: "#50B747" },
+      { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "contra", avatar: "PF", color: "#0057A0" },
       { nombre: "Elías Rescala", partido: "PRI", voto: "abstencion", avatar: "ER", color: "#00953B" }
     ]
   }
@@ -311,28 +311,12 @@ export const legisladores = [
   },
   {
     id: "leg-002",
-    nombre: "Maurilio Hernández González",
-    partido: "Morena",
-    color: "#B3282D",
-    estado: "Estado de México",
-    tipo_eleccion: "Plurinominal",
-    comisiones: ["Planeación y Gasto Público", "Comunicaciones y Transportes"],
-    asistencia: 98,
-    lealtad: 100,
-    avatar: "MH",
-    historial_votos: [
-      { votacion_id: "vot-001", sentido: "pendiente" },
-      { votacion_id: "vot-002", sentido: "favor" }
-    ]
-  },
-  {
-    id: "leg-003",
     nombre: "Elías Rescala Jiménez",
     partido: "PRI",
     color: "#00953B",
     estado: "Estado de México",
     tipo_eleccion: "Plurinominal",
-    comisiones: ["Junta de Coordinación Política", "Procuración y Administración de Justicia"],
+    comisiones: ["Junta de Coordinación Política (Vicepresidente)", "Procuración y Administración de Justicia"],
     asistencia: 95,
     lealtad: 98,
     avatar: "ER",
@@ -342,35 +326,51 @@ export const legisladores = [
     ]
   },
   {
-    id: "leg-004",
-    nombre: "Enrique Vargas del Villar",
-    partido: "PAN",
-    color: "#0057A0",
+    id: "leg-003",
+    nombre: "José Alberto Couttolenc Buentello",
+    partido: "PVEM",
+    color: "#50B747",
     estado: "Estado de México",
     tipo_eleccion: "Plurinominal",
-    comisiones: ["Junta de Coordinación Política", "Desarrollo Económico"],
-    asistencia: 92,
-    lealtad: 96,
-    avatar: "EV",
+    comisiones: ["Junta de Coordinación Política (Vicepresidente)", "Protección Ambiental y Cambio Climático"],
+    asistencia: 96,
+    lealtad: 95,
+    avatar: "JC",
     historial_votos: [
       { votacion_id: "vot-001", sentido: "pendiente" },
-      { votacion_id: "vot-002", sentido: "contra" }
+      { votacion_id: "vot-002", sentido: "favor" }
+    ]
+  },
+  {
+    id: "leg-004",
+    nombre: "Óscar González Yáñez",
+    partido: "PT",
+    color: "#D9131C",
+    estado: "Estado de México",
+    tipo_eleccion: "Plurinominal",
+    comisiones: ["Junta de Coordinación Política (Secretario)", "Educación, Cultura, Ciencia y Tecnología"],
+    asistencia: 94,
+    lealtad: 98,
+    avatar: "OG",
+    historial_votos: [
+      { votacion_id: "vot-001", sentido: "pendiente" },
+      { votacion_id: "vot-002", sentido: "favor" }
     ]
   },
   {
     id: "leg-005",
-    nombre: "María Luisa Mendoza Mondragón",
-    partido: "PVEM",
-    color: "#50B747",
+    nombre: "Pablo Fernández de Cevallos González",
+    partido: "PAN",
+    color: "#0057A0",
     estado: "Estado de México",
-    tipo_eleccion: "Mayoría Relativa",
-    comisiones: ["Protección Ambiental y Cambio Climático", "Salud, Asistencia y Bienestar Social"],
-    asistencia: 96,
-    lealtad: 95,
-    avatar: "MM",
+    tipo_eleccion: "Plurinominal",
+    comisiones: ["Junta de Coordinación Política (Vocal)", "Desarrollo Económico"],
+    asistencia: 92,
+    lealtad: 96,
+    avatar: "PF",
     historial_votos: [
       { votacion_id: "vot-001", sentido: "pendiente" },
-      { votacion_id: "vot-002", sentido: "favor" }
+      { votacion_id: "vot-002", sentido: "contra" }
     ]
   },
   {
@@ -380,7 +380,7 @@ export const legisladores = [
     color: "#FFCC00",
     estado: "Estado de México",
     tipo_eleccion: "Plurinominal",
-    comisiones: ["Junta de Coordinación Política", "Trabajo, Previsión y Seguridad Social"],
+    comisiones: ["Junta de Coordinación Política (Vocal)", "Trabajo, Previsión y Seguridad Social"],
     asistencia: 90,
     lealtad: 92,
     avatar: "OO",
@@ -391,34 +391,34 @@ export const legisladores = [
   },
   {
     id: "leg-007",
-    nombre: "Óscar González Yáñez",
-    partido: "PT",
-    color: "#D9131C",
-    estado: "Estado de México",
-    tipo_eleccion: "Plurinominal",
-    comisiones: ["Junta de Coordinación Política", "Educación, Cultura, Ciencia y Tecnología"],
-    asistencia: 94,
-    lealtad: 98,
-    avatar: "OG",
-    historial_votos: [
-      { votacion_id: "vot-001", sentido: "pendiente" },
-      { votacion_id: "vot-002", sentido: "favor" }
-    ]
-  },
-  {
-    id: "leg-008",
-    nombre: "Juana Bonilla Jaime",
+    nombre: "Juan Zepeda Hernández",
     partido: "MC",
     color: "#FF8200",
     estado: "Estado de México",
     tipo_eleccion: "Plurinominal",
-    comisiones: ["Igualdad de Género", "Derechos Humanos"],
+    comisiones: ["Junta de Coordinación Política (Vocal)", "Derechos Humanos"],
     asistencia: 95,
     lealtad: 90,
-    avatar: "JB",
+    avatar: "JZ",
     historial_votos: [
       { votacion_id: "vot-001", sentido: "pendiente" },
       { votacion_id: "vot-002", sentido: "contra" }
+    ]
+  },
+  {
+    id: "leg-008",
+    nombre: "Maurilio Hernández González",
+    partido: "Morena",
+    color: "#B3282D",
+    estado: "Estado de México",
+    tipo_eleccion: "Plurinominal",
+    comisiones: ["Mesa Directiva (Presidente)", "Planeación y Gasto Público"],
+    asistencia: 98,
+    lealtad: 100,
+    avatar: "MH",
+    historial_votos: [
+      { votacion_id: "vot-001", sentido: "pendiente" },
+      { votacion_id: "vot-002", sentido: "favor" }
     ]
   }
 ];
