@@ -18,8 +18,21 @@
   --color-morena-900: #601417;
   --color-morena-950: #360608;
 
-  --color-paper: #f1f5f9;
+  --color-paper: #e2e8f0;
   --color-ink: #0f172a;
+  --card-shadow: 0 4px 0 0 rgba(15, 23, 42, 0.08);
+  --card-shadow-hover: 0 6px 0 0 rgba(15, 23, 42, 0.12);
+  --card-radius: 1.5rem; /* 24px - rounded-3xl */
+  --card-border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+@layer utilities {
+  .card-3d {
+    @apply bg-white border border-slate-200 rounded-3xl shadow-[var(--card-shadow)] transition-all duration-200;
+  }
+  .card-3d-hover {
+    @apply hover:shadow-[var(--card-shadow-hover)] hover:-translate-y-0.5;
+  }
 }
 
 body {

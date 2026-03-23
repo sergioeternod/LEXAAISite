@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { 
   LayoutDashboard, 
   Search, 
@@ -45,19 +45,19 @@ import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const VoteChart = ({ favor, contra, abstencion }: { favor: number, contra: number, abstencion: number }) => {
-  const total = favor + contra + abstencion;
+const VoteChart = memo(({ favor, contra, abstencion }: { favor: number, contra: number, abstencion: number }) => {
+  const total = useMemo(() => favor + contra + abstencion, [favor, contra, abstencion]);
   
-  const data = [
+  const data = useMemo(() => [
     { name: 'A Favor', value: favor, color: '#e60000', percentage: Math.round((favor/total)*100), badgeBg: 'bg-red-50' },
     { name: 'Abstenciones', value: abstencion, color: '#f59e0b', percentage: Math.round((abstencion/total)*100), badgeBg: 'bg-amber-50' },
     { name: 'En Contra', value: contra, color: '#cbd5e1', percentage: Math.round((contra/total)*100), badgeBg: 'bg-slate-100' }
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [favor, contra, abstencion, total]);
 
-  const maxPercentage = Math.max(...data.map(d => d.percentage));
+  const maxPercentage = useMemo(() => Math.max(...data.map(d => d.percentage)), [data]);
 
   return (
-    <div className="w-full max-w-sm mx-auto my-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+    <div className="w-full max-w-sm mx-auto my-8 card-3d card-3d-hover p-6 flex flex-col">
       <div className="mb-6">
         <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Tendencia</h4>
         <h3 className="text-xl font-bold text-slate-900">Sentido de Votación</h3>
@@ -111,7 +111,7 @@ const VoteChart = ({ favor, contra, abstencion }: { favor: number, contra: numbe
       </div>
     </div>
   );
-};
+});
 
 const MarkdownComponents = {
   code({node, inline, className, children, ...props}: any) {
@@ -380,7 +380,7 @@ export default function App() {
     trackHistory('search', q);
     setCurrentView('explorar');
 
-    // Siempre ejecutar búsqueda por IA directamente
+    // Siempre ejecutar búsqueda por LEXA AI directamente
     handleAiSearch(q);
   };
 
@@ -392,6 +392,9 @@ export default function App() {
     setAiSearchResults(null);
 
     try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("API Key de Gemini no configurada. Por favor, configúrala en el panel de Secretos.");
+      }
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${q}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. 
       
@@ -418,9 +421,9 @@ export default function App() {
       });
 
       setAiSearchResults(response.text || "No se pudo generar un análisis.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating AI search:", error);
-      setAiSearchResults("Hubo un error al generar el análisis. Por favor, intenta de nuevo.");
+      setAiSearchResults(error.message || "Hubo un error al generar el análisis. Por favor, intenta de nuevo.");
     } finally {
       setIsAiSearchLoading(false);
     }
@@ -437,8 +440,11 @@ export default function App() {
           text: `Generando resumen analítico del expediente ${selectedExpediente.clave_oficial}...`
         }]);
         
-        try {
-          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("API Key de Gemini no configurada. Por favor, configúrala en el panel de Secretos.");
+      }
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
           const prompt = `Actúa como LEXA AI, un asistente experto en inteligencia legislativa del Estado de México.
           Genera un resumen analítico y conciso del siguiente expediente:
           Título: ${selectedExpediente.titulo}
@@ -475,11 +481,11 @@ export default function App() {
             role: 'model',
             text: response.text || `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}.`
           }]);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error generating initial summary:", error);
           setChatMessages([{
             role: 'model',
-            text: `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}. (Hubo un error al generar el resumen automático).`
+            text: `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}. (${error.message || 'Hubo un error al generar el resumen automático'}).`
           }]);
         }
       };
@@ -497,6 +503,9 @@ export default function App() {
     setIsChatLoading(true);
 
     try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("API Key de Gemini no configurada. Por favor, configúrala en el panel de Secretos.");
+      }
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       
       const systemInstruction = `Eres LEXA AI, un asistente experto en inteligencia legislativa enfocado en el Congreso del Estado de México (Edomex). 
@@ -536,9 +545,9 @@ export default function App() {
       });
 
       setChatMessages(prev => [...prev, { role: 'model', text: response.text || 'No pude generar una respuesta.' }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error calling Gemini:", error);
-      setChatMessages(prev => [...prev, { role: 'model', text: 'Ocurrió un error al consultar a LEXA AI. Por favor, intenta de nuevo.' }]);
+      setChatMessages(prev => [...prev, { role: 'model', text: error.message || 'Ocurrió un error al consultar a LEXA AI. Por favor, intenta de nuevo.' }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -632,12 +641,12 @@ export default function App() {
       <div className="text-center space-y-8 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-100/40 rounded-full blur-3xl -z-10"></div>
         <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
-          Explora el historial legislativo con <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B1A1A] to-[#D9131C]">inteligencia artificial</span>
+          Explora el historial legislativo con <span className="text-[#8B1A1A]">LEXA AI</span>
         </h1>
         
         <div className="max-w-2xl mx-auto relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#8B1A1A]/20 to-[#D9131C]/20 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
-          <div className="relative flex items-center w-full h-16 rounded-full bg-white border border-slate-200 shadow-sm overflow-hidden pl-6 pr-2">
+          <div className="absolute -inset-1 bg-slate-200 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
+          <div className="relative flex items-center w-full h-16 rounded-full bg-white border border-slate-200 shadow-[var(--card-shadow)] overflow-hidden pl-6 pr-2">
             <Search className="w-6 h-6 text-slate-400" />
             <input 
               type="text" 
@@ -656,7 +665,7 @@ export default function App() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl flex flex-col justify-between group  transition-all duration-300">
+        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group">
           <div>
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Última votación relevante</h3>
@@ -674,7 +683,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl flex flex-col justify-between group  transition-all duration-300">
+        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group">
           <div>
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aprobada</h3>
@@ -692,7 +701,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl flex flex-col justify-between group  transition-all duration-300">
+        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group">
           <div className="flex justify-between items-start mb-6">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tendencias</h3>
             <div className="p-2.5 bg-red-50 text-[#8B1A1A] rounded-xl">
@@ -727,8 +736,8 @@ export default function App() {
 
       {/* Tu Actividad Reciente (Solo usuarios registrados) */}
       {user && userHistory.length > 0 && (
-        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-200/40 to-transparent rounded-bl-full -z-10"></div>
+        <div className="card-3d p-8 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-100/40 rounded-bl-full -z-10"></div>
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-slate-900 flex items-center">
               <Clock className="w-6 h-6 mr-3 text-[#8B1A1A]" />
@@ -819,7 +828,7 @@ export default function App() {
       </div>
 
       {/* Votaciones Recientes */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8">
+        <div className="card-3d p-8 mb-8">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-xl font-bold text-slate-900 flex items-center">
             <Activity className="w-6 h-6 mr-3 text-[#8B1A1A]" />
@@ -856,7 +865,7 @@ export default function App() {
                     <div 
                       key={voto.id} 
                       onClick={() => setSelectedVote(voto)}
-                      className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl hover:shadow-sm  transition-all cursor-pointer group flex flex-col relative overflow-hidden"
+                      className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
                     >
                       <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r transition-all ${
                         estado === 'Aprobada' ? 'from-emerald-300 to-emerald-200 group-hover:from-emerald-500 group-hover:to-emerald-400' : 
@@ -898,8 +907,8 @@ export default function App() {
       </div>
 
       {/* Canal del Congreso - Videos Destacados */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-red-100/40 to-transparent rounded-bl-full -z-10"></div>
+      <div className="card-3d p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-red-50/40 rounded-bl-full -z-10"></div>
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-xl font-bold text-slate-900 flex items-center">
             <Youtube className="w-6 h-6 mr-3 text-red-600" />
@@ -918,7 +927,7 @@ export default function App() {
             <div 
               key={exp.id} 
               onClick={() => setSelectedExpediente(exp)}
-              className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden bg-white"
+              className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-200 to-red-100 group-hover:from-red-600 group-hover:to-red-500 transition-all duration-500"></div>
               <div className="flex justify-between items-start mb-4 mt-1">
@@ -941,14 +950,14 @@ export default function App() {
       </div>
 
       {/* Resumen Legislativo Semanal */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
+      <div className="card-3d p-8 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100/40 to-transparent rounded-bl-full -z-10"></div>
         <div className="flex items-center space-x-4 mb-8">
           <div className="p-3 bg-indigo-50 rounded-2xl shadow-sm border border-indigo-100/50">
             <Bot className="w-7 h-7 text-indigo-600" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">Resumen Legislativo Semanal (IA)</h3>
+            <h3 className="text-xl font-bold text-slate-900">Resumen Legislativo Semanal (LEXA AI)</h3>
             <p className="text-sm font-medium text-slate-500 mt-1">Generado automáticamente por LEXA AI</p>
           </div>
         </div>
@@ -957,7 +966,7 @@ export default function App() {
           {resumenesSemanales.map((resumen, idx) => (
             <div 
               key={idx} 
-              className="bg-white border border-slate-200 shadow-sm p-8 rounded-2xl hover:shadow-sm transition-all duration-300 cursor-default group flex flex-col relative overflow-hidden bg-white"
+              className="card-3d card-3d-hover p-8 cursor-default group flex flex-col relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-200 to-indigo-100 group-hover:from-indigo-600 group-hover:to-indigo-500 transition-all duration-500"></div>
               <div className="flex justify-between items-start mb-6 mt-1">
@@ -985,8 +994,8 @@ export default function App() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-100/40 to-transparent rounded-bl-full -z-10"></div>
+      <div className="card-3d p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50/40 rounded-bl-full -z-10"></div>
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-xl font-bold text-slate-900 flex items-center">
             <FileText className="w-6 h-6 mr-3 text-amber-600" />
@@ -1002,7 +1011,7 @@ export default function App() {
             <div 
               key={exp.id} 
               onClick={() => setSelectedExpediente(exp)}
-              className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden bg-white"
+              className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-200 to-amber-100 group-hover:from-amber-500 group-hover:to-amber-400 transition-all duration-500"></div>
               <div className="flex justify-between items-start mb-4 mt-1">
@@ -1091,7 +1100,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-2xl flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 shadow-sm">
+        <div className="card-3d p-4 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
           <div className="relative flex-1">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8B1A1A] w-6 h-6" />
             <input 
@@ -1163,7 +1172,7 @@ export default function App() {
         )}
 
         {searchQuery.trim() && (
-          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 shadow-sm relative overflow-hidden">
+          <div className="card-3d p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100/40 to-transparent rounded-bl-full -z-10"></div>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
@@ -1172,7 +1181,7 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">
-                    Análisis de Opiniones con IA
+                    Análisis de Opiniones con LEXA AI
                   </h3>
                   <p className="text-sm font-medium text-slate-500 mt-1">
                     Analiza versiones estenográficas para identificar las posturas de los legisladores sobre "{searchQuery}".
@@ -1199,7 +1208,7 @@ export default function App() {
             </div>
             
             {aiSearchResults && (
-              <div className="mt-8 bg-white  rounded-2xl p-8 border border-indigo-100/50 ">
+              <div className="mt-8 card-3d p-8 border-indigo-100/50">
                 <div className="prose prose-sm md:prose-base max-w-none text-slate-700 prose-headings:prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-800 prose-strong:text-slate-900">
                   <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{aiSearchResults}</Markdown>
                 </div>
@@ -1214,7 +1223,7 @@ export default function App() {
               <div 
                 key={exp.id} 
                 onClick={() => setSelectedExpediente(exp)}
-                className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden"
+                className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
                 <div className="flex justify-between items-start mb-4 mt-2">
@@ -1244,7 +1253,7 @@ export default function App() {
               </div>
             ))}
             {filteredExpedientes.length === 0 && (
-              <div className="col-span-full p-16 text-center bg-white border border-slate-200 shadow-sm rounded-3xl border border-dashed border-slate-300">
+              <div className="col-span-full p-16 text-center card-3d border-dashed border-slate-300">
                 <p className="text-slate-500 font-medium text-lg">No se encontraron expedientes que coincidan con la búsqueda.</p>
               </div>
             )}
@@ -1255,7 +1264,7 @@ export default function App() {
               <div 
                 key={leg.id}
                 onClick={() => setSelectedLegislator(leg)}
-                className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl hover:shadow-sm .5 transition-all duration-300 cursor-pointer group flex flex-col relative overflow-hidden"
+                className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
                 <div className="absolute top-0 left-0 w-1.5 h-full opacity-70 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: leg.color }}></div>
@@ -1272,11 +1281,11 @@ export default function App() {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mb-6 flex-1 pl-2">
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                  <div className="card-3d p-4">
                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Asistencia</div>
                     <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.asistencia}%</div>
                   </div>
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                  <div className="card-3d p-4">
                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Lealtad</div>
                     <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.lealtad}%</div>
                   </div>
@@ -1288,7 +1297,7 @@ export default function App() {
               </div>
             ))}
             {filteredLegisladores.length === 0 && (
-              <div className="col-span-full p-16 text-center text-slate-500 bg-white border border-slate-200 shadow-sm rounded-3xl border border-dashed border-slate-300">
+              <div className="col-span-full p-16 text-center text-slate-500 card-3d border-dashed border-slate-300">
                 <p className="font-medium text-lg">No se encontraron legisladores que coincidan con la búsqueda.</p>
               </div>
             )}
@@ -1352,7 +1361,7 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className="flex flex-col items-end bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col items-end card-3d p-4 bg-slate-50">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Impacto Regulatorio</div>
               <div className={`text-4xl font-mono font-light tracking-tighter ${
                 exp.impacto_score >= 80 ? 'text-red-600' :
@@ -1371,9 +1380,9 @@ export default function App() {
                   <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shadow-sm">
                     <BookOpen className="w-5 h-5 text-[#8B1A1A]" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Resumen IA (Ejecutivo)</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Resumen LEXA AI (Ejecutivo)</h3>
                 </div>
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div className="card-3d p-6">
                   <p className="text-slate-700 leading-relaxed text-lg">{exp.resumen_ia.ejecutivo}</p>
                   
                   <div className="mt-8">
@@ -1413,7 +1422,7 @@ export default function App() {
               </div>
 
               {/* Chat Section */}
-              <div className="mt-12 bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden border border-slate-200 shadow-sm flex flex-col h-[600px] chat-section relative">
+              <div className="mt-12 card-3d overflow-hidden flex flex-col h-[600px] chat-section relative bg-white">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#8B1A1A] to-red-500"></div>
                 <div className="bg-white  p-5 border-b border-slate-200 flex items-center space-x-4 mt-1.5">
                   <div className="w-12 h-12 rounded-2xl bg-[#8B1A1A] flex items-center justify-center shadow-sm">
@@ -1469,7 +1478,7 @@ export default function App() {
 
             <div className="col-span-1 space-y-8">
               {exp.video_youtube && (
-                <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group">
+                <div className="card-3d card-3d-hover p-6 relative overflow-hidden group">
                   <div className="absolute top-0 left-0 w-full h-1 bg-red-600/20 group-hover:bg-red-600 transition-colors"></div>
                   <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
                     <Youtube className="w-5 h-5 mr-3 text-red-600" />
@@ -1497,7 +1506,7 @@ export default function App() {
                 </div>
               )}
 
-              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
                 <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center uppercase tracking-wider mt-1">
                   <Users className="w-5 h-5 mr-3 text-slate-500" />
@@ -1521,7 +1530,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
                 <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
                   <FileText className="w-5 h-5 mr-3 text-slate-500" />
@@ -1542,7 +1551,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
                 <h3 className="text-sm font-bold text-slate-900 mb-5 uppercase tracking-wider mt-1">Sectores Afectados</h3>
                 <div className="flex flex-wrap gap-2.5">
@@ -1622,7 +1631,7 @@ export default function App() {
       </div>
 
       {!user ? (
-        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-16 text-center relative overflow-hidden">
+        <div className="card-3d p-16 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100"></div>
           <UserCircle className="w-20 h-20 text-slate-300 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-slate-900 mb-3">Inicia sesión para ver tu perfil</h2>
@@ -1634,7 +1643,7 @@ export default function App() {
       ) : (
         <div className="space-y-10">
           {/* User Info Card */}
-          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 flex items-center space-x-8 relative overflow-hidden">
+          <div className="card-3d p-8 flex items-center space-x-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-[#8B1A1A]"></div>
             <div className="h-28 w-28 rounded-full overflow-hidden border-4 border-white shadow-sm">
               <img src={user.photoURL || "https://picsum.photos/seed/user/200/200"} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -1658,7 +1667,7 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Saved Expedientes */}
-            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+            <div className="card-3d p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-blue-200"></div>
               <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                 <Bookmark className="w-6 h-6 mr-3 text-blue-600" />
@@ -1672,7 +1681,7 @@ export default function App() {
                     const exp = expedientes.find(e => e.id === id);
                     if (!exp) return null;
                     return (
-                      <div key={id} className="p-5 rounded-2xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm  transition-all duration-300 cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                      <div key={id} className="card-3d card-3d-hover p-5 cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors duration-300"></div>
                         <div className="flex justify-between items-start pl-3">
                           <span className="font-mono text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm group-hover:border-blue-200 group-hover:text-blue-600 transition-colors">{exp.clave_oficial}</span>
@@ -1689,7 +1698,7 @@ export default function App() {
             </div>
 
             {/* Subscribed Expedientes */}
-            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+            <div className="card-3d p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-amber-200"></div>
               <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                 <Bell className="w-6 h-6 mr-3 text-amber-500" />
@@ -1703,7 +1712,7 @@ export default function App() {
                     const exp = expedientes.find(e => e.id === id);
                     if (!exp) return null;
                     return (
-                      <div key={id} className="p-5 rounded-2xl border border-amber-100/60 bg-amber-50/30 hover:bg-white hover:shadow-sm  transition-all duration-300 cursor-pointer group relative overflow-hidden" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
+                      <div key={id} className="card-3d card-3d-hover p-5 cursor-pointer group relative overflow-hidden bg-amber-50/30" onClick={() => { setSelectedExpediente(exp); setCurrentView('explorar'); }}>
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-200 group-hover:bg-amber-500 transition-colors duration-300"></div>
                         <div className="flex justify-between items-start pl-3">
                           <span className="font-mono text-xs font-bold text-amber-700 bg-white px-2.5 py-1 rounded-lg border border-amber-200/50 shadow-sm group-hover:border-amber-300 transition-colors">{exp.clave_oficial}</span>
@@ -1720,7 +1729,7 @@ export default function App() {
             </div>
 
             {/* Saved Legisladores */}
-            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+            <div className="card-3d p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-purple-200"></div>
               <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                 <Star className="w-6 h-6 mr-3 text-purple-600" />
@@ -1734,7 +1743,7 @@ export default function App() {
                     const leg = legisladores.find(l => l.id === id);
                     if (!leg) return null;
                     return (
-                      <div key={id} className="p-5 rounded-2xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm  transition-all duration-300 cursor-pointer flex items-center justify-between group relative overflow-hidden" onClick={() => { setSelectedLegislator(leg); setCurrentView('explorar'); setExploreMode('legisladores'); }}>
+                      <div key={id} className="card-3d card-3d-hover p-5 cursor-pointer flex items-center justify-between group relative overflow-hidden" onClick={() => { setSelectedLegislator(leg); setCurrentView('explorar'); setExploreMode('legisladores'); }}>
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-purple-500 transition-colors duration-300"></div>
                         <div className="flex items-center space-x-4 pl-3">
                           <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
@@ -1774,7 +1783,7 @@ export default function App() {
           Volver a Legisladores
         </button>
 
-        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative">
+        <div className="card-3d overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
           <div className="absolute top-0 left-0 w-2 h-full opacity-70" style={{ backgroundColor: selectedLegislator.color }}></div>
           <div className="p-10 flex flex-col md:flex-row gap-10 items-start pl-12">
@@ -1866,7 +1875,7 @@ export default function App() {
                   setCurrentView('explorar');
                 }
               }}
-              className={`bg-white border border-slate-200 shadow-sm p-6 rounded-3xl border transition-all duration-300 cursor-pointer group relative overflow-hidden ${alerta.leida ? 'border-slate-200 hover:shadow-sm ' : 'bg-red-50/30 border-red-200/60 shadow-sm hover:shadow-sm '}`}
+              className={`card-3d card-3d-hover p-6 cursor-pointer group relative overflow-hidden ${alerta.leida ? '' : 'bg-red-50/30 border-red-200/60'}`}
             >
               <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors duration-300 ${alerta.leida ? 'bg-slate-200 group-hover:bg-[#8B1A1A]' : 'bg-red-400 group-hover:bg-red-600'}`}></div>
               <div className="flex gap-5 pl-3">
@@ -1919,7 +1928,7 @@ export default function App() {
         </div>
 
         <div className="space-y-8">
-          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+          <div className="card-3d p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
             <h3 className="text-xl font-bold text-slate-900 mb-5 flex items-center">
               <Search className="w-6 h-6 mr-3 text-slate-400" />
@@ -1994,9 +2003,9 @@ export default function App() {
 
       {/* Vote Details Modal */}
       {selectedVote && (
-        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4  animate-in fade-in duration-300">
-          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl shadow-sm max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-white/20">
-            <div className="p-8 border-b border-slate-200 flex justify-between items-start sticky top-0 bg-white  z-10">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="card-3d max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-white/20 bg-white">
+            <div className="p-8 border-b border-slate-200 flex justify-between items-start sticky top-0 bg-white z-10">
               <div>
                 <div className="flex items-center space-x-3 mb-3">
                   <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest shadow-sm ${
@@ -2041,13 +2050,13 @@ export default function App() {
               </div>
 
               {/* AI Summary */}
-              <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl p-6 border border-red-100 shadow-sm relative overflow-hidden">
+              <div className="card-3d p-6 relative overflow-hidden bg-gradient-to-br from-red-50 to-white border-red-100">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#8B1A1A]"></div>
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="p-2 bg-white rounded-xl shadow-sm border border-red-100">
                     <Bot className="w-5 h-5 text-[#8B1A1A]" />
                   </div>
-                  <h3 className="font-bold text-xl text-slate-900">Resumen del Debate (IA)</h3>
+                  <h3 className="font-bold text-xl text-slate-900">Resumen del Debate (LEXA AI)</h3>
                 </div>
                 <p className="text-slate-700 text-base leading-relaxed pl-1">
                   {selectedVote.resumen_ia_votacion}
@@ -2057,19 +2066,19 @@ export default function App() {
               {/* Voting Results */}
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resultados de la Votación</h3>
-                <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl shadow-sm">
+                <div className="card-3d p-6">
                   <VoteChart favor={selectedVote.votos_favor} contra={selectedVote.votos_contra} abstencion={selectedVote.abstenciones} />
                   
                   <div className="grid grid-cols-3 gap-6 text-center mb-8 mt-6">
-                    <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
+                    <div className="card-3d p-4 border-emerald-100">
                       <div className="text-3xl font-mono font-light text-emerald-600 tracking-tighter">{selectedVote.votos_favor}</div>
                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">A Favor</div>
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+                    <div className="card-3d p-4 border-red-100">
                       <div className="text-3xl font-mono font-light text-red-600 tracking-tighter">{selectedVote.votos_contra}</div>
                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">En Contra</div>
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="card-3d p-4 border-slate-200">
                       <div className="text-3xl font-mono font-light text-slate-600 tracking-tighter">{selectedVote.abstenciones}</div>
                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Abstenciones</div>
                     </div>
@@ -2187,8 +2196,8 @@ export default function App() {
       )}
       {/* Legislator Detail Modal */}
       {selectedLegislator && (
-        <div className="fixed inset-0 bg-slate-900/60  z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white/90  rounded-3xl shadow-sm border border-white/50 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300 relative">
+        <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="card-3d w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300 relative bg-white">
             <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
             <div className="absolute top-0 left-0 w-2 h-full opacity-70" style={{ backgroundColor: selectedLegislator.color }}></div>
             
@@ -2220,28 +2229,28 @@ export default function App() {
             
             <div className="p-10 overflow-y-auto bg-slate-50/30 pl-12">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div className="card-3d p-6">
                   <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Asistencia</div>
                   <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.asistencia}%</div>
                   <div className="w-full bg-slate-100 rounded-full h-2 mt-4 ">
                     <div className="bg-emerald-500 h-2 rounded-full shadow-sm" style={{ width: `${selectedLegislator.asistencia}%` }}></div>
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div className="card-3d p-6">
                   <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Lealtad Partidista</div>
                   <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.lealtad}%</div>
                   <div className="w-full bg-slate-100 rounded-full h-2 mt-4 ">
                     <div className="bg-[#8B1A1A] h-2 rounded-full shadow-sm" style={{ width: `${selectedLegislator.lealtad}%` }}></div>
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div className="card-3d p-6">
                   <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Iniciativas Votadas</div>
                   <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.historial_votos.length}</div>
                 </div>
               </div>
 
               <h3 className="text-xl font-bold text-slate-900 mb-6">Historial de Votaciones</h3>
-              <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden shadow-sm">
+              <div className="card-3d overflow-hidden">
                 <table className="w-full text-sm text-left">
                   <thead className="bg-slate-50/80 text-[10px] text-slate-400 uppercase font-bold tracking-widest border-b border-slate-200">
                     <tr>

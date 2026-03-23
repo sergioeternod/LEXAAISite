@@ -261,7 +261,11 @@ export const votaciones = [
       { nombre: "Francisco Vázquez", partido: "Morena", voto: "pendiente", avatar: "FV", color: "#B3282D" },
       { nombre: "Elías Rescala", partido: "PRI", voto: "pendiente", avatar: "ER", color: "#00953B" },
       { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "pendiente", avatar: "PF", color: "#0057A0" },
-      { nombre: "José Couttolenc", partido: "PVEM", voto: "pendiente", avatar: "JC", color: "#50B747" }
+      { nombre: "José Couttolenc", partido: "PVEM", voto: "pendiente", avatar: "JC", color: "#50B747" },
+      { nombre: "Azucena Cisneros", partido: "Morena", voto: "pendiente", avatar: "AC", color: "#B3282D" },
+      { nombre: "Enrique Vargas", partido: "PAN", voto: "pendiente", avatar: "EV", color: "#0057A0" },
+      { nombre: "Juan Zepeda", partido: "MC", voto: "pendiente", avatar: "JZ", color: "#FF8200" },
+      { nombre: "Trinidad Franco", partido: "PT", voto: "pendiente", avatar: "TF", color: "#D9131C" }
     ]
   },
   {
@@ -287,7 +291,11 @@ export const votaciones = [
       { nombre: "Francisco Vázquez", partido: "Morena", voto: "favor", avatar: "FV", color: "#B3282D" },
       { nombre: "José Couttolenc", partido: "PVEM", voto: "favor", avatar: "JC", color: "#50B747" },
       { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "contra", avatar: "PF", color: "#0057A0" },
-      { nombre: "Elías Rescala", partido: "PRI", voto: "abstencion", avatar: "ER", color: "#00953B" }
+      { nombre: "Elías Rescala", partido: "PRI", voto: "abstencion", avatar: "ER", color: "#00953B" },
+      { nombre: "Azucena Cisneros", partido: "Morena", voto: "favor", avatar: "AC", color: "#B3282D" },
+      { nombre: "Enrique Vargas", partido: "PAN", voto: "contra", avatar: "EV", color: "#0057A0" },
+      { nombre: "Juan Zepeda", partido: "MC", voto: "contra", avatar: "JZ", color: "#FF8200" },
+      { nombre: "Trinidad Franco", partido: "PT", voto: "favor", avatar: "TF", color: "#D9131C" }
     ]
   }
 ];
@@ -420,8 +428,76 @@ export const legisladores = [
       { votacion_id: "vot-001", sentido: "pendiente" },
       { votacion_id: "vot-002", sentido: "favor" }
     ]
-  }
+  },
+  { id: "leg-009", nombre: "Azucena Cisneros Coss", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Asuntos Metropolitanos"], asistencia: 97, lealtad: 100, avatar: "AC", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-010", nombre: "Isaac Montoya Márquez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Juventud y Deporte"], asistencia: 95, lealtad: 100, avatar: "IM", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-011", nombre: "Daniel Sibaja González", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Comunicaciones y Transportes"], asistencia: 96, lealtad: 100, avatar: "DS", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-012", nombre: "Faustino de la Cruz Silva", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Contraloría"], asistencia: 94, lealtad: 100, avatar: "FC", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-013", nombre: "Mónica Miriam Granillo Velazco", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Educación"], asistencia: 98, lealtad: 100, avatar: "MG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-014", nombre: "Gerardo Ulloa Pérez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Procuración de Justicia"], asistencia: 93, lealtad: 100, avatar: "GU", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-015", nombre: "Luz Ma. Hernández Bermúdez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Desarrollo Turístico"], asistencia: 95, lealtad: 100, avatar: "LH", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-016", nombre: "Carmen de la Rosa Mendoza", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Planeación y Gasto"], asistencia: 97, lealtad: 100, avatar: "CR", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-017", nombre: "Abraham Saroné Campos", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Educación"], asistencia: 99, lealtad: 100, avatar: "AS", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-018", nombre: "Yesica Yanet Rojas Hernández", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Salud"], asistencia: 94, lealtad: 100, avatar: "YR", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-019", nombre: "Marco Antonio Cruz Cruz", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Desarrollo Urbano"], asistencia: 96, lealtad: 100, avatar: "MC", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-020", nombre: "Anuar Azar Figueroa", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Gobernación"], asistencia: 92, lealtad: 95, avatar: "AA", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-021", nombre: "Enrique Vargas del Villar", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Jucopo"], asistencia: 88, lealtad: 98, avatar: "EV", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-022", nombre: "Ingrid Schemelensky Castro", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Mesa Directiva"], asistencia: 96, lealtad: 97, avatar: "IS", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-023", nombre: "Román Francisco Cortés Lugo", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Seguridad Pública"], asistencia: 94, lealtad: 96, avatar: "RC", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-024", nombre: "Cristina Ruiz Sandoval", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Derechos Humanos"], asistencia: 91, lealtad: 99, avatar: "CR", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-025", nombre: "Paola Jiménez Hernández", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Igualdad de Género"], asistencia: 97, lealtad: 95, avatar: "PJ", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-026", nombre: "Braulio Álvarez Jasso", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Asuntos Municipales"], asistencia: 95, lealtad: 98, avatar: "BA", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-027", nombre: "Myriam Cárdenas Rojas", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Cultura"], asistencia: 93, lealtad: 97, avatar: "MC", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-028", nombre: "Vanessa Linares Zetina", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Medio Ambiente"], asistencia: 96, lealtad: 94, avatar: "VL", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-029", nombre: "María Luisa Mendoza Mondragón", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Asuntos Agrarios"], asistencia: 98, lealtad: 96, avatar: "ML", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-030", nombre: "Silvia Barberena Maldonado", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Vivienda"], asistencia: 94, lealtad: 99, avatar: "SB", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-031", nombre: "Sergio García Sosa", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Seguridad"], asistencia: 92, lealtad: 100, avatar: "SG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-032", nombre: "Trinidad Franco Arpero", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Trabajo"], asistencia: 97, lealtad: 98, avatar: "TF", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-033", nombre: "Rigoberto Vargas Cervantes", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Educación"], asistencia: 95, lealtad: 92, avatar: "RV", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-034", nombre: "Alicia Mercado Moreno", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Discapacidad"], asistencia: 98, lealtad: 100, avatar: "AM", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-035", nombre: "Beatriz García Villegas", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Recursos Hidráulicos"], asistencia: 96, lealtad: 100, avatar: "BG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-036", nombre: "Dionicio Jorge García Guerrero", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Finanzas"], asistencia: 94, lealtad: 100, avatar: "DG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-037", nombre: "Edith Marisol Mercado Torres", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Turismo"], asistencia: 93, lealtad: 100, avatar: "EM", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-038", nombre: "Emiliano Aguirre Cruz", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Obra Pública"], asistencia: 95, lealtad: 100, avatar: "EA", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-039", nombre: "Jezabel Delgado Flores", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Asuntos Electorales"], asistencia: 97, lealtad: 100, avatar: "JD", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-040", nombre: "Jorge García Sánchez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Seguridad"], asistencia: 92, lealtad: 100, avatar: "JG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-041", nombre: "Karina Labastida Sotelo", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Género"], asistencia: 99, lealtad: 100, avatar: "KL", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-042", nombre: "Max Correa Hernández", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Protección Civil"], asistencia: 96, lealtad: 100, avatar: "MC", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-043", nombre: "Rosario Elizalde Vázquez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Cultura"], asistencia: 95, lealtad: 100, avatar: "RE", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-044", nombre: "Valentín González Bautista", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Hacienda"], asistencia: 98, lealtad: 100, avatar: "VG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-045", nombre: "Adrián Manuel Galicia Salceda", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Presupuesto"], asistencia: 94, lealtad: 100, avatar: "AG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-046", nombre: "Anais Miriam Burgos Hernandez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Comercio"], asistencia: 97, lealtad: 100, avatar: "AB", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-047", nombre: "Daniel Andrés Sibaja González", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Movilidad"], asistencia: 96, lealtad: 100, avatar: "DS", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-048", nombre: "Griselda Santana Valero", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Justicia"], asistencia: 95, lealtad: 100, avatar: "GS", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-049", nombre: "Lourdes Jezabel Delgado Flores", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Electoral"], asistencia: 93, lealtad: 100, avatar: "LD", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-050", nombre: "María del Carmen de la Rosa Mendoza", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Finanzas"], asistencia: 98, lealtad: 100, avatar: "MD", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-051", nombre: "Mario Ariel Juárez Rodríguez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Penitenciario"], asistencia: 92, lealtad: 100, avatar: "MJ", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-052", nombre: "Nazario Gutiérrez Martínez", partido: "Morena", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Transporte"], asistencia: 97, lealtad: 100, avatar: "NG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-053", nombre: "Gerardo Lamas Pombo", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Medio Ambiente"], asistencia: 95, lealtad: 96, avatar: "GL", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-054", nombre: "Francisco Brian Rojas Cano", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Juventud"], asistencia: 94, lealtad: 95, avatar: "FR", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-055", nombre: "Martha Amalia Moya Bastón", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Economía"], asistencia: 96, lealtad: 98, avatar: "MM", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-056", nombre: "Leticia Mejía García", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Indígenas"], asistencia: 97, lealtad: 99, avatar: "LM", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-057", nombre: "David Parra Sánchez", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Trabajo"], asistencia: 93, lealtad: 98, avatar: "DP", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-058", nombre: "Enrique Jacob Rocha", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Economía"], asistencia: 95, lealtad: 97, avatar: "EJ", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-059", nombre: "Fernando González Mejía", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Urbano"], asistencia: 92, lealtad: 96, avatar: "FG", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-060", nombre: "Gretel González Aguirre", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Educación"], asistencia: 96, lealtad: 98, avatar: "GG", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-061", nombre: "Isabel Sánchez Holguín", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Mujeres"], asistencia: 98, lealtad: 99, avatar: "IS", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-062", nombre: "Jesús Gerardo Izquierdo Rojas", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Cultura"], asistencia: 94, lealtad: 97, avatar: "JI", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] },
+  { id: "leg-063", nombre: "Héctor Raúl García González", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Agua"], asistencia: 95, lealtad: 95, avatar: "HG", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-064", nombre: "Claudia Desiree Morales Robledo", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Salud"], asistencia: 97, lealtad: 96, avatar: "CM", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-065", nombre: "Luis Alberto Carballo Gutiérrez", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Deporte"], asistencia: 94, lealtad: 94, avatar: "LC", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-066", nombre: "Martha Azucena Camacho Reynoso", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Agrario"], asistencia: 96, lealtad: 97, avatar: "MC", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-067", nombre: "Israel Espíndola López", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Urbano"], asistencia: 95, lealtad: 95, avatar: "IE", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-068", nombre: "Gloria Vanessa Linares Zetina", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Género"], asistencia: 98, lealtad: 98, avatar: "VL", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-069", nombre: "Itzel Guadalupe Pérez Correa", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Juventud"], asistencia: 96, lealtad: 96, avatar: "IP", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-070", nombre: "Ana Yurixi Leyva Piñón", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Mujeres"], asistencia: 97, lealtad: 99, avatar: "AL", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-071", nombre: "Gabriel Kalid Mohamed Báez", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Justicia"], asistencia: 94, lealtad: 98, avatar: "GK", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-072", nombre: "Yareth Adriana Quezada Valdés", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", comisiones: ["Salud"], asistencia: 95, lealtad: 97, avatar: "YQ", historial_votos: [{ votacion_id: "vot-002", sentido: "favor" }] },
+  { id: "leg-073", nombre: "Ruth Salinas Reyes", partido: "MC", color: "#FF8200", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Gobernación"], asistencia: 96, lealtad: 95, avatar: "RS", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-074", nombre: "Martín Zepeda Hernández", partido: "MC", color: "#FF8200", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Finanzas"], asistencia: 94, lealtad: 92, avatar: "MZ", historial_votos: [{ votacion_id: "vot-002", sentido: "contra" }] },
+  { id: "leg-075", nombre: "Viridiana Fuentes Cruz", partido: "PRD", color: "#FFCC00", estado: "Edomex", tipo_eleccion: "Pluri", comisiones: ["Juventud"], asistencia: 95, lealtad: 94, avatar: "VF", historial_votos: [{ votacion_id: "vot-002", sentido: "abstencion" }] }
 ];
+
 
 export const resumenesSemanales = [
   {

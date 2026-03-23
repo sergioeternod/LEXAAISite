@@ -39,9 +39,9 @@ Vean cómo en los resultados de búsqueda ya tengo información procesada: el fo
 *(Pantalla: Detalle del Expediente)*
 
 **Narrativa:**
-"Esta es la vista de detalle de un expediente. Aquí es donde la Inteligencia Artificial hace el trabajo pesado por nosotros.
+"Esta es la vista de detalle de un expediente. Aquí es donde LEXA AI hace el trabajo pesado por nosotros.
 
-En lugar de tener que leer un PDF de 200 páginas, LEXA genera un **Resumen Ejecutivo** inmediato. Pero en el sector público y legal, no podemos permitirnos errores o 'alucinaciones' de la IA. 
+En lugar de tener que leer un PDF de 200 páginas, LEXA genera un **Resumen Ejecutivo** inmediato. Pero en el sector público y legal, no podemos permitirnos errores o 'alucinaciones' de LEXA AI. 
 
 Por eso, LEXA incluye la sección de **Evidencia Extraída (NLP)**. Fíjense cómo cada afirmación del resumen está sustentada por un fragmento exacto del texto original. Por ejemplo, aquí nos indica exactamente que *'las entidades deberán notificar incidentes en un plazo máximo de 12 horas'* y nos da la referencia del documento. **LEXA no opina, LEXA sustenta.**
 
@@ -52,7 +52,7 @@ Del lado derecho, tenemos estructurado todo el contexto:
 
 ---
 
-## 4. El Asistente Contextual (Raciocinio IA)
+## 4. El Asistente Contextual (Raciocinio LEXA AI)
 *(Acción: Hacer scroll hacia abajo hasta la sección del Chat "LEXA AI")*
 
 **Narrativa:**
@@ -64,7 +64,7 @@ Vamos a hacerle una pregunta."
 *(Acción: Escribir en el chat: "¿Cuáles son las multas o sanciones económicas que propone esta ley y a quiénes afectan?")*
 
 "Al enviar la pregunta, LEXA procesa la información del expediente y razona la respuesta basándose únicamente en la evidencia legal."
-*(Esperar la respuesta de la IA)*
+*(Esperar la respuesta de LEXA AI)*
 
 "Como ven, me responde de manera precisa, indicando los montos (ej. 50,000 UMAs) y a qué tipo de empresas afecta. Esto reduce horas de análisis legal a solo segundos, permitiendo a los equipos de asuntos públicos reaccionar más rápido."
 
