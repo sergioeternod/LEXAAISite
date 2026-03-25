@@ -34,8 +34,11 @@ import {
   Eye
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
+import EdomexMap from './components/EdomexMap';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { districtMunicipalities } from './data/districtMunicipalities';
+import { legisladorData } from './data/legisladorFotos';
 import { expedientes, alertas, kpis, votaciones, resumenesSemanales, legisladores } from './data/mockData';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -65,6 +68,7 @@ const VoteChart = memo(({ favor, contra, abstencion }: { favor: number, contra: 
       
       <div className="relative w-full aspect-square max-h-64 mx-auto mb-8 flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
+          {/* @ts-ignore */}
           <PieChart>
             <Pie
               data={data}
@@ -142,6 +146,7 @@ export default function App() {
   // Explore Mode State
   const [exploreMode, setExploreMode] = useState<'expedientes' | 'legisladores'>('expedientes');
   const [selectedLegislator, setSelectedLegislator] = useState<any>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
 
   // Chat State
   const [chatMessages, setChatMessages] = useState<{role: string, text: string}[]>([]);
@@ -518,7 +523,7 @@ export default function App() {
       Impacto Score: ${selectedExpediente.impacto_score}/100
       Actores Involucrados: ${selectedExpediente.actores ? selectedExpediente.actores.map((a: any) => `${a.nombre} (${a.rol} - ${a.partido})`).join(", ") : 'No especificados'}
       Resumen Ejecutivo: ${selectedExpediente.resumen_ia.ejecutivo}
-      Evidencia clave: ${selectedExpediente.resumen_ia.evidencia.map((e: any) => e.texto).join(" | ")}
+      Evidencia clave: ${selectedExpediente.resumen_ia.evidencia ? selectedExpediente.resumen_ia.evidencia.map((e: any) => e.texto).join(" | ") : 'No especificada'}
       
       Responde a las preguntas del usuario basándote en esta información. Presta especial atención a detallar el impacto (basado en el Impacto Score) y los actores involucrados cuando se te pregunte. Sé profesional, analítico, objetivo y conciso. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.
       
@@ -588,6 +593,12 @@ export default function App() {
           <span className="flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#8B1A1A] rounded-full shadow-sm">
             2
           </span>
+        </button>
+        <button 
+          onClick={() => { setCurrentView('mapa'); setSelectedExpediente(null); }}
+          className={`px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ${currentView === 'mapa' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
+        >
+          Mapa
         </button>
       </nav>
 
@@ -788,6 +799,7 @@ export default function App() {
           <h3 className="text-xl font-bold text-slate-900 mb-8">Actividad Legislativa <span className="text-sm font-sans font-normal text-slate-500 ml-2">(Últimos 4 meses)</span></h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              {/* @ts-ignore */}
               <BarChart data={kpis.actividadMensual} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
@@ -805,6 +817,7 @@ export default function App() {
           <h3 className="text-xl font-bold text-slate-900 mb-8">Distribución por Sector</h3>
           <div className="h-72 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              {/* @ts-ignore */}
               <PieChart>
                 <Pie
                   data={kpis.sectoresTop}
@@ -937,7 +950,7 @@ export default function App() {
               <p className="text-sm font-bold text-slate-800 mb-5 line-clamp-2 group-hover:text-red-600 transition-colors flex-1 leading-snug">{exp.video_youtube.titulo}</p>
               
               <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative mt-auto border border-slate-200  group-hover:shadow-sm transition-shadow">
-                <img src={`https://img.youtube.com/vi/${exp.video_youtube.id}/mqdefault.jpg`} alt={exp.video_youtube.titulo} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" />
+                <img src={exp.video_youtube?.id ? `https://img.youtube.com/vi/${exp.video_youtube.id}/mqdefault.jpg` : "https://picsum.photos/seed/video/300/200"} alt={exp.video_youtube?.titulo || "Video"} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-14 h-14 bg-red-600/90  rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300 border border-white/20">
                     <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
@@ -1066,16 +1079,23 @@ export default function App() {
       return matchesSearch && matchesStatus && matchesDate;
     });
 
-    const filteredLegisladores = legisladores.filter(l => {
-      const normalizedQuery = normalizeText(searchQuery);
-      const combinedText = normalizeText(`${l.nombre} ${l.partido} ${l.estado}`);
-      
-      const searchTerms = normalizedQuery.split(' ').filter(term => term.length > 0);
-      const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => combinedText.includes(term));
-      
-      const matchesParty = filterParty === 'Todos' || l.partido === filterParty;
-      return matchesSearch && matchesParty;
-    });
+    const filteredLegisladores = legisladores
+      .map((l, index) => ({ ...l, districtId: index < 45 ? index + 1 : null }))
+      .filter(l => {
+        const normalizedQuery = normalizeText(searchQuery);
+        const combinedText = normalizeText(`${l.nombre} ${l.partido} ${l.estado}`);
+        
+        const searchTerms = normalizedQuery.split(' ').filter(term => term.length > 0);
+        const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => combinedText.includes(term));
+        
+        const matchesParty = filterParty === 'Todos' || l.partido === filterParty;
+        return matchesSearch && matchesParty;
+      })
+      .sort((a, b) => {
+        if (a.tipo_eleccion === 'RP' && b.tipo_eleccion !== 'RP') return -1;
+        if (a.tipo_eleccion !== 'RP' && b.tipo_eleccion === 'RP') return 1;
+        return 0;
+      });
 
     return (
       <div className="space-y-8 max-w-5xl mx-auto w-full">
@@ -1260,42 +1280,66 @@ export default function App() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredLegisladores.map(leg => (
-              <div 
-                key={leg.id}
-                onClick={() => setSelectedLegislator(leg)}
-                className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
-                <div className="absolute top-0 left-0 w-1.5 h-full opacity-70 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: leg.color }}></div>
-                <div className="flex items-start justify-between mb-6 mt-2 pl-2">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-500  border border-white/50" style={{ color: leg.color, backgroundColor: `${leg.color}15` }}>
-                      {leg.avatar}
+            {filteredLegisladores.map(leg => {
+              const municipios = leg.districtId ? (districtMunicipalities[leg.districtId as keyof typeof districtMunicipalities] || []) : [];
+              return (
+                <div 
+                  key={leg.id}
+                  onClick={() => setSelectedLegislator(leg)}
+                  className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:from-[#8B1A1A] group-hover:to-red-500 transition-all duration-500"></div>
+                  <div className="absolute top-0 left-0 w-1.5 h-full opacity-70 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: leg.color }}></div>
+                  <div className="flex items-start justify-between mb-6 mt-2 pl-2">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-100 border border-white/50">
+                        <img 
+                          src={legisladorData[leg.id]?.foto ? encodeURI(legisladorData[leg.id].foto) : `https://picsum.photos/seed/${leg.id}/100/100`} 
+                          alt={leg.nombre} 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors leading-tight">{leg.nombre}</h3>
+                        <p className="text-sm font-medium text-slate-500 mt-1">{leg.partido} • {leg.tipo_eleccion === 'RP' ? 'Representación Proporcional' : `Distrito ${leg.districtId}`}</p>
+                        {legisladorData[leg.id]?.perfil && (
+                          <a 
+                            href={legisladorData[leg.id].perfil} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-[#8B1A1A] font-bold hover:underline mt-1 block"
+                          >
+                            Ver perfil oficial
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors leading-tight">{leg.nombre}</h3>
-                      <p className="text-sm font-medium text-slate-500 mt-1">{leg.partido} • {leg.estado}</p>
+                  </div>
+                  
+                  {leg.districtId && (
+                    <div className="text-xs text-slate-500 mb-4 pl-2">
+                      <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Municipios:</span> <span className="font-medium">{municipios.join(", ")}</span>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6 flex-1 pl-2">
-                  <div className="card-3d p-4">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Asistencia</div>
-                    <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.asistencia}%</div>
-                  </div>
-                  <div className="card-3d p-4">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Lealtad</div>
-                    <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.lealtad}%</div>
-                  </div>
-                </div>
+                  )}
 
-                <div className="text-xs text-slate-500 mt-auto pt-5 border-t border-slate-100/50 pl-2">
-                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Comisiones:</span> <span className="font-medium">{leg.comisiones.join(", ")}</span>
+                  <div className="grid grid-cols-2 gap-4 mb-6 flex-1 pl-2">
+                    <div className="card-3d p-4">
+                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Asistencia</div>
+                      <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.asistencia}%</div>
+                    </div>
+                    <div className="card-3d p-4">
+                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1.5">Lealtad</div>
+                      <div className="text-2xl font-mono font-light text-slate-900 tracking-tighter">{leg.lealtad}%</div>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-500 mt-auto pt-5 border-t border-slate-100/50 pl-2">
+                    <span className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Comisiones:</span> <span className="font-medium">{(leg.comisiones || []).join(", ")}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {filteredLegisladores.length === 0 && (
               <div className="col-span-full p-16 text-center text-slate-500 card-3d border-dashed border-slate-300">
                 <p className="font-medium text-lg">No se encontraron legisladores que coincidan con la búsqueda.</p>
@@ -1621,6 +1665,60 @@ export default function App() {
     );
   };
 
+  const renderMapa = () => (
+    <div className="space-y-8 max-w-6xl mx-auto w-full pb-16 animate-in fade-in duration-300">
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Mapa Legislativo</h1>
+          <p className="text-slate-500 mt-2 text-lg">Visualización geográfica de los distritos electorales del Estado de México.</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 card-3d p-4">
+          <EdomexMap onDistrictSelect={setSelectedDistrict} onLegislatorSelect={setSelectedLegislator} />
+        </div>
+        <div className="lg:col-span-1">
+          {selectedDistrict ? (
+            <div 
+              className="card-3d animate-in slide-in-from-right duration-300 border-l-8 overflow-hidden"
+              style={{ 
+                borderColor: legisladores[selectedDistrict - 1]?.color || '#ffffff'
+              }}
+            >
+              <div 
+                className="p-4 text-white font-bold text-lg"
+                style={{ backgroundColor: legisladores[selectedDistrict - 1]?.color || '#ffffff' }}
+              >
+                Distrito {selectedDistrict}
+              </div>
+              <div className="p-6">
+                {legisladores[selectedDistrict - 1] ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <img src={legisladores[selectedDistrict - 1].avatar || "https://picsum.photos/seed/legislator/100/100"} alt={legisladores[selectedDistrict - 1].nombre} className="w-16 h-16 rounded-full object-cover" referrerPolicy="no-referrer" />
+                      <div>
+                        <p className="font-bold text-lg">{legisladores[selectedDistrict - 1].nombre}</p>
+                        <p className="text-slate-500">{legisladores[selectedDistrict - 1].partido}</p>
+                      </div>
+                    </div>
+                    <p><strong>Comisiones:</strong> {(legisladores[selectedDistrict - 1].comisiones || []).join(', ')}</p>
+                    <p><strong>Asistencia:</strong> {legisladores[selectedDistrict - 1].asistencia}%</p>
+                  </div>
+                ) : (
+                  <p>Información del legislador no disponible.</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="card-3d p-6 text-slate-500">
+              Selecciona un distrito en el mapa para ver la información del legislador.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderPerfil = () => (
     <div className="space-y-8 max-w-5xl mx-auto w-full pb-16 animate-in fade-in duration-300">
       <div className="flex justify-between items-end mb-8">
@@ -1747,7 +1845,7 @@ export default function App() {
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-purple-500 transition-colors duration-300"></div>
                         <div className="flex items-center space-x-4 pl-3">
                           <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
-                            <img src={leg.avatar} alt={leg.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <img src={leg.avatar || "https://picsum.photos/seed/legislator/100/100"} alt={leg.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </div>
                           <div>
                             <p className="text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors leading-tight">{leg.nombre}</p>
@@ -1789,7 +1887,7 @@ export default function App() {
           <div className="p-10 flex flex-col md:flex-row gap-10 items-start pl-12">
             <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl overflow-hidden border-4 border-white shadow-sm flex-shrink-0 relative group">
               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"></div>
-              <img src={selectedLegislator.foto} alt={selectedLegislator.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <img src={selectedLegislator.foto || "https://picsum.photos/seed/legislator/200/200"} alt={selectedLegislator.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
             <div className="flex-1 w-full">
               <div className="flex justify-between items-start">
@@ -1994,6 +2092,7 @@ export default function App() {
             {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
             {currentView === 'explorar' && !selectedExpediente && !selectedLegislator && renderExplorar()}
             {currentView === 'alertas' && !selectedExpediente && !selectedLegislator && renderAlertas()}
+            {currentView === 'mapa' && !selectedExpediente && !selectedLegislator && renderMapa()}
             {currentView === 'perfil' && !selectedExpediente && !selectedLegislator && renderPerfil()}
             {selectedExpediente && renderExpedienteDetail()}
             {selectedLegislator && renderLegisladorDetail()}
@@ -2203,8 +2302,13 @@ export default function App() {
             
             <div className="p-8 border-b border-slate-200 flex justify-between items-start sticky top-0 bg-white  z-10 pl-10">
               <div className="flex items-center space-x-6">
-                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-3xl font-bold text-slate-500  border-2 border-white" style={{ color: selectedLegislator.color, backgroundColor: `${selectedLegislator.color}15` }}>
-                  {selectedLegislator.avatar}
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 border-2 border-white shadow-sm">
+                  <img 
+                    src={legisladorData[selectedLegislator.id]?.foto ? encodeURI(legisladorData[selectedLegislator.id].foto) : `https://picsum.photos/seed/${selectedLegislator.id}/100/100`} 
+                    alt={selectedLegislator.nombre} 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{selectedLegislator.nombre}</h2>
@@ -2245,9 +2349,40 @@ export default function App() {
                 </div>
                 <div className="card-3d p-6">
                   <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Iniciativas Votadas</div>
-                  <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{selectedLegislator.historial_votos.length}</div>
+                  <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">{(selectedLegislator.historial_votos || []).length}</div>
                 </div>
               </div>
+
+              {selectedLegislator.comisiones && selectedLegislator.comisiones.length > 0 && (
+                <div className="mb-10">
+                  <h3 className="text-xl font-bold text-slate-900 mb-6">Comisiones</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedLegislator.comisiones.map((comision: string, idx: number) => (
+                      <span key={idx} className="text-xs font-bold uppercase text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
+                        {comision}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+
+              {selectedLegislator.iniciativas_generadas && selectedLegislator.iniciativas_generadas.length > 0 && (
+                <div className="mb-10">
+                  <h3 className="text-xl font-bold text-slate-900 mb-6">Iniciativas Generadas</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    {selectedLegislator.iniciativas_generadas.map((expId: string) => {
+                      const exp = expedientes.find(e => e.id === expId);
+                      return exp ? (
+                        <div key={exp.id} className="card-3d p-4 flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-800">{exp.titulo}</span>
+                          <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded">{exp.estado_actual}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
 
               <h3 className="text-xl font-bold text-slate-900 mb-6">Historial de Votaciones</h3>
               <div className="card-3d overflow-hidden">
@@ -2260,7 +2395,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100/50">
-                    {selectedLegislator.historial_votos.map((voto: any, idx: number) => {
+                    {(selectedLegislator.historial_votos || []).map((voto: any, idx: number) => {
                       const votacionInfo = votaciones.find(v => v.id === voto.votacion_id);
                       return (
                         <tr key={idx} className="hover:bg-white transition-colors">
