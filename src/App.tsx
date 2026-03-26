@@ -1694,15 +1694,23 @@ export default function App() {
               <div className="p-6">
                 {legisladores[selectedDistrict - 1] ? (
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <img src={legisladores[selectedDistrict - 1].avatar || "https://picsum.photos/seed/legislator/100/100"} alt={legisladores[selectedDistrict - 1].nombre} className="w-16 h-16 rounded-full object-cover" referrerPolicy="no-referrer" />
-                      <div>
-                        <p className="font-bold text-lg">{legisladores[selectedDistrict - 1].nombre}</p>
-                        <p className="text-slate-500">{legisladores[selectedDistrict - 1].partido}</p>
-                      </div>
+                    <div className="flex flex-col items-center text-center">
+                      <img 
+                        src={legisladores[selectedDistrict - 1].avatar || "https://picsum.photos/seed/legislator/200/200"} 
+                        alt={legisladores[selectedDistrict - 1].nombre} 
+                        className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md mb-4" 
+                        referrerPolicy="no-referrer" 
+                      />
+                      <p className="font-bold text-xl">{legisladores[selectedDistrict - 1].nombre}</p>
+                      <p className="text-slate-500 text-lg">{legisladores[selectedDistrict - 1].partido}</p>
                     </div>
-                    <p><strong>Comisiones:</strong> {(legisladores[selectedDistrict - 1].comisiones || []).join(', ')}</p>
-                    <p><strong>Asistencia:</strong> {legisladores[selectedDistrict - 1].asistencia}%</p>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Comisiones:</strong> {(legisladores[selectedDistrict - 1].comisiones || []).join(', ')}</p>
+                      <p><strong>Asistencia:</strong> {legisladores[selectedDistrict - 1].asistencia}%</p>
+                      <p><strong>Tipo de elección:</strong> {legisladores[selectedDistrict - 1].tipo_eleccion === 'MR' ? 'Mayoría Relativa' : 'Representación Proporcional'}</p>
+                      <p><strong>Lealtad:</strong> {legisladores[selectedDistrict - 1].lealtad}%</p>
+                      <p><strong>Lealtad al Ejecutivo:</strong> {legisladores[selectedDistrict - 1].lealtad_ejecutivo}%</p>
+                    </div>
                   </div>
                 ) : (
                   <p>Información del legislador no disponible.</p>

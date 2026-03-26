@@ -51,46 +51,11 @@ const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSel
       if (onDistrictSelect) {
         onDistrictSelect(districtId);
       }
+      const legislador = legisladores[districtId - 1];
+      if (onLegislatorSelect && legislador) {
+        onLegislatorSelect(legislador);
+      }
     });
-
-    const legislador = legisladores[districtId - 1];
-    const municipios = districtMunicipalities[districtId as keyof typeof districtMunicipalities] || [];
-    const municipiosText = municipios.join(', ');
-
-    if (legislador) {
-      layer.bindPopup(`
-        <div style="font-family: sans-serif;">
-          <h3 style="margin: 0 0 5px 0;">Distrito ${districtId}</h3>
-          <p style="margin: 0;"><strong>Legislador:</strong> ${legislador.nombre}</p>
-          <p style="margin: 0;"><strong>Partido:</strong> ${legislador.partido}</p>
-          <p style="margin: 5px 0;"><strong>Municipios:</strong> ${municipiosText}</p>
-          <button id="btn-view-${districtId}" style="margin-top: 10px; color: #3388ff; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font-size: 14px;">
-            Ver perfil completo
-          </button>
-        </div>
-      `);
-
-      layer.on('popupopen', () => {
-        console.log('Popup opened for district', districtId);
-        const btn = document.getElementById(`btn-view-${districtId}`);
-        if (btn) {
-          btn.onclick = () => {
-            console.log('Button clicked for district', districtId);
-            if (onLegislatorSelect) {
-              onLegislatorSelect(legislador);
-            }
-          };
-        }
-      });
-    } else {
-      layer.bindPopup(`
-        <div style="font-family: sans-serif;">
-          <h3 style="margin: 0;">Distrito ${districtId}</h3>
-          <p style="margin: 5px 0;"><strong>Municipios:</strong> ${municipiosText}</p>
-          <p style="margin: 0;">Legislador no encontrado</p>
-        </div>
-      `);
-    }
   };
 
   const edomexBounds: L.LatLngBoundsExpression = [
