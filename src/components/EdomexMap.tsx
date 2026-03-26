@@ -9,9 +9,10 @@ import { districtMunicipalities } from '../data/districtMunicipalities';
 interface EdomexMapProps {
   onDistrictSelect?: (districtId: number) => void;
   onLegislatorSelect?: (legislador: any) => void;
+  onDistrictHover?: (districtId: number | null) => void;
 }
 
-const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSelect }) => {
+const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSelect, onDistrictHover }) => {
   console.log('EdomexMap rendering');
   const [geoData, setGeoData] = useState<any>(null);
 
@@ -54,6 +55,18 @@ const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSel
       const legislador = legisladores[districtId - 1];
       if (onLegislatorSelect && legislador) {
         onLegislatorSelect(legislador);
+      }
+    });
+
+    layer.on('mouseover', () => {
+      if (onDistrictHover) {
+        onDistrictHover(districtId);
+      }
+    });
+
+    layer.on('mouseout', () => {
+      if (onDistrictHover) {
+        onDistrictHover(null);
       }
     });
   };

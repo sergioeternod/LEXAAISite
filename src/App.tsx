@@ -147,6 +147,7 @@ export default function App() {
   const [exploreMode, setExploreMode] = useState<'expedientes' | 'legisladores'>('expedientes');
   const [selectedLegislator, setSelectedLegislator] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
+  const [hoveredDistrict, setHoveredDistrict] = useState<number | null>(null);
 
   // Chat State
   const [chatMessages, setChatMessages] = useState<{role: string, text: string}[]>([]);
@@ -170,6 +171,8 @@ export default function App() {
   // Advanced Filters
   const [filterStatus, setFilterStatus] = useState<string>('Todos');
   const [filterDate, setFilterDate] = useState<string>('Todos');
+
+  const displayDistrict = hoveredDistrict || selectedDistrict;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -1675,41 +1678,45 @@ export default function App() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 card-3d p-4">
-          <EdomexMap onDistrictSelect={setSelectedDistrict} onLegislatorSelect={setSelectedLegislator} />
+          <EdomexMap 
+            onDistrictSelect={setSelectedDistrict} 
+            onLegislatorSelect={setSelectedLegislator} 
+            onDistrictHover={setHoveredDistrict} 
+          />
         </div>
         <div className="lg:col-span-1">
-          {selectedDistrict ? (
+          {displayDistrict ? (
             <div 
               className="card-3d animate-in slide-in-from-right duration-300 border-l-8 overflow-hidden"
               style={{ 
-                borderColor: legisladores[selectedDistrict - 1]?.color || '#ffffff'
+                borderColor: legisladores[displayDistrict - 1]?.color || '#ffffff'
               }}
             >
               <div 
                 className="p-4 text-white font-bold text-lg"
-                style={{ backgroundColor: legisladores[selectedDistrict - 1]?.color || '#ffffff' }}
+                style={{ backgroundColor: legisladores[displayDistrict - 1]?.color || '#ffffff' }}
               >
-                Distrito {selectedDistrict}
+                Distrito {displayDistrict}
               </div>
               <div className="p-6">
-                {legisladores[selectedDistrict - 1] ? (
+                {legisladores[displayDistrict - 1] ? (
                   <div className="space-y-4">
                     <div className="flex flex-col items-center text-center">
                       <img 
-                        src={legisladores[selectedDistrict - 1].avatar || "https://picsum.photos/seed/legislator/200/200"} 
-                        alt={legisladores[selectedDistrict - 1].nombre} 
+                        src={legisladores[displayDistrict - 1].avatar || "https://picsum.photos/seed/legislator/200/200"} 
+                        alt={legisladores[displayDistrict - 1].nombre} 
                         className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md mb-4" 
                         referrerPolicy="no-referrer" 
                       />
-                      <p className="font-bold text-xl">{legisladores[selectedDistrict - 1].nombre}</p>
-                      <p className="text-slate-500 text-lg">{legisladores[selectedDistrict - 1].partido}</p>
+                      <p className="font-bold text-xl">{legisladores[displayDistrict - 1].nombre}</p>
+                      <p className="text-slate-500 text-lg">{legisladores[displayDistrict - 1].partido}</p>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <p><strong>Comisiones:</strong> {(legisladores[selectedDistrict - 1].comisiones || []).join(', ')}</p>
-                      <p><strong>Asistencia:</strong> {legisladores[selectedDistrict - 1].asistencia}%</p>
-                      <p><strong>Tipo de elección:</strong> {legisladores[selectedDistrict - 1].tipo_eleccion === 'MR' ? 'Mayoría Relativa' : 'Representación Proporcional'}</p>
-                      <p><strong>Lealtad:</strong> {legisladores[selectedDistrict - 1].lealtad}%</p>
-                      <p><strong>Lealtad al Ejecutivo:</strong> {legisladores[selectedDistrict - 1].lealtad_ejecutivo}%</p>
+                      <p><strong>Comisiones:</strong> {(legisladores[displayDistrict - 1].comisiones || []).join(', ')}</p>
+                      <p><strong>Asistencia:</strong> {legisladores[displayDistrict - 1].asistencia}%</p>
+                      <p><strong>Tipo de elección:</strong> {legisladores[displayDistrict - 1].tipo_eleccion === 'MR' ? 'Mayoría Relativa' : 'Representación Proporcional'}</p>
+                      <p><strong>Lealtad:</strong> {legisladores[displayDistrict - 1].lealtad}%</p>
+                      <p><strong>Lealtad al Ejecutivo:</strong> {legisladores[displayDistrict - 1].lealtad_ejecutivo}%</p>
                     </div>
                   </div>
                 ) : (
@@ -1719,7 +1726,7 @@ export default function App() {
             </div>
           ) : (
             <div className="card-3d p-6 text-slate-500">
-              Selecciona un distrito en el mapa para ver la información del legislador.
+              Selecciona o pasa el mouse sobre un distrito en el mapa para ver la información del legislador.
             </div>
           )}
         </div>
