@@ -37,9 +37,9 @@ import { GoogleGenAI } from '@google/genai';
 import EdomexMap from './components/EdomexMap';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { districtMunicipalities } from './data/districtMunicipalities';
-import { legisladorData } from './data/legisladorFotos';
 import { expedientes, alertas, kpis, votaciones, resumenesSemanales, legisladores } from './data/mockData';
+import { legisladorData } from './data/legisladorFotos';
+import { districtMunicipalities } from './data/districtMunicipalities';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -1703,7 +1703,7 @@ export default function App() {
                   <div className="space-y-4">
                     <div className="flex flex-col items-center text-center">
                       <img 
-                        src={legisladores[displayDistrict - 1].avatar || "https://picsum.photos/seed/legislator/200/200"} 
+                        src={legisladorData[legisladores[displayDistrict - 1].id]?.foto || "https://picsum.photos/seed/legislator/200/200"} 
                         alt={legisladores[displayDistrict - 1].nombre} 
                         className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md mb-4" 
                         referrerPolicy="no-referrer" 
