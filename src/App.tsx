@@ -462,24 +462,10 @@ export default function App() {
     }
   };
 
-  const exportToCSV = (data: any, filename: string) => {
-    // Basic CSV export
-    const headers = Object.keys(data).join(',');
-    const values = Object.values(data).map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
-    const csvContent = `data:text/csv;charset=utf-8,\uFEFF${headers}\n${values}`;
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${filename}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   const exportSummaryToPDF = async () => {
     if (!expedienteRef.current) return;
-    const canvas = await html2canvas(expedienteRef.current);
+    const canvas = await html2canvas(expedienteRef.current, { useCORS: true, scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -1536,10 +1522,6 @@ export default function App() {
                   <Bell className={`w-4 h-4 ${isSubscribed ? 'fill-current' : ''}`} />
                   <span>{isSubscribed ? 'Suscrito a Alertas' : 'Activar Alertas'}</span>
                 </button>
-                <button onClick={() => exportToCSV(exp, `expediente_${exp.clave_oficial}`)} className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide">
-                  <FileDown className="w-4 h-4" />
-                  <span>Exportar CSV</span>
-                </button>
                 <button onClick={exportSummaryToPDF} className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide">
                   <DownloadIcon className="w-4 h-4" />
                   <span>Descargar PDF</span>
@@ -2073,9 +2055,6 @@ export default function App() {
                   >
                     <Star className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
                     <span className="hidden sm:inline">{isSaved ? 'Siguiendo' : 'Seguir'}</span>
-                  </button>
-                  <button onClick={() => exportToCSV(selectedLegislator, `legislador_${selectedLegislator.id}`)} className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm">
-                    <DownloadIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
