@@ -71,4 +71,8 @@ body {
   .overflow-y-auto {
     overflow: visible !important;
   }
+  /* Prevent page breaks inside cards and images */
+  .card-3d, img, .related-initiative-card {
+    break-inside: avoid;
+  }
 }

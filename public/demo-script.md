@@ -1,4 +1,4 @@
-# Script de Demo: LEXA AI - Inteligencia Legislativa
+# Script de Demo: LEXA IA - Inteligencia Legislativa
 
 **Duración estimada:** 5 - 7 minutos
 **Audiencia:** Tomadores de decisión, equipos de asuntos públicos, legisladores.
@@ -9,7 +9,7 @@
 *(Pantalla inicial: Dashboard)*
 
 **Narrativa:**
-"Hola a todos. Hoy les presento **LEXA AI**, la plataforma de inteligencia legislativa diseñada para transformar cómo monitoreamos, analizamos y anticipamos el riesgo regulatorio. 
+"Hola a todos. Hoy les presento **LEXA IA**, la plataforma de inteligencia legislativa diseñada para transformar cómo monitoreamos, analizamos y anticipamos el riesgo regulatorio. 
 
 Lo que estamos viendo es el **Panel Institucional**. A diferencia de los portales tradicionales del gobierno que son difíciles de navegar, LEXA centraliza todo en tiempo real. 
 - Aquí arriba vemos nuestros KPIs: tenemos **1,245 expedientes activos** y el sistema ha detectado **18 alertas críticas** que requieren nuestra atención inmediata.
@@ -39,9 +39,9 @@ Vean cómo en los resultados de búsqueda ya tengo información procesada: el fo
 *(Pantalla: Detalle del Expediente)*
 
 **Narrativa:**
-"Esta es la vista de detalle de un expediente. Aquí es donde LEXA AI hace el trabajo pesado por nosotros.
+"Esta es la vista de detalle de un expediente. Aquí es donde LEXA IA hace el trabajo pesado por nosotros.
 
-En lugar de tener que leer un PDF de 200 páginas, LEXA genera un **Resumen Ejecutivo** inmediato. Pero en el sector público y legal, no podemos permitirnos errores o 'alucinaciones' de LEXA AI. 
+En lugar de tener que leer un PDF de 200 páginas, LEXA genera un **Resumen Ejecutivo** inmediato. Pero en el sector público y legal, no podemos permitirnos errores o 'alucinaciones' de LEXA IA. 
 
 Por eso, LEXA incluye la sección de **Evidencia Extraída (NLP)**. Fíjense cómo cada afirmación del resumen está sustentada por un fragmento exacto del texto original. Por ejemplo, aquí nos indica exactamente que *'las entidades deberán notificar incidentes en un plazo máximo de 12 horas'* y nos da la referencia del documento. **LEXA no opina, LEXA sustenta.**
 
@@ -52,11 +52,11 @@ Del lado derecho, tenemos estructurado todo el contexto:
 
 ---
 
-## 4. El Asistente Contextual (Raciocinio LEXA AI)
-*(Acción: Hacer scroll hacia abajo hasta la sección del Chat "LEXA AI")*
+## 4. El Asistente Contextual (Raciocinio LEXA IA)
+*(Acción: Hacer scroll hacia abajo hasta la sección del Chat "LEXA IA")*
 
 **Narrativa:**
-"Ahora, ¿qué pasa si necesito analizar este documento para mi contexto específico? Para eso integramos el **Asistente Legislativo LEXA AI**.
+"Ahora, ¿qué pasa si necesito analizar este documento para mi contexto específico? Para eso integramos el **Asistente Legislativo LEXA IA**.
 
 Este chat no es un ChatGPT genérico. Está inyectado con todo el contexto, la evidencia y el estado de *este expediente en particular*. 
 
@@ -64,7 +64,7 @@ Vamos a hacerle una pregunta."
 *(Acción: Escribir en el chat: "¿Cuáles son las multas o sanciones económicas que propone esta ley y a quiénes afectan?")*
 
 "Al enviar la pregunta, LEXA procesa la información del expediente y razona la respuesta basándose únicamente en la evidencia legal."
-*(Esperar la respuesta de LEXA AI)*
+*(Esperar la respuesta de LEXA IA)*
 
 "Como ven, me responde de manera precisa, indicando los montos (ej. 50,000 UMAs) y a qué tipo de empresas afecta. Esto reduce horas de análisis legal a solo segundos, permitiendo a los equipos de asuntos públicos reaccionar más rápido."
 
@@ -87,7 +87,7 @@ Esto garantiza que ninguna institución o empresa sea tomada por sorpresa ante u
 ## Cierre
 
 **Narrativa:**
-"En resumen, el prototipo de LEXA AI demuestra cómo podemos pasar de un monitoreo manual, lento y reactivo, a un modelo **automatizado, sustentado en evidencia y proactivo**. 
+"En resumen, el prototipo de LEXA IA demuestra cómo podemos pasar de un monitoreo manual, lento y reactivo, a un modelo **automatizado, sustentado en evidencia y proactivo**. 
 
 Con LEXA, el Poder Legislativo y el sector privado tienen la inteligencia detrás de su estrategia.
 

@@ -34,23 +34,30 @@ export const expedientes = [
       { fecha: "2025-09-20", tipo: "Parlamento Abierto", descripcion: "Foros con sindicatos de maestros y burócratas del Estado." }
     ],
     documentos: [
-      { id: "doc-1", tipo: "Iniciativa", fecha: "2025-09-05", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ],
-    resultado_proyectado: {
-      descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
-      impacto_social: {
-        nivel: "Medio",
-        descripcion: "Beneficia al sector objetivo del estado directamente."
-      },
-      carga_regulatoria: {
-        nivel: "Moderada",
-        descripcion: "Ajustes normativos graduales."
-      }
-    },
-    documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
+      { id: "doc-1", tipo: "Iniciativa", fecha: "2025-09-05", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-1-a", tipo: "Dictamen_Comisión", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-1-b", tipo: "Exposición_Motivos", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ]
+  },
+  {
+    id: "exp-004",
+    clave_oficial: "LXII-090",
+    titulo: "Reforma a la Ley de Seguridad Social para los Servidores Públicos (Pensiones)",
+    descripcion: "Propuesta complementaria para la reforma del ISSEMyM.",
+    estado_actual: "En Discusión",
+    tema_principal: "Seguridad Social",
+    fecha_inicio: "2025-10-01",
+    score_relevancia: 0.90,
+    impacto_score: 80,
+    sectores_afectados: ["Servidores Públicos"],
+    resumen_ia: {
+      ejecutivo: "Propuesta complementaria.",
+      evidencia: []
+    },
+    actores: [],
+    video_youtube: { id: "", titulo: "", vistas: "" },
+    eventos: [],
+    documentos: []
   },
   {
     id: "exp-002",
@@ -86,7 +93,9 @@ export const expedientes = [
       { fecha: "2025-11-05", tipo: "Mesa Técnica", descripcion: "Reunión con líderes transportistas del Valle de México." }
     ],
     documentos: [
-      { id: "doc-2", tipo: "Iniciativa", fecha: "2025-10-12", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
+      { id: "doc-2", tipo: "Iniciativa", fecha: "2025-10-12", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-2-a", tipo: "Dictamen_Comisión", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-2-b", tipo: "Exposición_Motivos", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -98,11 +107,7 @@ export const expedientes = [
         nivel: "Alta",
         descripcion: "Requiere ajustes mayores en normativas de tránsito municipales."
       }
-    },
-    documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ]
+    }
   },
   {
     id: "exp-003",
@@ -139,7 +144,9 @@ export const expedientes = [
       { fecha: "2025-11-20", tipo: "Dictamen", descripcion: "Aprobación del dictamen en comisiones unidas." }
     ],
     documentos: [
-      { id: "doc-4", tipo: "Iniciativa de la Gobernadora", fecha: "2025-08-10", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
+      { id: "doc-4", tipo: "Iniciativa de la Gobernadora", fecha: "2025-08-10", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-4-a", tipo: "Dictamen_Comisión", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-4-b", tipo: "Exposición_Motivos", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -151,14 +158,10 @@ export const expedientes = [
         nivel: "Alta",
         descripcion: "Nuevas obligaciones para industrias y municipios."
       }
-    },
-    documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ]
+    }
   },
   {
-    id: "exp-004",
+    id: "exp-005",
     clave_oficial: "LXII-112",
     titulo: "Paquete Fiscal del Estado de México 2026",
     descripcion: "Ley de Ingresos y Presupuesto de Egresos para el ejercicio fiscal 2026, con enfoque en programas sociales e infraestructura.",
@@ -187,7 +190,9 @@ export const expedientes = [
       { fecha: "2025-11-21", tipo: "Paquete Económico", descripcion: "Entrega del Paquete Fiscal 2026 por parte del Secretario de Finanzas." }
     ],
     documentos: [
-      { id: "doc-5", tipo: "Proyecto de Presupuesto", fecha: "2025-11-21", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
+      { id: "doc-5", tipo: "Proyecto de Presupuesto", fecha: "2025-11-21", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-5-a", tipo: "Dictamen_Comisión", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { id: "doc-5-b", tipo: "Exposición_Motivos", fecha: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
     ],
     resultado_proyectado: {
       descripcion: "El análisis predictivo de LEXA indica que la votación entre los 75 diputados se definirá con un margen moderado, reflejando las distintas posturas dentro de los bloques parlamentarios.",
@@ -199,11 +204,7 @@ export const expedientes = [
         nivel: "Baja",
         descripcion: "Ajustes menores en la miscelánea fiscal."
       }
-    },
-    documentacion_oficial: [
-      { nombre: "Dictamen_Comision.pdf", tamaño: "1.4 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { nombre: "Exposicion_Motivos.pdf", tamaño: "0.8 MB", año: "2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
-    ]
+    }
   }
 ];
 
@@ -251,21 +252,21 @@ export const votaciones = [
     desglose_partidos: [
       { partido: "Morena", favor: 0, contra: 0, abstencion: 0, color: "#B3282D" },
       { partido: "PVEM", favor: 0, contra: 0, abstencion: 0, color: "#50B747" },
-      { partido: "PT", favor: 0, contra: 0, abstencion: 0, color: "#D9131C" },
-      { partido: "PRI", favor: 0, contra: 0, abstencion: 0, color: "#00953B" },
+      { partido: "PT", favor: 0, contra: 0, abstencion: 0, color: "#800080" },
+      { partido: "PRI", favor: 0, contra: 0, abstencion: 0, color: "#FF0000" },
       { partido: "PAN", favor: 0, contra: 0, abstencion: 0, color: "#0057A0" },
       { partido: "MC", favor: 0, contra: 0, abstencion: 0, color: "#FF8200" },
       { partido: "PRD", favor: 0, contra: 0, abstencion: 0, color: "#FFCC00" }
     ],
     detalle_legisladores: [
       { nombre: "Francisco Vázquez", partido: "Morena", voto: "pendiente", avatar: "FV", color: "#B3282D" },
-      { nombre: "Elías Rescala", partido: "PRI", voto: "pendiente", avatar: "ER", color: "#00953B" },
+      { nombre: "Elías Rescala", partido: "PRI", voto: "pendiente", avatar: "ER", color: "#FF0000" },
       { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "pendiente", avatar: "PF", color: "#0057A0" },
       { nombre: "José Couttolenc", partido: "PVEM", voto: "pendiente", avatar: "JC", color: "#50B747" },
       { nombre: "Azucena Cisneros", partido: "Morena", voto: "pendiente", avatar: "AC", color: "#B3282D" },
       { nombre: "Enrique Vargas", partido: "PAN", voto: "pendiente", avatar: "EV", color: "#0057A0" },
       { nombre: "Juan Zepeda", partido: "MC", voto: "pendiente", avatar: "JZ", color: "#FF8200" },
-      { nombre: "Trinidad Franco", partido: "PT", voto: "pendiente", avatar: "TF", color: "#D9131C" }
+      { nombre: "Trinidad Franco", partido: "PT", voto: "pendiente", avatar: "TF", color: "#800080" }
     ]
   },
   {
@@ -302,7 +303,7 @@ export const votaciones = [
 
 export const legisladores = [
   { id: "leg-001", nombre: "José Miguel Gutiérrez Morales", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Gobernación", "Finanzas"], avatar: "JG", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: ["exp-001"] },
-  { id: "leg-002", nombre: "Ana Yurixi Leyva Piñón", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Educación", "Salud"], avatar: "AL", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-002", nombre: "Ana Yurixi Leyva Piñón", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "MR", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Educación", "Salud"], avatar: "AL", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-003", nombre: "Vladimir Hernández Villegas", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Movilidad", "Seguridad"], avatar: "VH", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: ["exp-002"] },
   { id: "leg-004", nombre: "Gabriel Kalid Mohamed Báez", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Justicia", "Gobernación"], avatar: "GK", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-005", nombre: "Edgar Samuel Ríos Moreno", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Finanzas", "Educación"], avatar: "ER", historial_votos: [{ votacion_id: "vot-001", sentido: "abstencion" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
@@ -315,13 +316,13 @@ export const legisladores = [
   { id: "leg-012", nombre: "Rigoberto Vargas Cervantes", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Finanzas", "Educación"], avatar: "RV", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-013", nombre: "Alejandra Figueroa Adame", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Salud", "Movilidad"], avatar: "AF", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-014", nombre: "Carlos Alberto López Imm", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Seguridad", "Justicia"], avatar: "CL", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
-  { id: "leg-015", nombre: "Isaac Josué Hernández Méndez", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Gobernación", "Finanzas"], avatar: "IH", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-015", nombre: "Isaac Josué Hernández Méndez", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Gobernación", "Finanzas"], avatar: "IH", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-016", nombre: "Román Francisco Cortés Lugo", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Educación", "Salud"], avatar: "RC", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-017", nombre: "Pablo Fernández de Cevallos González", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "MR", asistencia: 91, lealtad: 92, lealtad_ejecutivo: 75, comisiones: ["Movilidad", "Seguridad"], avatar: "PF", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
   { id: "leg-018", nombre: "Krishna Karina Romero Velázquez", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "MR", asistencia: 90, lealtad: 91, lealtad_ejecutivo: 72, comisiones: ["Justicia", "Gobernación"], avatar: "KR", historial_votos: [{ votacion_id: "vot-001", sentido: "abstencion" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
   { id: "leg-019", nombre: "Itzel Daniela Ballesteros Lule", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Finanzas", "Educación"], avatar: "IB", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-020", nombre: "Esteban Juárez Hernández", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Salud", "Movilidad"], avatar: "EJ", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
-  { id: "leg-021", nombre: "Ernesto Santillán Ramírez", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Seguridad", "Justicia"], avatar: "ES", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-021", nombre: "Ernesto Santillán Ramírez", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "MR", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Seguridad", "Justicia"], avatar: "ES", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-022", nombre: "Ángel Adriel Negrete Avonce", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Gobernación", "Finanzas"], avatar: "AN", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-023", nombre: "María José Pérez Domínguez", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Educación", "Salud"], avatar: "MP", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-024", nombre: "Susana Estrada Rojas", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Movilidad", "Seguridad"], avatar: "SE", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
@@ -332,11 +333,11 @@ export const legisladores = [
   { id: "leg-029", nombre: "Martha Azucena Camacho Reynoso", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Gobernación", "Finanzas"], avatar: "MC", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-030", nombre: "Israel Espíndola López", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Educación", "Salud"], avatar: "IE", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-031", nombre: "Selina Trujillo Arizmendi", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Movilidad", "Seguridad"], avatar: "ST", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
-  { id: "leg-032", nombre: "Elías Rescala Jiménez", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Justicia", "Gobernación"], avatar: "ER", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
+  { id: "leg-032", nombre: "Elías Rescala Jiménez", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "MR", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Justicia", "Gobernación"], avatar: "ER", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-033", nombre: "Samuel Hernández Cruz", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Finanzas", "Educación"], avatar: "SH", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-034", nombre: "Gerardo Pliego Santana", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Salud", "Movilidad"], avatar: "GP", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
-  { id: "leg-035", nombre: "Mariano Camacho San Martín", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "MR", asistencia: 91, lealtad: 92, lealtad_ejecutivo: 75, comisiones: ["Seguridad", "Justicia"], avatar: "MC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
-  { id: "leg-036", nombre: "Yareli Anai Esparza Acevedo", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Gobernación", "Finanzas"], avatar: "YE", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-035", nombre: "Mariano Camacho San Martín", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "MR", asistencia: 91, lealtad: 92, lealtad_ejecutivo: 75, comisiones: ["Seguridad", "Justicia"], avatar: "MC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
+  { id: "leg-036", nombre: "Yareli Anai Esparza Acevedo", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Gobernación", "Finanzas"], avatar: "YE", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-037", nombre: "Arleth Stephanie Grimaldo Osorio", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Educación", "Salud"], avatar: "AG", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-038", nombre: "Sandra Patricia Santos Rodríguez", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Movilidad", "Seguridad"], avatar: "SS", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-039", nombre: "Osvaldo Cortés Contreras", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Justicia", "Gobernación"], avatar: "OC", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
@@ -345,24 +346,24 @@ export const legisladores = [
   { id: "leg-042", nombre: "Zaira Cedillo Silva", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Seguridad", "Justicia"], avatar: "ZC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-043", nombre: "Héctor Karim Carvallo Delfín", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 95, lealtad: 97, lealtad_ejecutivo: 96, comisiones: ["Gobernación", "Finanzas"], avatar: "HC", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-044", nombre: "Armando Navarrete López", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "MR", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Educación", "Salud"], avatar: "AN", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
-  { id: "leg-045", nombre: "Sofía Martínez Molina", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Movilidad", "Seguridad"], avatar: "SM", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-045", nombre: "Sofía Martínez Molina", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "MR", asistencia: 93, lealtad: 94, lealtad_ejecutivo: 95, comisiones: ["Movilidad", "Seguridad"], avatar: "SM", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-046", nombre: "Emma Laura Álvarez Villavicencio", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 75, comisiones: ["Justicia", "Gobernación"], avatar: "EA", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
   { id: "leg-047", nombre: "Honoria Arellano Ocampo", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "RP", asistencia: 95, lealtad: 96, lealtad_ejecutivo: 97, comisiones: ["Finanzas", "Educación"], avatar: "HA", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-048", nombre: "Graciela Argueta Bello", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Salud", "Movilidad"], avatar: "GA", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-049", nombre: "Anuar Roberto Azar Figueroa", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 75, comisiones: ["Seguridad", "Justicia"], avatar: "AA", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
   { id: "leg-050", nombre: "Maricela Beltrán Sánchez", partido: "MC", color: "#FF8200", estado: "Edomex", tipo_eleccion: "RP", asistencia: 90, lealtad: 85, lealtad_ejecutivo: 70, comisiones: ["Gobernación", "Finanzas"], avatar: "MB", historial_votos: [{ votacion_id: "vot-001", sentido: "abstencion" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-051", nombre: "Araceli Casasola Salazar", partido: "PRD", color: "#FFCC00", estado: "Edomex", tipo_eleccion: "RP", asistencia: 90, lealtad: 85, lealtad_ejecutivo: 70, comisiones: ["Educación", "Salud"], avatar: "AC", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
-  { id: "leg-052", nombre: "Alejandro Castro Hernández", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Movilidad", "Seguridad"], avatar: "AC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
-  { id: "leg-053", nombre: "María Mercedes Colín Guadarrama", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Justicia", "Gobernación"], avatar: "MC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
+  { id: "leg-052", nombre: "Alejandro Castro Hernández", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Movilidad", "Seguridad"], avatar: "AC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
+  { id: "leg-053", nombre: "María Mercedes Colín Guadarrama", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Justicia", "Gobernación"], avatar: "MC", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
   { id: "leg-054", nombre: "José Alberto Couttolenc Buentello", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "RP", asistencia: 95, lealtad: 96, lealtad_ejecutivo: 97, comisiones: ["Finanzas", "Educación"], avatar: "JC", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-055", nombre: "Rocío Alexia Dávila Sánchez", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 75, comisiones: ["Salud", "Movilidad"], avatar: "RD", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
-  { id: "leg-056", nombre: "María del Consuelo Estrada Plata", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "RP", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Seguridad", "Justicia"], avatar: "ME", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-056", nombre: "María del Consuelo Estrada Plata", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "RP", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Seguridad", "Justicia"], avatar: "ME", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-057", nombre: "Joanna Alejandra Felipe Torres", partido: "PAN", color: "#0057A0", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 75, comisiones: ["Gobernación", "Finanzas"], avatar: "JF", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
   { id: "leg-058", nombre: "Jennifer Nathalie González López", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Educación", "Salud"], avatar: "JG", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
-  { id: "leg-059", nombre: "Óscar González Yáñez", partido: "PT", color: "#D9131C", estado: "Edomex", tipo_eleccion: "RP", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Movilidad", "Seguridad"], avatar: "OG", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-059", nombre: "Óscar González Yáñez", partido: "PT", color: "#800080", estado: "Edomex", tipo_eleccion: "RP", asistencia: 94, lealtad: 95, lealtad_ejecutivo: 96, comisiones: ["Movilidad", "Seguridad"], avatar: "OG", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-060", nombre: "Maurilio Hernández González", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 97, lealtad: 99, lealtad_ejecutivo: 98, comisiones: ["Justicia", "Gobernación"], avatar: "MH", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-061", nombre: "Paola Jiménez Hernández", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Finanzas", "Educación"], avatar: "PJ", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
-  { id: "leg-062", nombre: "Leticia Mejía García", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Salud", "Movilidad"], avatar: "LM", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
+  { id: "leg-062", nombre: "Leticia Mejía García", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Salud", "Movilidad"], avatar: "LM", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
   { id: "leg-063", nombre: "Luisa Esmeralda Navarro Hernández", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Seguridad", "Justicia"], avatar: "LN", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-064", nombre: "Omar Ortega Álvarez", partido: "PRD", color: "#FFCC00", estado: "Edomex", tipo_eleccion: "RP", asistencia: 90, lealtad: 85, lealtad_ejecutivo: 70, comisiones: ["Gobernación", "Finanzas"], avatar: "OO", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-065", nombre: "Angélica Pérez Cerón", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Educación", "Salud"], avatar: "AP", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
@@ -371,9 +372,9 @@ export const legisladores = [
   { id: "leg-068", nombre: "Nelly Brígida Rivera Sánchez", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Finanzas", "Educación"], avatar: "NR", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-069", nombre: "Ruth Salinas Reyes", partido: "MC", color: "#FF8200", estado: "Edomex", tipo_eleccion: "RP", asistencia: 90, lealtad: 85, lealtad_ejecutivo: 70, comisiones: ["Salud", "Movilidad"], avatar: "RS", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-070", nombre: "Miriam Silva Mata", partido: "PVEM", color: "#50B747", estado: "Edomex", tipo_eleccion: "RP", asistencia: 95, lealtad: 96, lealtad_ejecutivo: 97, comisiones: ["Seguridad", "Justicia"], avatar: "MS", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] },
-  { id: "leg-071", nombre: "Lilia Urbina Salazar", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Gobernación", "Finanzas"], avatar: "LU", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-071", nombre: "Lilia Urbina Salazar", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Gobernación", "Finanzas"], avatar: "LU", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-072", nombre: "José Francisco Vázquez Rodríguez", partido: "MORENA", color: "#B3282D", estado: "Edomex", tipo_eleccion: "RP", asistencia: 96, lealtad: 98, lealtad_ejecutivo: 97, comisiones: ["Educación", "Salud"], avatar: "JV", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "abstencion" }], iniciativas_generadas: [] },
-  { id: "leg-073", nombre: "Eduardo Zarzosa Sánchez", partido: "PRI", color: "#00953B", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Movilidad", "Seguridad"], avatar: "EZ", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
+  { id: "leg-073", nombre: "Eduardo Zarzosa Sánchez", partido: "PRI", color: "#FF0000", estado: "Edomex", tipo_eleccion: "RP", asistencia: 92, lealtad: 93, lealtad_ejecutivo: 78, comisiones: ["Movilidad", "Seguridad"], avatar: "EZ", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-074", nombre: "Juan Manuel Zepeda Hernández", partido: "MC", color: "#FF8200", estado: "Edomex", tipo_eleccion: "RP", asistencia: 91, lealtad: 88, lealtad_ejecutivo: 72, comisiones: ["Justicia", "Gobernación"], avatar: "JZ", historial_votos: [{ votacion_id: "vot-001", sentido: "favor" }, { votacion_id: "vot-002", sentido: "favor" }], iniciativas_generadas: [] },
   { id: "leg-075", nombre: "Martín Zepeda Hernández", partido: "MC", color: "#FF8200", estado: "Edomex", tipo_eleccion: "RP", asistencia: 90, lealtad: 85, lealtad_ejecutivo: 70, comisiones: ["Finanzas", "Educación"], avatar: "MZ", historial_votos: [{ votacion_id: "vot-001", sentido: "contra" }, { votacion_id: "vot-002", sentido: "contra" }], iniciativas_generadas: [] }
 ];

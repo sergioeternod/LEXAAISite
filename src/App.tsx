@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, memo, useRef } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { 
   LayoutDashboard, 
   Search, 
@@ -48,14 +50,67 @@ import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const VoteChart = memo(({ favor, contra, abstencion }: { favor: number, contra: number, abstencion: number }) => {
+const calculateExpectedVoteByParty = (claveOficial: string) => {
+  const expediente = expedientes.find(e => e.clave_oficial === claveOficial);
+  if (!expediente) return [];
+
+  const promovente = expediente.actores.find(a => a.rol === "Promovente");
+  const partidoPromovente = promovente?.partido?.toLowerCase();
+
+  const partidos = Array.from(new Set(legisladores.map(l => l.partido)));
+
+  return partidos.map(partido => {
+    let favor = 0;
+    let contra = 0;
+    let abstencion = 0;
+
+    legisladores.filter(l => l.partido === partido).forEach(leg => {
+      if (partidoPromovente && leg.partido.toLowerCase() === partidoPromovente) {
+        favor++;
+      } else {
+        if (Math.random() > 0.5) contra++;
+        else abstencion++;
+      }
+    });
+
+    return {
+      partido,
+      favor,
+      contra,
+      abstencion,
+      color: legisladores.find(l => l.partido === partido)?.color || "#000"
+    };
+  });
+};
+
+const VoteChart = memo(({ favor, contra, abstencion, expedienteId }: { favor: number, contra: number, abstencion: number, expedienteId?: string }) => {
   const total = useMemo(() => favor + contra + abstencion, [favor, contra, abstencion]);
   
+  const partyData = useMemo(() => {
+    if (total === 0 && expedienteId) {
+      return calculateExpectedVoteByParty(expedienteId);
+    }
+    return [];
+  }, [total, expedienteId]);
+
+  const displayData = useMemo(() => {
+    if (total === 0 && partyData.length > 0) {
+      return {
+        favor: partyData.reduce((acc, p) => acc + p.favor, 0),
+        contra: partyData.reduce((acc, p) => acc + p.contra, 0),
+        abstencion: partyData.reduce((acc, p) => acc + p.abstencion, 0)
+      };
+    }
+    return { favor, contra, abstencion };
+  }, [total, partyData, favor, contra, abstencion]);
+
+  const displayTotal = useMemo(() => displayData.favor + displayData.contra + displayData.abstencion, [displayData]);
+  
   const data = useMemo(() => [
-    { name: 'A Favor', value: favor, color: '#e60000', percentage: Math.round((favor/total)*100), badgeBg: 'bg-red-50' },
-    { name: 'Abstenciones', value: abstencion, color: '#f59e0b', percentage: Math.round((abstencion/total)*100), badgeBg: 'bg-amber-50' },
-    { name: 'En Contra', value: contra, color: '#cbd5e1', percentage: Math.round((contra/total)*100), badgeBg: 'bg-slate-100' }
-  ].filter(d => d.value > 0), [favor, contra, abstencion, total]);
+    { name: 'A Favor', value: displayData.favor, color: '#e60000', percentage: Math.round((displayData.favor/displayTotal)*100), badgeBg: 'bg-red-50' },
+    { name: 'Abstenciones', value: displayData.abstencion, color: '#f59e0b', percentage: Math.round((displayData.abstencion/displayTotal)*100), badgeBg: 'bg-amber-50' },
+    { name: 'En Contra', value: displayData.contra, color: '#cbd5e1', percentage: Math.round((displayData.contra/displayTotal)*100), badgeBg: 'bg-slate-100' }
+  ].filter(d => d.value > 0), [displayData, displayTotal]);
 
   const maxPercentage = useMemo(() => Math.max(...data.map(d => d.percentage)), [data]);
 
@@ -63,7 +118,12 @@ const VoteChart = memo(({ favor, contra, abstencion }: { favor: number, contra: 
     <div className="w-full max-w-sm mx-auto my-8 card-3d card-3d-hover p-6 flex flex-col">
       <div className="mb-6">
         <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Tendencia</h4>
-        <h3 className="text-xl font-bold text-slate-900">Sentido de Votación</h3>
+        <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          {total === 0 ? "Votación Esperada" : "Votación Realizada"}
+          <span className={`text-[10px] ${total === 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'} px-2 py-0.5 rounded-full`}>
+            {total === 0 ? "Proyectada" : "Oficial"}
+          </span>
+        </h3>
       </div>
       
       <div className="relative w-full aspect-square max-h-64 mx-auto mb-8 flex items-center justify-center">
@@ -83,7 +143,7 @@ const VoteChart = memo(({ favor, contra, abstencion }: { favor: number, contra: 
               stroke="none"
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip 
@@ -101,19 +161,62 @@ const VoteChart = memo(({ favor, contra, abstencion }: { favor: number, contra: 
       </div>
 
       <div className="flex flex-col space-y-4 mt-auto">
-        {data.map((item, idx) => (
-          <div key={idx} className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-              <span className="text-sm text-slate-600">{item.name}</span>
+        {total === 0 && partyData.length > 0 ? (
+          partyData.map((p) => (
+            <div key={p.partido} className="flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></div>
+                <span className="font-bold text-slate-700">{p.partido}</span>
+              </div>
+              <div className="flex space-x-2">
+                <span className="text-red-600">{p.favor} F</span>
+                <span className="text-slate-400">{p.contra} C</span>
+                <span className="text-amber-600">{p.abstencion} A</span>
+              </div>
             </div>
-            <div className={`px-3 py-1 rounded-md text-sm font-bold ${item.badgeBg} text-slate-900`}>
-              {item.value}
+          ))
+        ) : (
+          data.map((item) => (
+            <div key={item.name} className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                <span className="text-sm text-slate-600">{item.name}</span>
+              </div>
+              <div className={`px-3 py-1 rounded-md text-sm font-bold ${item.badgeBg} text-slate-900`}>
+                {item.value}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )
+        }
       </div>
     </div>
+  );
+});
+
+const VoteResults = memo(({ favor, contra, abstencion, expedienteId }: { favor: number, contra: number, abstencion: number, expedienteId: string }) => {
+  const hasVotes = favor + contra + abstencion > 0;
+  return (
+    <>
+      <VoteChart favor={favor} contra={contra} abstencion={abstencion} expedienteId={expedienteId} />
+      
+      {hasVotes && (
+        <div className="grid grid-cols-3 gap-6 text-center mb-8 mt-6">
+          <div className="card-3d p-4 border-emerald-100">
+            <div className="text-3xl font-mono font-light text-emerald-600 tracking-tighter">{favor}</div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">A Favor</div>
+          </div>
+          <div className="card-3d p-4 border-red-100">
+            <div className="text-3xl font-mono font-light text-red-600 tracking-tighter">{contra}</div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">En Contra</div>
+          </div>
+          <div className="card-3d p-4 border-slate-200">
+            <div className="text-3xl font-mono font-light text-slate-600 tracking-tighter">{abstencion}</div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Abstenciones</div>
+          </div>
+        </div>
+      )}
+    </>
   );
 });
 
@@ -145,6 +248,7 @@ export default function App() {
   
   // Explore Mode State
   const [exploreMode, setExploreMode] = useState<'expedientes' | 'legisladores'>('expedientes');
+  const expedienteRef = useRef<HTMLDivElement>(null);
   const [selectedLegislator, setSelectedLegislator] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
   const [hoveredDistrict, setHoveredDistrict] = useState<number | null>(null);
@@ -373,8 +477,15 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  const exportSummaryToPDF = () => {
-    window.print();
+  const exportSummaryToPDF = async () => {
+    if (!expedienteRef.current) return;
+    const canvas = await html2canvas(expedienteRef.current);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`);
   };
 
   const handleSearch = (query?: string | any) => {
@@ -388,7 +499,7 @@ export default function App() {
     trackHistory('search', q);
     setCurrentView('explorar');
 
-    // Siempre ejecutar búsqueda por LEXA AI directamente
+    // Siempre ejecutar búsqueda por LEXA IA directamente
     handleAiSearch(q);
   };
 
@@ -453,7 +564,7 @@ export default function App() {
         throw new Error("API Key de Gemini no configurada. Por favor, configúrala en el panel de Secretos.");
       }
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-          const prompt = `Actúa como LEXA AI, un asistente experto en inteligencia legislativa del Estado de México.
+          const prompt = `Actúa como LEXA IA, un asistente experto en inteligencia legislativa del Estado de México.
           Genera un resumen analítico y conciso del siguiente expediente:
           Título: ${selectedExpediente.titulo}
           Clave: ${selectedExpediente.clave_oficial}
@@ -516,7 +627,7 @@ export default function App() {
       }
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       
-      const systemInstruction = `Eres LEXA AI, un asistente experto en inteligencia legislativa enfocado en el Congreso del Estado de México (Edomex). 
+      const systemInstruction = `Eres LEXA IA, un asistente experto en inteligencia legislativa enfocado en el Congreso del Estado de México (Edomex). 
       Estás ayudando a un usuario a analizar el siguiente expediente legislativo local:
       Título: ${selectedExpediente.titulo}
       Clave: ${selectedExpediente.clave_oficial}
@@ -555,7 +666,7 @@ export default function App() {
       setChatMessages(prev => [...prev, { role: 'model', text: response.text || 'No pude generar una respuesta.' }]);
     } catch (error: any) {
       console.error("Error calling Gemini:", error);
-      setChatMessages(prev => [...prev, { role: 'model', text: error.message || 'Ocurrió un error al consultar a LEXA AI. Por favor, intenta de nuevo.' }]);
+      setChatMessages(prev => [...prev, { role: 'model', text: error.message || 'Ocurrió un error al consultar a LEXA IA. Por favor, intenta de nuevo.' }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -572,7 +683,7 @@ export default function App() {
         className="flex items-center space-x-1 transform scale-y-[0.8] scale-x-[1.1] origin-left w-32 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
       >
         <span className="text-2xl font-black text-slate-900 tracking-tighter">LEXA</span>
-        <span className="text-2xl font-black bg-gradient-to-r from-[#FF8B53] to-[#EB577A] text-transparent bg-clip-text tracking-tighter">AI</span>
+        <span className="text-2xl font-black bg-gradient-to-r from-[#FF8B53] to-[#EB577A] text-transparent bg-clip-text tracking-tighter">IA</span>
       </button>
       
       <nav className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-2 bg-slate-100/50 p-1 rounded-full border border-slate-200  shadow-sm">
@@ -655,7 +766,7 @@ export default function App() {
       <div className="text-center space-y-8 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-100/40 rounded-full blur-3xl -z-10"></div>
         <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
-          Explora el historial legislativo con <span className="text-[#8B1A1A]">LEXA AI</span>
+          Explora el historial legislativo con <span className="text-[#8B1A1A]">LEXA IA</span>
         </h1>
         
         <div className="max-w-2xl mx-auto relative group">
@@ -766,9 +877,9 @@ export default function App() {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {userHistory.slice().reverse().slice(0, 4).map((item, idx) => (
+            {userHistory.slice().reverse().slice(0, 4).map((item) => (
               <div 
-                key={idx} 
+                key={item.timestamp} 
                 onClick={() => {
                   handleSearch(item.query);
                 }}
@@ -973,8 +1084,8 @@ export default function App() {
             <Bot className="w-7 h-7 text-indigo-600" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">Resumen Legislativo Semanal (LEXA AI)</h3>
-            <p className="text-sm font-medium text-slate-500 mt-1">Generado automáticamente por LEXA AI</p>
+            <h3 className="text-xl font-bold text-slate-900">Resumen Legislativo Semanal (LEXA IA)</h3>
+            <p className="text-sm font-medium text-slate-500 mt-1">Generado automáticamente por LEXA IA</p>
           </div>
         </div>
 
@@ -997,8 +1108,8 @@ export default function App() {
               <div className="mt-auto pt-5 border-t border-slate-100/50">
                 <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Puntos Clave</h5>
                 <ul className="space-y-2.5">
-                  {resumen.puntos_clave.map((punto, i) => (
-                    <li key={i} className="flex items-start space-x-3 text-xs font-medium text-slate-600">
+                  {resumen.puntos_clave.map((punto) => (
+                    <li key={punto} className="flex items-start space-x-3 text-xs font-medium text-slate-600">
                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/70 mt-1 flex-shrink-0 shadow-sm" />
                       <span className="line-clamp-2 leading-snug group-hover:text-slate-800 transition-colors">{punto}</span>
                     </li>
@@ -1204,7 +1315,7 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">
-                    Análisis de Opiniones con LEXA AI
+                    Análisis LEXA IA
                   </h3>
                   <p className="text-sm font-medium text-slate-500 mt-1">
                     Analiza versiones estenográficas para identificar las posturas de los legisladores sobre "{searchQuery}".
@@ -1255,6 +1366,31 @@ export default function App() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-3 line-clamp-2 group-hover:text-[#8B1A1A] transition-colors leading-snug">{exp.titulo}</h3>
                 <p className="text-sm text-slate-500 mb-6 line-clamp-3 flex-1 leading-relaxed">{exp.descripcion}</p>
+                
+                <div className="mb-4">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Iniciativas relacionadas:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {expedientes
+                      .filter(e => e.tema_principal === exp.tema_principal && e.id !== exp.id)
+                      .slice(0, 3)
+                      .map((relatedExp) => (
+                        <a key={relatedExp.id} href="#" onClick={(e) => { e.preventDefault(); setSelectedExpediente(relatedExp); }} className="text-xs text-indigo-600 hover:underline">
+                          {relatedExp.clave_oficial}
+                        </a>
+                      ))}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Documentos:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {exp.documentos.map((doc) => (
+                      <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">
+                        {doc.tipo.replace('_', ' ')}
+                      </a>
+                    ))}
+                  </div>
+                </div>
                 
                 <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100/50">
                   <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-red-50 text-[#8B1A1A] border border-red-100">
@@ -1355,6 +1491,7 @@ export default function App() {
   };
 
   const renderExpedienteDetail = () => {
+    console.log("renderExpedienteDetail called");
     if (!selectedExpediente) return null;
     const exp = selectedExpediente;
     const isSaved = savedExpedientes.includes(exp.id);
@@ -1368,7 +1505,7 @@ export default function App() {
           <span className="font-medium text-slate-900">{exp.clave_oficial}</span>
         </div>
 
-        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl shadow-sm relative overflow-hidden">
+        <div ref={expedienteRef} className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
           <div className="flex justify-between items-start mb-8 mt-2">
             <div>
@@ -1409,7 +1546,12 @@ export default function App() {
               </div>
             </div>
             <div className="flex flex-col items-end card-3d p-4 bg-slate-50">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Impacto Regulatorio</div>
+              <div className="relative group">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 cursor-help">Impacto Regulatorio</div>
+                <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  Mide la magnitud de los cambios propuestos en la normativa y sus efectos en los sectores afectados.
+                </div>
+              </div>
               <div className={`text-4xl font-mono font-light tracking-tighter ${
                 exp.impacto_score >= 80 ? 'text-red-600' :
                 exp.impacto_score >= 60 ? 'text-amber-600' :
@@ -1427,7 +1569,7 @@ export default function App() {
                   <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shadow-sm">
                     <BookOpen className="w-5 h-5 text-[#8B1A1A]" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Resumen LEXA AI (Ejecutivo)</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Resumen LEXA IA (Ejecutivo)</h3>
                 </div>
                 <div className="card-3d p-6">
                   <p className="text-slate-700 leading-relaxed text-lg">{exp.resumen_ia.ejecutivo}</p>
@@ -1476,14 +1618,14 @@ export default function App() {
                     <Bot className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 text-lg">LEXA AI - Asistente Legislativo</h3>
+                    <h3 className="font-bold text-slate-900 text-lg">LEXA IA - Asistente Legislativo</h3>
                     <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mt-0.5">Análisis contextual y raciocinio sobre este expediente</p>
                   </div>
                 </div>
                 
                 <div className="flex-1 p-6 overflow-y-auto bg-slate-50/50 space-y-6 flex flex-col">
                   {chatMessages.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div key={`${msg.role}-${idx}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-3xl p-5 shadow-sm ${msg.role === 'user' ? 'bg-[#8B1A1A] text-white rounded-br-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm'}`}>
                         <div className="text-base whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none">
                           <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{msg.text}</Markdown>
@@ -1560,8 +1702,8 @@ export default function App() {
                   Actores Clave
                 </h3>
                 <div className="space-y-5">
-                  {exp.actores.map((actor, idx) => (
-                    <div key={idx} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                  {exp.actores.map((actor) => (
+                    <div key={actor.nombre} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50">
                       <span className="text-base font-bold text-slate-900">{actor.nombre}</span>
                       <div className="flex items-center space-x-2 mt-1.5">
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{actor.rol}</span>
@@ -1581,11 +1723,37 @@ export default function App() {
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
                 <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
                   <FileText className="w-5 h-5 mr-3 text-slate-500" />
-                  Documentos Originales
+                  Iniciativas Relacionadas
                 </h3>
                 <div className="space-y-3">
-                  {exp.documentos.map((doc, idx) => (
-                    <a key={idx} href={doc.url} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#8B1A1A]/30 hover:bg-white hover:shadow-sm transition-all group">
+                  {expedientes
+                    .filter(e => e.id !== exp.id)
+                    .map((relatedExp) => (
+                      <button 
+                        key={relatedExp.id} 
+                        onClick={() => setSelectedExpediente(relatedExp)}
+                        className="w-full text-left p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100"
+                      >
+                        <div className="font-bold text-sm text-indigo-600">{relatedExp.clave_oficial}</div>
+                        <div className="text-xs text-slate-600 line-clamp-1">{relatedExp.titulo}</div>
+                      </button>
+                    ))}
+                  {expedientes.filter(e => e.id !== exp.id).length === 0 && (
+                    <p className="text-xs text-slate-400 italic">No hay iniciativas relacionadas.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
+                <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
+                  <FileText className="w-5 h-5 mr-3 text-slate-500" />
+                  Documentos
+                </h3>
+                <div className="space-y-3">
+                  {console.log("Expedientes length:", expedientes.length)}
+                  {exp.documentos.map((doc) => (
+                    <a key={doc.id} href={doc.url} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#8B1A1A]/30 hover:bg-white hover:shadow-sm transition-all group">
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-red-50 transition-colors">
                           <FileText className="w-5 h-5 text-slate-400 group-hover:text-[#8B1A1A] transition-colors" />
@@ -1602,8 +1770,8 @@ export default function App() {
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
                 <h3 className="text-sm font-bold text-slate-900 mb-5 uppercase tracking-wider mt-1">Sectores Afectados</h3>
                 <div className="flex flex-wrap gap-2.5">
-                  {exp.sectores_afectados.map((sector, idx) => (
-                    <span key={idx} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 shadow-sm">
+                  {exp.sectores_afectados.map((sector) => (
+                    <span key={sector} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 shadow-sm">
                       {sector}
                     </span>
                   ))}
@@ -1640,29 +1808,7 @@ export default function App() {
             </div>
           )}
 
-          {exp.documentacion_oficial && (
-            <div className="mt-10 pt-10 border-t border-slate-200">
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Documentación Oficial</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {exp.documentacion_oficial.map((doc: any, idx: number) => (
-                  <a key={idx} href={doc.url} download={doc.nombre} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-5 rounded-3xl border border-slate-200 bg-white hover:bg-white hover:shadow-sm transition-all cursor-pointer group shadow-sm">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0 border border-red-100 group-hover:bg-[#8B1A1A] transition-colors">
-                        <FileText className="w-6 h-6 text-red-500 group-hover:text-white transition-colors" />
-                      </div>
-                      <div>
-                        <p className="text-base font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{doc.nombre}</p>
-                        <p className="text-sm font-medium text-slate-500 mt-0.5">{doc.tamaño} • {doc.año}</p>
-                      </div>
-                    </div>
-                    <div className="text-slate-400 group-hover:text-[#8B1A1A] p-3 rounded-xl group-hover:bg-red-50 transition-colors">
-                      <DownloadIcon className="w-5 h-5" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
     );
@@ -1952,8 +2098,8 @@ export default function App() {
           <div className="border-t border-slate-200 p-10 bg-slate-50/50">
             <h3 className="text-xl font-bold text-slate-900 mb-6">Comisiones</h3>
             <div className="flex flex-wrap gap-3">
-              {selectedLegislator.comisiones.map((comision: string, idx: number) => (
-                <span key={idx} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm hover:border-[#8B1A1A]/30 hover:text-[#8B1A1A] transition-colors cursor-default">
+              {selectedLegislator.comisiones.map((comision: string) => (
+                <span key={comision} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm hover:border-[#8B1A1A]/30 hover:text-[#8B1A1A] transition-colors cursor-default">
                   {comision}
                 </span>
               ))}
@@ -2170,7 +2316,7 @@ export default function App() {
                   <div className="p-2 bg-white rounded-xl shadow-sm border border-red-100">
                     <Bot className="w-5 h-5 text-[#8B1A1A]" />
                   </div>
-                  <h3 className="font-bold text-xl text-slate-900">Resumen del Debate (LEXA AI)</h3>
+                  <h3 className="font-bold text-xl text-slate-900">Resumen del Debate (LEXA IA)</h3>
                 </div>
                 <p className="text-slate-700 text-base leading-relaxed pl-1">
                   {selectedVote.resumen_ia_votacion}
@@ -2181,30 +2327,15 @@ export default function App() {
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resultados de la Votación</h3>
                 <div className="card-3d p-6">
-                  <VoteChart favor={selectedVote.votos_favor} contra={selectedVote.votos_contra} abstencion={selectedVote.abstenciones} />
-                  
-                  <div className="grid grid-cols-3 gap-6 text-center mb-8 mt-6">
-                    <div className="card-3d p-4 border-emerald-100">
-                      <div className="text-3xl font-mono font-light text-emerald-600 tracking-tighter">{selectedVote.votos_favor}</div>
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">A Favor</div>
-                    </div>
-                    <div className="card-3d p-4 border-red-100">
-                      <div className="text-3xl font-mono font-light text-red-600 tracking-tighter">{selectedVote.votos_contra}</div>
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">En Contra</div>
-                    </div>
-                    <div className="card-3d p-4 border-slate-200">
-                      <div className="text-3xl font-mono font-light text-slate-600 tracking-tighter">{selectedVote.abstenciones}</div>
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Abstenciones</div>
-                    </div>
-                  </div>
+                  <VoteResults favor={selectedVote.votos_favor} contra={selectedVote.votos_contra} abstencion={selectedVote.abstenciones} expedienteId={selectedVote.expediente} />
 
                   {/* Party Breakdown */}
                   {selectedVote.desglose_partidos && (
                     <div className="border-t border-slate-200 pt-6">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Desglose por Partido</h4>
                       <div className="space-y-4">
-                        {selectedVote.desglose_partidos.map((partido: any, idx: number) => (
-                          <div key={idx} className="flex items-center text-sm">
+                        {selectedVote.desglose_partidos.map((partido: any) => (
+                          <div key={partido.partido} className="flex items-center text-sm">
                             <div className="w-20 font-bold text-slate-700 flex items-center">
                               <div className="w-2.5 h-2.5 rounded-full mr-3 shadow-sm" style={{ backgroundColor: partido.color }}></div>
                               {partido.partido}
@@ -2273,8 +2404,8 @@ export default function App() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {selectedVote.detalle_legisladores
                           .filter((l: any) => filterParty === 'Todos' || l.partido === filterParty)
-                          .map((legislador: any, idx: number) => (
-                          <div key={idx} className="flex items-center p-2 bg-white border border-slate-100 rounded-lg hover:border-red-100 transition-colors">
+                          .map((legislador: any) => (
+                          <div key={legislador.id} className="flex items-center p-2 bg-white border border-slate-100 rounded-lg hover:border-red-100 transition-colors">
                             <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 mr-3" style={{ color: legislador.color, backgroundColor: `${legislador.color}15` }}>
                               {legislador.avatar}
                             </div>
