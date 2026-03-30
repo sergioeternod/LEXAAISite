@@ -1421,6 +1421,7 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredLegisladores.map(leg => {
               const municipios = leg.districtId ? (districtMunicipalities[leg.districtId as keyof typeof districtMunicipalities] || []) : [];
+              console.log('Legislator:', leg.nombre, 'DistrictId:', leg.districtId, 'Municipios:', municipios);
               return (
                 <div 
                   key={leg.id}
@@ -1858,6 +1859,7 @@ export default function App() {
                       <p className="text-slate-500 text-lg">{legisladores[displayDistrict - 1].partido}</p>
                     </div>
                     <div className="space-y-2 text-sm">
+                      <p><strong>Municipios:</strong> {(districtMunicipalities[displayDistrict as keyof typeof districtMunicipalities] || []).join(', ')}</p>
                       <p><strong>Comisiones:</strong> {(legisladores[displayDistrict - 1].comisiones || []).join(', ')}</p>
                       <p><strong>Asistencia:</strong> {legisladores[displayDistrict - 1].asistencia}%</p>
                       <p><strong>Tipo de elección:</strong> {legisladores[displayDistrict - 1].tipo_eleccion === 'MR' ? 'Mayoría Relativa' : 'Representación Proporcional'}</p>
