@@ -464,14 +464,21 @@ export default function App() {
 
 
   const exportSummaryToPDF = async () => {
-    if (!expedienteRef.current) return;
-    const canvas = await html2canvas(expedienteRef.current, { useCORS: true, scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`);
+    try {
+      if (!expedienteRef.current) {
+        console.error("expedienteRef.current is null");
+        return;
+      }
+      const canvas = await html2canvas(expedienteRef.current, { useCORS: true, scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   const handleSearch = (query?: string | any) => {
