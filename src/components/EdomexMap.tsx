@@ -15,8 +15,10 @@ interface EdomexMapProps {
 const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSelect, onDistrictHover }) => {
   console.log('EdomexMap rendering');
   const [geoData, setGeoData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('useEffect running');
     let DefaultIcon = L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -26,11 +28,24 @@ const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSel
     L.Marker.prototype.options.icon = DefaultIcon;
 
     fetch('/edomex_distritos_simplified.json')
-      .then((response) => response.json())
-      .then((data) => setGeoData(data))
-      .catch((error) => console.error('Error loading GeoJSON:', error));
+      .then((response) => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Data loaded');
+        setGeoData(data);
+      })
+      .catch((error) => {
+        console.error('Error loading GeoJSON:', error);
+        setError(error.message);
+      });
   }, []);
 
+  if (error) return <div>Error loading map: {error}</div>;
   if (!geoData) return <div>Loading map...</div>;
 
   const getDistrictStyle = (feature: any) => {
@@ -41,7 +56,7 @@ const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSel
       weight: 1.5,
       opacity: 1,
       color: '#333333',
-      fillOpacity: 0.5
+      fillOpacity: 0.6
     };
   };
 
