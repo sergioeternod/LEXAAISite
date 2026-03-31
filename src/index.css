@@ -56,7 +56,7 @@ body {
   body {
     background-color: white !important;
   }
-  header, nav, .chat-section, button {
+  header, nav, button {
     display: none !important;
   }
   .print-only {

@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, memo, useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 import { 
   LayoutDashboard, 
   Search, 
@@ -16,7 +18,6 @@ import {
   Clock,
   Users,
   AlertTriangle,
-  CheckCircle2,
   Bot,
   Send,
   Loader2,
@@ -141,6 +142,7 @@ const VoteChart = memo(({ favor, contra, abstencion, expedienteId }: { favor: nu
               paddingAngle={0}
               dataKey="value"
               stroke="none"
+              isAnimationActive={false}
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
@@ -469,31 +471,364 @@ export default function App() {
         console.error("contentRef.current is null");
         return;
       }
-      const canvas = await html2canvas(contentRef.current, {
-        useCORS: true,
-        scale: 2,
-        onclone: (clonedDoc) => {
-          // Replace oklch in all elements
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach((el) => {
-            const style = window.getComputedStyle(el);
-            for (let i = 0; i < style.length; i++) {
-              const prop = style[i];
-              const val = style.getPropertyValue(prop);
-              if (val && (val.includes('oklch') || val.includes('oklab'))) {
-                // Replace oklch or oklab
-                (el as HTMLElement).style.setProperty(prop, val.replace(/(oklch|oklab)\([^)]+\)/g, 'rgb(0,0,0)'));
+
+      // Extract and sanitize CSS asynchronously to ensure we capture external stylesheets
+      let rawCSS = '';
+      
+      // 1. Get inline styles
+      const styleTags = document.querySelectorAll('style');
+      styleTags.forEach(style => {
+        rawCSS += style.innerHTML + '\n';
+      });
+
+      // 1.5 Get parsed stylesheets (this handles @import and already parsed rules)
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        const sheet = document.styleSheets[i];
+        try {
+          // Only process stylesheets that are not from external domains (to avoid CORS errors)
+          // or if they are, we hope they have CORS headers.
+          const rules = sheet.cssRules || sheet.rules;
+          if (rules) {
+            for (let j = 0; j < rules.length; j++) {
+              rawCSS += rules[j].cssText + '\n';
+            }
+          }
+        } catch (e) {
+          console.warn('Cannot access cssRules for stylesheet', sheet.href, e);
+        }
+      }
+
+      // 1.6 Get adoptedStyleSheets
+      if ('adoptedStyleSheets' in document) {
+        const adoptedSheets = (document as any).adoptedStyleSheets;
+        for (let i = 0; i < adoptedSheets.length; i++) {
+          const sheet = adoptedSheets[i];
+          try {
+            const rules = sheet.cssRules || sheet.rules;
+            if (rules) {
+              for (let j = 0; j < rules.length; j++) {
+                rawCSS += rules[j].cssText + '\n';
               }
             }
-          });
+          } catch (e) {
+            console.warn('Cannot access cssRules for adopted stylesheet', e);
+          }
         }
-      });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`);
+      }
+
+      // 2. Fetch external stylesheets
+      const linkTags = document.querySelectorAll('link[rel="stylesheet"]');
+      for (let i = 0; i < linkTags.length; i++) {
+        const link = linkTags[i] as HTMLLinkElement;
+        try {
+          const response = await fetch(link.href);
+          if (response.ok) {
+            const cssText = await response.text();
+            rawCSS += cssText + '\n';
+          }
+        } catch (e) {
+          console.warn('Could not fetch stylesheet', link.href, e);
+        }
+      }
+
+      const opt = {
+        margin:       [15, 15, 20, 15],
+        filename:     `expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  {
+          useCORS: true,
+          allowTaint: true,
+          scale: 2,
+          windowWidth: 1200,
+          onclone: (clonedDoc: Document) => {
+          // 1. Remove all existing style tags and links in the cloned document
+          const styles = clonedDoc.querySelectorAll('style');
+          styles.forEach(style => style.remove());
+          
+          const links = clonedDoc.querySelectorAll('link');
+          links.forEach(link => {
+            if (link.rel === 'stylesheet' || link.getAttribute('as') === 'style' || link.href.endsWith('.css')) {
+              link.remove();
+            }
+          });
+
+          // 2. Inject the synchronously extracted and sanitized CSS
+          const newStyle = clonedDoc.createElement('style');
+          newStyle.innerHTML = rawCSS;
+          clonedDoc.head.appendChild(newStyle);
+
+          // 4. Hide specific buttons instead of all buttons to preserve tabs
+          const buttons = clonedDoc.querySelectorAll('button');
+          buttons.forEach(btn => {
+            const text = btn.textContent?.toLowerCase() || '';
+            if (
+              text.includes('descargar') || 
+              text.includes('guardar') || 
+              text.includes('alerta') ||
+              text.includes('volver') ||
+              text.includes('explorar') ||
+              text.includes('generar') ||
+              btn.querySelector('svg.lucide-download') ||
+              btn.querySelector('svg.lucide-bookmark') ||
+              btn.querySelector('svg.lucide-bell') ||
+              btn.querySelector('svg.lucide-chevron-right')
+            ) {
+              btn.style.display = 'none';
+            }
+          });
+
+          const svgs = clonedDoc.querySelectorAll('svg');
+          svgs.forEach(svg => {
+            if (
+              svg.classList.contains('lucide-check-circle-2') || 
+              svg.classList.contains('lucide-check') || 
+              svg.classList.contains('lucide-check-circle') ||
+              svg.classList.contains('lucide-check-square') ||
+              svg.classList.contains('lucide-download')
+            ) {
+              svg.remove();
+            }
+          });
+
+          // 5. Remove all links (a tags)
+          const aTags = clonedDoc.querySelectorAll('a');
+          aTags.forEach(a => {
+            // Replace the a tag with a span containing its text content, or just remove it if it's an image link
+            if (a.querySelector('img')) {
+              a.remove();
+            } else {
+              const span = clonedDoc.createElement('span');
+              span.innerHTML = ' ' + a.innerHTML + ' ';
+              span.className = a.className;
+              // Remove hover classes and underline
+              span.className = span.className.replace(/hover:[^\s]+/g, '').replace('underline', '');
+              a.parentNode?.replaceChild(span, a);
+            }
+          });
+
+          // 6. Enhance Typography and Layout for PDF
+          const pdfStyles = clonedDoc.createElement('style');
+          pdfStyles.innerHTML = `
+            /* Reset base font size to ensure consistent scaling */
+            html { font-size: 16px !important; }
+            
+            /* Remove custom spacing and justification that breaks html2canvas */
+            * {
+              letter-spacing: normal !important;
+              word-spacing: normal !important;
+              font-family: sans-serif !important;
+              white-space: normal !important;
+            }
+            
+            /* Enhance readability with consistent sizes */
+            .prose p, .prose li, .prose span, p, span, li { 
+              font-size: 18px !important; 
+              line-height: 1.6 !important; 
+              color: #1e293b !important;
+              text-align: left !important; /* Justify causes overlapping characters in PDF */
+            }
+            
+            .prose p { margin-bottom: 24px !important; }
+            .prose li { margin-bottom: 12px !important; }
+            
+            /* Make headings stand out more and prevent crowding */
+            h1 { font-size: 32px !important; margin-bottom: 24px !important; color: #8B1A1A !important; font-weight: bold !important; }
+            h2 { 
+              font-size: 28px !important; 
+              margin-top: 40px !important; 
+              margin-bottom: 24px !important; 
+              border-bottom: 2px solid #8B1A1A !important; 
+              padding-bottom: 12px !important; 
+              color: #0f172a !important;
+              font-weight: bold !important;
+            }
+            h3 { font-size: 24px !important; margin-top: 32px !important; margin-bottom: 16px !important; color: #334155 !important; font-weight: 600 !important; }
+            
+            /* Divide sections clearly and prevent object crowding */
+            .card-3d, .bg-white.border { 
+              margin-bottom: 48px !important; 
+              padding: 40px !important; 
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; 
+              border: 1px solid #e2e8f0 !important; 
+              border-radius: 24px !important;
+              page-break-inside: avoid !important;
+              background-color: #ffffff !important;
+            }
+            
+            /* Add more space between major blocks */
+            .space-y-4 > * + * { margin-top: 24px !important; }
+            .space-y-6 > * + * { margin-top: 32px !important; }
+            .space-y-8 > * + * { margin-top: 48px !important; }
+            
+            /* Prevent grid crowding */
+            .grid { gap: 32px !important; }
+            
+            /* Ensure flex columns have breathing room */
+            .flex-col > * + * { margin-top: 24px !important; }
+            
+            /* Make tabs larger and more distinct */
+            .flex.space-x-1.bg-slate-100 {
+              padding: 16px !important;
+              margin-bottom: 48px !important;
+              border-radius: 16px !important;
+              background-color: #f1f5f9 !important;
+              gap: 16px !important;
+            }
+            .flex.space-x-1.bg-slate-100 button {
+              font-size: 20px !important;
+              padding: 16px 32px !important;
+              border-radius: 12px !important;
+              margin: 0 !important;
+            }
+
+            /* Fix chart rendering and spacing */
+            .recharts-responsive-container {
+              height: 400px !important;
+              min-height: 400px !important;
+              width: 100% !important;
+              margin-top: 32px !important;
+              margin-bottom: 32px !important;
+            }
+            .recharts-wrapper {
+              margin: 0 auto !important;
+            }
+            .aspect-square {
+              aspect-ratio: auto !important;
+              height: 400px !important;
+              max-height: none !important;
+            }
+            .h-72 {
+              height: 400px !important;
+            }
+          `;
+          clonedDoc.head.appendChild(pdfStyles);
+
+          // Remove chat input area to make the PDF cleaner
+          const chatInputArea = clonedDoc.querySelector('.p-5.bg-white.border-t.border-slate-200');
+          if (chatInputArea) chatInputArea.remove();
+
+          // Expand chat section to show all AI analysis messages
+          const chatSection = clonedDoc.querySelector('.chat-section') as HTMLElement;
+          if (chatSection) {
+            chatSection.style.height = 'auto';
+            chatSection.style.maxHeight = 'none';
+            chatSection.classList.remove('h-[600px]', 'overflow-hidden');
+            
+            const messagesContainer = chatSection.querySelector('.overflow-y-auto') as HTMLElement;
+            if (messagesContainer) {
+              messagesContainer.style.overflow = 'visible';
+              messagesContainer.style.height = 'auto';
+              messagesContainer.style.maxHeight = 'none';
+              messagesContainer.classList.remove('overflow-y-auto');
+              
+              // Remove greeting message if present
+              const messages = messagesContainer.querySelectorAll('.flex.justify-start');
+              if (messages.length > 0) {
+                const firstMessage = messages[0];
+                if (firstMessage.textContent?.includes('LEXA IA')) {
+                  firstMessage.remove();
+                }
+              }
+            }
+          }
+
+          // Remove breadcrumb to make the PDF cleaner
+          const breadcrumb = clonedDoc.querySelector('.flex.items-center.space-x-2.text-sm.text-slate-500.mb-4');
+          if (breadcrumb) breadcrumb.remove();
+
+          // 5. Add Header
+          clonedDoc.body.style.backgroundColor = '#ffffff';
+          clonedDoc.body.style.color = '#0f172a'; // slate-900
+          
+          // Force desktop width for consistent layout
+          const clonedContent = clonedDoc.getElementById('pdf-content-wrapper') as HTMLElement;
+          if (clonedContent) {
+            clonedContent.style.width = '1200px';
+            clonedContent.style.maxWidth = '1200px';
+            clonedContent.style.margin = '0 auto';
+            clonedContent.style.padding = '40px 60px'; // Add generous padding for the PDF
+            clonedContent.style.backgroundColor = '#ffffff'; // Ensure white background
+          }
+          
+          const header = clonedDoc.createElement('div');
+          header.style.display = 'flex';
+          header.style.justifyContent = 'space-between';
+          header.style.alignItems = 'center';
+          header.style.padding = '0 0 20px 0';
+          header.style.borderBottom = '2px solid #e2e8f0';
+          header.style.marginBottom = '40px';
+          
+          const titleContainer = clonedDoc.createElement('div');
+          
+          const title = clonedDoc.createElement('h1');
+          title.textContent = 'Reporte de Inteligencia Legislativa';
+          title.style.fontSize = '28px';
+          title.style.fontWeight = '800';
+          title.style.color = '#0f172a';
+          title.style.margin = '0 0 8px 0';
+          title.style.letterSpacing = '-0.02em';
+          
+          const subtitle = clonedDoc.createElement('p');
+          subtitle.textContent = `Generado por LEXA IA • ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+          subtitle.style.fontSize = '14px';
+          subtitle.style.color = '#64748b';
+          subtitle.style.margin = '0';
+          
+          titleContainer.appendChild(title);
+          titleContainer.appendChild(subtitle);
+          header.appendChild(titleContainer);
+          
+          // Add a badge on the right
+          const badge = clonedDoc.createElement('div');
+          badge.textContent = 'LEXA IA';
+          badge.style.backgroundColor = '#f8fafc';
+          badge.style.border = '1px solid #e2e8f0';
+          badge.style.color = '#8B1A1A';
+          badge.style.fontWeight = 'bold';
+          badge.style.padding = '8px 16px';
+          badge.style.borderRadius = '8px';
+          badge.style.fontSize = '14px';
+          badge.style.letterSpacing = '0.05em';
+          
+          header.appendChild(badge);
+          
+          if (clonedContent) {
+            clonedContent.prepend(header);
+          } else {
+            clonedDoc.body.prepend(header);
+          }
+        }
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
+        html2canvas:  { scale: 2, useCORS: true, logging: false }
+      };
+
+      const worker = html2pdf().set(opt).from(contentRef.current);
+      const pdf = await worker.toPdf().get('pdf');
+      
+      // Pagination logic
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(9);
+        pdf.setTextColor(150);
+        pdf.text(
+          `Página ${i} de ${totalPages}`, 
+          pdf.internal.pageSize.getWidth() / 2, 
+          pdf.internal.pageSize.getHeight() - 8, 
+          { align: 'center' }
+        );
+      }
+
+      // Explicit download trigger
+      const pdfBlob = pdf.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error generating PDF:", error);
     }
@@ -565,6 +900,7 @@ export default function App() {
       setChatInput('');
       
       const generateInitialSummary = async () => {
+        setIsAiSearchLoading(true);
         setChatMessages([{
           role: 'model',
           text: `Generando resumen analítico del expediente ${selectedExpediente.clave_oficial}...`
@@ -587,14 +923,13 @@ export default function App() {
           Resumen Ejecutivo: ${selectedExpediente.resumen_ia.ejecutivo}
           
           Tu respuesta debe ser un resumen estructurado en Markdown que incluya:
-          1. Un saludo breve presentándote como LEXA.
-          2. El **contexto** general de la iniciativa.
-          3. El **impacto** proyectado (mencionando el Impacto Score).
-          4. Los **actores** clave involucrados.
-          5. La **intención de voto esperada** o el resultado de la última votación (simulada basada en el contexto político actual del Edomex).
-          6. Una pregunta final invitando al usuario a profundizar en algún aspecto.
+          1. El **contexto** general de la iniciativa.
+          2. El **impacto** proyectado (mencionando el Impacto Score).
+          3. Los **actores** clave involucrados.
+          4. La **intención de voto esperada** o el resultado de la última votación (simulada basada en el contexto político actual del Edomex).
+          5. Una pregunta final invitando al usuario a profundizar en algún aspecto.
           
-          Sé profesional, analítico y directo.
+          Sé profesional, analítico y directo. NO incluyas saludos ni introducciones como 'Saludos, soy LEXA IA...'.
           
           IMPORTANTE: DEBES incluir al final de tu respuesta un bloque de código JSON exacto con este formato para renderizar una gráfica visual de la intención de voto o resultado:
           \`\`\`json
@@ -617,6 +952,8 @@ export default function App() {
             role: 'model',
             text: `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}. (${error.message || 'Hubo un error al generar el resumen automático'}).`
           }]);
+        } finally {
+          setIsAiSearchLoading(false);
         }
       };
 
@@ -650,7 +987,7 @@ export default function App() {
       Resumen Ejecutivo: ${selectedExpediente.resumen_ia.ejecutivo}
       Evidencia clave: ${selectedExpediente.resumen_ia.evidencia ? selectedExpediente.resumen_ia.evidencia.map((e: any) => e.texto).join(" | ") : 'No especificada'}
       
-      Responde a las preguntas del usuario basándote en esta información. Presta especial atención a detallar el impacto (basado en el Impacto Score) y los actores involucrados cuando se te pregunte. Sé profesional, analítico, objetivo y conciso. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.
+      Responde a las preguntas del usuario basándote en esta información. Presta especial atención a detallar el impacto (basado en el Impacto Score) y los actores involucrados cuando se te pregunte. Sé profesional, analítico, objetivo y conciso. NO incluyas saludos ni introducciones como 'Saludos, soy LEXA IA...'. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.
       
       IMPORTANTE: Si en tu respuesta mencionas resultados de votaciones o tendencias/expectativas de votos, DEBES incluir un bloque de código JSON con este formato para que el sistema renderice una gráfica visual:
       \`\`\`json
@@ -776,6 +1113,11 @@ export default function App() {
       {/* Hero Section */}
       <div className="text-center space-y-8 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-100/40 rounded-full blur-3xl -z-10"></div>
+        <div className="flex justify-center mb-6">
+          <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-200">
+            <Sparkles className="w-12 h-12 text-[#8B1A1A]" />
+          </div>
+        </div>
         <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
           Explora el historial legislativo con <span className="text-[#8B1A1A]">LEXA IA</span>
         </h1>
@@ -823,9 +1165,6 @@ export default function App() {
           <div>
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aprobada</h3>
-              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
             </div>
             <p className="text-lg font-bold text-slate-900 mb-4 line-clamp-2 leading-tight">
               Iniciativa con proyecto de decreto por el que se expide la Ley General de Aguas
@@ -931,8 +1270,8 @@ export default function App() {
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                 <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                <Bar dataKey="iniciativas" name="Iniciativas" fill="#B3282D" radius={[4, 4, 0, 0]} barSize={32} />
-                <Bar dataKey="dictamenes" name="Dictámenes" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={32} />
+                <Bar dataKey="iniciativas" name="Iniciativas" fill="#B3282D" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={false} />
+                <Bar dataKey="dictamenes" name="Dictámenes" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -952,6 +1291,7 @@ export default function App() {
                   outerRadius={110}
                   paddingAngle={2}
                   dataKey="value"
+                  isAnimationActive={false}
                 >
                   {kpis.sectoresTop.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -1044,48 +1384,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Canal del Congreso - Videos Destacados */}
-      <div className="card-3d p-8 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-red-50/40 rounded-bl-full -z-10"></div>
-        <div className="flex justify-between items-center mb-8">
-          <h3 className="text-xl font-bold text-slate-900 flex items-center">
-            <Youtube className="w-6 h-6 mr-3 text-red-600" />
-            Canal del Congreso <span className="text-sm font-sans font-normal text-slate-500 ml-2">- Videos Destacados</span>
-          </h3>
-          <button 
-            onClick={() => setCurrentView('explorar')}
-            className="text-sm font-bold text-red-600 hover:text-red-800 transition-colors uppercase tracking-wider flex items-center"
-          >
-            Ver más videos
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {expedientes.slice(0, 3).map((exp) => (
-            <div 
-              key={exp.id} 
-              onClick={() => setSelectedExpediente(exp)}
-              className="card-3d card-3d-hover p-6 cursor-pointer group flex flex-col relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-200 to-red-100 group-hover:from-red-600 group-hover:to-red-500 transition-all duration-500"></div>
-              <div className="flex justify-between items-start mb-4 mt-1">
-                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 group-hover:border-red-600/30 group-hover:text-red-600 transition-colors shadow-sm">{exp.clave_oficial}</span>
-                <span className="text-xs font-medium text-slate-500 flex items-center bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-100"><Eye className="w-3.5 h-3.5 mr-1.5 text-slate-400"/> {exp.video_youtube.vistas}</span>
-              </div>
-              <p className="text-sm font-bold text-slate-800 mb-5 line-clamp-2 group-hover:text-red-600 transition-colors flex-1 leading-snug">{exp.video_youtube.titulo}</p>
-              
-              <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative mt-auto border border-slate-200  group-hover:shadow-sm transition-shadow">
-                <img src={exp.video_youtube?.id ? `https://img.youtube.com/vi/${exp.video_youtube.id}/mqdefault.jpg` : "https://picsum.photos/seed/video/300/200"} alt={exp.video_youtube?.titulo || "Video"} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-14 h-14 bg-red-600/90  rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300 border border-white/20">
-                    <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Resumen Legislativo Semanal */}
       <div className="card-3d p-8 mb-8 relative overflow-hidden">
@@ -1399,16 +1698,7 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="mb-4">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Documentos:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {exp.documentos.map((doc) => (
-                      <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">
-                        {doc.tipo.replace('_', ' ')}
-                      </a>
-                    ))}
-                  </div>
-                </div>
+
                 
                 <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100/50">
                   <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-red-50 text-[#8B1A1A] border border-red-100">
@@ -1528,17 +1818,7 @@ export default function App() {
           <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
           <div className="flex justify-between items-start mb-8 mt-2">
             <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <span className="font-mono text-sm font-bold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">{exp.clave_oficial}</span>
-                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-red-50 text-[#8B1A1A] border border-red-100 shadow-sm">
-                  {exp.tema_principal}
-                </span>
-                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 shadow-sm">
-                  {exp.estado_actual}
-                </span>
-              </div>
-              <h1 className="text-3xl font-bold text-slate-900 leading-tight max-w-4xl tracking-tight">{exp.titulo}</h1>
-              
+              <h1 className="text-3xl font-bold text-slate-900 leading-tight max-w-4xl tracking-tight mb-8">{exp.titulo}</h1>
               <div className="flex flex-wrap gap-3 mt-8">
                 <button 
                   onClick={() => toggleSaveExpediente(exp.id)}
@@ -1554,9 +1834,13 @@ export default function App() {
                   <Bell className={`w-4 h-4 ${isSubscribed ? 'fill-current' : ''}`} />
                   <span>{isSubscribed ? 'Suscrito a Alertas' : 'Activar Alertas'}</span>
                 </button>
-                <button onClick={exportSummaryToPDF} className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide">
+                <button 
+                  onClick={exportSummaryToPDF} 
+                  disabled={isAiSearchLoading}
+                  className={`px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all shadow-sm flex items-center space-x-2 text-sm font-bold tracking-wide ${isAiSearchLoading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm'}`}
+                >
                   <DownloadIcon className="w-4 h-4" />
-                  <span>Descargar PDF</span>
+                  <span>{isAiSearchLoading ? 'Generando...' : 'Descargar PDF'}</span>
                 </button>
               </div>
             </div>
@@ -1594,10 +1878,8 @@ export default function App() {
                     <div className="space-y-4">
                       {exp.resumen_ia.evidencia.map((ev, idx) => (
                         <div key={idx} className="flex items-start space-x-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100/50">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-slate-600 italic text-base leading-relaxed">"{ev.texto}"</p>
-                            <span className="text-[10px] font-mono font-bold text-slate-400 mt-2 block uppercase tracking-wider">Ref: {ev.chunk_id}</span>
                           </div>
                         </div>
                       ))}
@@ -1634,7 +1916,7 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-lg">LEXA IA - Asistente Legislativo</h3>
-                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mt-0.5">Análisis contextual y raciocinio sobre este expediente</p>
+                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mt-0.5">Análisis contextual y raciocinio sobre este expediente generado por IA</p>
                   </div>
                 </div>
                 
@@ -1681,34 +1963,7 @@ export default function App() {
             </div>
 
             <div className="col-span-1 space-y-8">
-              {exp.video_youtube && (
-                <div className="card-3d card-3d-hover p-6 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-red-600/20 group-hover:bg-red-600 transition-colors"></div>
-                  <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
-                    <Youtube className="w-5 h-5 mr-3 text-red-600" />
-                    Video Destacado
-                  </h3>
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 aspect-video relative ">
-                    <iframe 
-                      width="100%" 
-                      height="100%" 
-                      src={`https://www.youtube.com/embed/${exp.video_youtube.id}`} 
-                      title={exp.video_youtube.titulo}
-                      frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full"
-                    ></iframe>
-                  </div>
-                  <div className="mt-4 flex justify-between items-start">
-                    <span className="text-sm font-bold text-slate-800 line-clamp-2 flex-1 pr-3 leading-snug">{exp.video_youtube.titulo}</span>
-                    <span className="text-xs font-mono font-bold text-slate-500 flex items-center whitespace-nowrap bg-slate-100 px-2 py-1 rounded-md">
-                      <Eye className="w-3.5 h-3.5 mr-1.5" />
-                      {exp.video_youtube.vistas}
-                    </span>
-                  </div>
-                </div>
-              )}
+
 
               <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
@@ -1740,57 +1995,31 @@ export default function App() {
                   <FileText className="w-5 h-5 mr-3 text-slate-500" />
                   Iniciativas Relacionadas
                 </h3>
-                <div className="space-y-3">
-                  {expedientes
-                    .filter(e => e.id !== exp.id)
-                    .map((relatedExp) => (
-                      <button 
-                        key={relatedExp.id} 
-                        onClick={() => setSelectedExpediente(relatedExp)}
-                        className="w-full text-left p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100"
-                      >
-                        <div className="font-bold text-sm text-indigo-600">{relatedExp.clave_oficial}</div>
-                        <div className="text-xs text-slate-600 line-clamp-1">{relatedExp.titulo}</div>
-                      </button>
-                    ))}
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="text-slate-400 uppercase text-[10px] tracking-wider">
+                      <th className="pb-2 font-bold">Iniciativa</th>
+                      <th className="pb-2 font-bold text-right">Expediente</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {expedientes
+                      .filter(e => e.id !== exp.id)
+                      .map((relatedExp) => (
+                        <tr key={relatedExp.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedExpediente(relatedExp)}>
+                          <td className="py-3 pr-4 text-slate-700 leading-tight">{relatedExp.titulo}</td>
+                          <td className="py-3 font-bold text-indigo-700 text-right whitespace-nowrap">{relatedExp.clave_oficial}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
                   {expedientes.filter(e => e.id !== exp.id).length === 0 && (
-                    <p className="text-xs text-slate-400 italic">No hay iniciativas relacionadas.</p>
+                    <p className="text-xs text-slate-400 italic mt-2">No hay iniciativas relacionadas.</p>
                   )}
-                </div>
               </div>
 
-              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
-                <h3 className="text-sm font-bold text-slate-900 mb-5 flex items-center uppercase tracking-wider mt-1">
-                  <FileText className="w-5 h-5 mr-3 text-slate-500" />
-                  Documentos
-                </h3>
-                <div className="space-y-3">
-                  {console.log("Expedientes length:", expedientes.length)}
-                  {exp.documentos.map((doc) => (
-                    <a key={doc.id} href={doc.url} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#8B1A1A]/30 hover:bg-white hover:shadow-sm transition-all group">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-red-50 transition-colors">
-                          <FileText className="w-5 h-5 text-slate-400 group-hover:text-[#8B1A1A] transition-colors" />
-                        </div>
-                        <span className="text-sm font-bold text-slate-700 group-hover:text-[#8B1A1A] transition-colors">{doc.tipo}</span>
-                      </div>
-                      <Download className="w-5 h-5 text-slate-400 group-hover:text-[#8B1A1A] transition-colors" />
-                    </a>
-                  ))}
-                </div>
-              </div>
 
-              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
-                <h3 className="text-sm font-bold text-slate-900 mb-5 uppercase tracking-wider mt-1">Sectores Afectados</h3>
-                <div className="flex flex-wrap gap-2.5">
-                  {exp.sectores_afectados.map((sector) => (
-                    <span key={sector} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 shadow-sm">
-                      {sector}
-                    </span>
-                  ))}
-                </div>
+
               </div>
             </div>
           </div>
@@ -1825,7 +2054,6 @@ export default function App() {
 
 
         </div>
-      </div>
     );
   };
 
@@ -2262,7 +2490,7 @@ export default function App() {
         {/* Subtle background decoration */}
         <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent pointer-events-none -z-10"></div>
         <div className="flex-1 p-8 overflow-y-auto">
-          <div ref={contentRef} className="max-w-6xl mx-auto">
+          <div id="pdf-content-wrapper" ref={contentRef} className="max-w-6xl mx-auto">
             {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
             {currentView === 'explorar' && !selectedExpediente && !selectedLegislator && renderExplorar()}
             {currentView === 'alertas' && !selectedExpediente && !selectedLegislator && renderAlertas()}
@@ -2303,24 +2531,7 @@ export default function App() {
             </div>
             
             <div className="p-8 space-y-8 bg-slate-50/30">
-              {/* Video Section */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
-                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Canal del Congreso - Grabación de la Sesión</h3>
-                </div>
-                <div className="aspect-video bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm border border-slate-200">
-                  <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src={selectedVote.video_url} 
-                    title="Video del Canal del Congreso" 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </div>
+
 
               {/* AI Summary */}
               <div className="card-3d p-6 relative overflow-hidden bg-gradient-to-br from-red-50 to-white border-red-100">
