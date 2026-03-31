@@ -480,9 +480,9 @@ export default function App() {
             for (let i = 0; i < style.length; i++) {
               const prop = style[i];
               const val = style.getPropertyValue(prop);
-              if (val && val.includes('oklch')) {
-                // Simple replacement, might need refinement
-                (el as HTMLElement).style.setProperty(prop, val.replace(/oklch\([^)]+\)/g, 'rgb(0,0,0)'));
+              if (val && (val.includes('oklch') || val.includes('oklab'))) {
+                // Replace oklch or oklab
+                (el as HTMLElement).style.setProperty(prop, val.replace(/(oklch|oklab)\([^)]+\)/g, 'rgb(0,0,0)'));
               }
             }
           });
