@@ -469,7 +469,25 @@ export default function App() {
         console.error("contentRef.current is null");
         return;
       }
-      const canvas = await html2canvas(contentRef.current, { useCORS: true, scale: 2 });
+      const canvas = await html2canvas(contentRef.current, {
+        useCORS: true,
+        scale: 2,
+        onclone: (clonedDoc) => {
+          // Replace oklch in all elements
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el) => {
+            const style = window.getComputedStyle(el);
+            for (let i = 0; i < style.length; i++) {
+              const prop = style[i];
+              const val = style.getPropertyValue(prop);
+              if (val && val.includes('oklch')) {
+                // Simple replacement, might need refinement
+                (el as HTMLElement).style.setProperty(prop, val.replace(/oklch\([^)]+\)/g, 'rgb(0,0,0)'));
+              }
+            }
+          });
+        }
+      });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
