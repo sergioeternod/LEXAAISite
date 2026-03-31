@@ -248,7 +248,7 @@ export default function App() {
   
   // Explore Mode State
   const [exploreMode, setExploreMode] = useState<'expedientes' | 'legisladores'>('expedientes');
-  const expedienteRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [selectedLegislator, setSelectedLegislator] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
   const [hoveredDistrict, setHoveredDistrict] = useState<number | null>(null);
@@ -465,11 +465,11 @@ export default function App() {
 
   const exportSummaryToPDF = async () => {
     try {
-      if (!expedienteRef.current) {
-        console.error("expedienteRef.current is null");
+      if (!contentRef.current) {
+        console.error("contentRef.current is null");
         return;
       }
-      const canvas = await html2canvas(expedienteRef.current, { useCORS: true, scale: 2 });
+      const canvas = await html2canvas(contentRef.current, { useCORS: true, scale: 2 });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -1335,7 +1335,14 @@ export default function App() {
             </div>
             
             {aiSearchResults && (
-              <div className="mt-8 card-3d p-8 border-indigo-100/50">
+              <div className="mt-8 card-3d p-8 border-indigo-100/50 relative">
+                <button 
+                  onClick={exportSummaryToPDF}
+                  className="absolute top-4 right-4 p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+                  title="Descargar PDF"
+                >
+                  <DownloadIcon className="w-5 h-5 text-slate-600" />
+                </button>
                 <div className="prose prose-sm md:prose-base max-w-none text-slate-700 prose-headings:prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-800 prose-strong:text-slate-900">
                   <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{aiSearchResults}</Markdown>
                 </div>
@@ -1499,7 +1506,7 @@ export default function App() {
           <span className="font-medium text-slate-900">{exp.clave_oficial}</span>
         </div>
 
-        <div ref={expedienteRef} className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl shadow-sm relative overflow-hidden">
+        <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"></div>
           <div className="flex justify-between items-start mb-8 mt-2">
             <div>
@@ -2237,7 +2244,7 @@ export default function App() {
         {/* Subtle background decoration */}
         <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent pointer-events-none -z-10"></div>
         <div className="flex-1 p-8 overflow-y-auto">
-          <div className="max-w-6xl mx-auto">
+          <div ref={contentRef} className="max-w-6xl mx-auto">
             {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
             {currentView === 'explorar' && !selectedExpediente && !selectedLegislator && renderExplorar()}
             {currentView === 'alertas' && !selectedExpediente && !selectedLegislator && renderAlertas()}
