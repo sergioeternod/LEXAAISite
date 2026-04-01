@@ -550,7 +550,7 @@ export default function App() {
       rawCSS = rawCSS.replace(/:[^;}{]*(?:oklch|oklab|lch|lab|hwb|color\()[^;}{]*/gi, ': #94a3b8');
 
       const opt = {
-        margin:       [35, 20, 30, 20] as [number, number, number, number],
+        margin:       [32, 20, 30, 20] as [number, number, number, number],
         filename:     `expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`,
         image:        { type: 'jpeg' as const, quality: 0.98 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
@@ -686,6 +686,20 @@ export default function App() {
             .prose table:not(.vote-chart-table) { width: 100% !important; border-collapse: collapse !important; margin-bottom: 16px !important; }
             .prose table:not(.vote-chart-table) th, .prose table:not(.vote-chart-table) td { border: 1px solid #e2e8f0 !important; padding: 8px !important; text-align: left !important; font-size: 12px !important; }
             .prose table:not(.vote-chart-table) th { background-color: #f8fafc !important; font-weight: bold !important; color: #0f172a !important; }
+            
+            /* Specific fix for Related Initiatives table in PDF */
+            .related-initiatives-table td {
+              padding-top: 4px !important;
+              padding-bottom: 4px !important;
+              line-height: 1.2 !important;
+              vertical-align: middle !important;
+            }
+            
+            .related-initiatives-table div {
+              line-height: 1.2 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
             
             /* Make headings stand out more and prevent crowding */
             h1 { font-size: 22px !important; margin-bottom: 12px !important; color: #8B1A1A !important; font-weight: bold !important; }
@@ -878,7 +892,7 @@ export default function App() {
             (targetElement as HTMLElement).style.width = '1200px';
             (targetElement as HTMLElement).style.maxWidth = '1200px';
             (targetElement as HTMLElement).style.margin = '0 auto';
-            (targetElement as HTMLElement).style.padding = '40px 60px'; // Add generous padding for the PDF
+            (targetElement as HTMLElement).style.padding = '20px 40px'; // Adjusted padding for the PDF
             (targetElement as HTMLElement).style.backgroundColor = '#ffffff'; // Ensure white background
           }
         }
@@ -934,47 +948,47 @@ export default function App() {
         pdf.setFillColor(248, 250, 252); // slate-50
         pdf.setDrawColor(226, 232, 240); // slate-200
         pdf.setLineWidth(0.5);
-        pdf.rect(20, 10, pageWidth - 40, 20, 'FD'); // Fill and Draw
+        pdf.rect(20, 8, pageWidth - 40, 20, 'FD'); // Fill and Draw
         
         // LEXA IA Logo
         if (logoDataUrl) {
-          pdf.addImage(logoDataUrl, 'PNG', 22, 14, 30, 9);
+          pdf.addImage(logoDataUrl, 'PNG', 22, 12, 30, 9);
         } else {
           pdf.setFont("helvetica", "bold");
           pdf.setFontSize(16);
           pdf.setTextColor(15, 23, 42); // slate-900
-          pdf.text("LEXA", 25, 23);
+          pdf.text("LEXA", 25, 21);
           pdf.setTextColor(235, 87, 122); // pink-500
-          pdf.text("IA", 41, 23);
+          pdf.text("IA", 41, 21);
         }
         
         // Divider
         pdf.setDrawColor(203, 213, 225); // slate-300
         pdf.setLineWidth(0.5);
-        pdf.line(55, 14, 55, 26);
+        pdf.line(55, 12, 55, 24);
         
         // Reporte Text
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(8);
         pdf.setTextColor(100, 116, 139); // slate-500
-        pdf.text("REPORTE DE INTELIGENCIA LEGISLATIVA", 60, 19);
+        pdf.text("REPORTE DE INTELIGENCIA LEGISLATIVA", 60, 17);
         
         // Date
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(7);
         pdf.setTextColor(148, 163, 184); // slate-400
         const dateStr = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
-        pdf.text(dateStr, 60, 24);
+        pdf.text(dateStr, 60, 22);
         
         // Right side (Expediente / IA)
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(7);
         pdf.setTextColor(148, 163, 184);
-        pdf.text(selectedExpediente ? "EXPEDIENTE" : "BÚSQUEDA", pageWidth - 25, 18, { align: 'right' });
+        pdf.text(selectedExpediente ? "EXPEDIENTE" : "BÚSQUEDA", pageWidth - 25, 16, { align: 'right' });
         
         pdf.setFontSize(12);
         pdf.setTextColor(15, 23, 42);
-        pdf.text(selectedExpediente?.clave_oficial || 'IA', pageWidth - 25, 24, { align: 'right' });
+        pdf.text(selectedExpediente?.clave_oficial || 'IA', pageWidth - 25, 22, { align: 'right' });
         
         // --- FOOTER ---
         pdf.setFont("helvetica", "normal");
@@ -2161,7 +2175,7 @@ export default function App() {
                   <FileText className="w-5 h-5 mr-3 text-slate-500" />
                   Iniciativas Relacionadas
                 </h3>
-                <table className="w-full text-left text-sm" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="w-full text-left text-sm related-initiatives-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr className="text-slate-400 uppercase text-[10px] tracking-wider" style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <th className="pb-2 font-bold" style={{ paddingBottom: '12px', textAlign: 'left' }}>Iniciativa</th>
@@ -2171,10 +2185,13 @@ export default function App() {
                   <tbody className="divide-y divide-slate-100">
                     {expedientes
                       .filter(e => e.id !== exp.id)
+                      .slice(0, 4)
                       .map((relatedExp) => (
                         <tr key={relatedExp.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedExpediente(relatedExp)} style={{ borderBottom: '1px solid #f1f5f9', pageBreakInside: 'avoid' }}>
-                          <td className="py-3 pr-4 text-slate-700 leading-tight" style={{ padding: '12px 16px 12px 0' }}>{relatedExp.titulo}</td>
-                          <td className="py-3 font-bold text-indigo-700 text-right whitespace-nowrap" style={{ padding: '12px 0', textAlign: 'right' }}>{relatedExp.clave_oficial}</td>
+                          <td className="py-1 pr-4 text-slate-700 leading-tight" style={{ padding: '4px 16px 4px 0' }}>
+                            <div className="text-xs">{relatedExp.titulo.replace(/\s+/g, ' ').trim()}</div>
+                          </td>
+                          <td className="py-1 font-bold text-indigo-700 text-right whitespace-nowrap" style={{ padding: '4px 0', textAlign: 'right' }}>{relatedExp.clave_oficial}</td>
                         </tr>
                       ))}
                   </tbody>
