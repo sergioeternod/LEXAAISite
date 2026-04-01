@@ -116,81 +116,92 @@ const VoteChart = memo(({ favor, contra, abstencion, expedienteId }: { favor: nu
   const maxPercentage = useMemo(() => Math.max(...data.map(d => d.percentage)), [data]);
 
   return (
-    <div className="w-full max-w-sm mx-auto my-8 card-3d card-3d-hover p-6 flex flex-col">
-      <div className="mb-6">
+    <div className="w-full max-w-sm mx-auto my-8 card-3d card-3d-hover p-6 flex flex-col items-center vote-chart-container" style={{ margin: '32px auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="mb-6 flex flex-col items-center text-center w-full">
         <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Tendencia</h4>
-        <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+        <h3 className="text-xl font-bold text-slate-900 flex items-center justify-center gap-2">
           {total === 0 ? "Votación Esperada" : "Votación Realizada"}
-          <span className={`text-[10px] ${total === 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'} px-2 py-0.5 rounded-full`}>
+          <span className={`ml-2 text-[10px] ${total === 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'} px-2 py-0.5 rounded-full`}>
             {total === 0 ? "Proyectada" : "Oficial"}
           </span>
         </h3>
       </div>
       
-      <div className="relative w-full aspect-square max-h-64 mx-auto mb-8 flex items-center justify-center">
-        <ResponsiveContainer width="100%" height="100%">
-          {/* @ts-ignore */}
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              startAngle={90}
-              endAngle={-270}
-              innerRadius="75%"
-              outerRadius="95%"
-              paddingAngle={0}
-              dataKey="value"
-              stroke="none"
-              isAnimationActive={false}
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip 
-              formatter={(value: number, name: string, props: any) => [`${value} votos (${props.payload.percentage}%)`, name]}
-              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-              itemStyle={{ fontWeight: 700, color: '#1e293b' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-5xl font-black text-slate-900">{maxPercentage}%</span>
-          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Consenso AI</span>
-        </div>
+      <div className="relative w-full h-48 mx-auto mb-8 flex items-center justify-center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ maxWidth: '200px', maxHeight: '200px', overflow: 'visible' }}>
+          <g transform="rotate(-90 50 50)">
+            {data.reduce((acc, slice, i) => {
+              const radius = 40;
+              const circumference = 2 * Math.PI * radius;
+              const slicePercentage = slice.value / displayTotal;
+              const strokeDasharray = `${slicePercentage * circumference} ${circumference}`;
+              const strokeDashoffset = acc.offset;
+              
+              acc.elements.push(
+                <circle
+                  key={i}
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                  stroke={slice.color}
+                  strokeWidth="12"
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={-strokeDashoffset}
+                />
+              );
+              
+              acc.offset += slicePercentage * circumference;
+              return acc;
+            }, { elements: [] as React.ReactNode[], offset: 0 }).elements}
+          </g>
+          <text x="50" y="47" textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="900" fill="#0f172a">
+            {maxPercentage}%
+          </text>
+          <text x="50" y="62" textAnchor="middle" dominantBaseline="middle" fontSize="7" fontWeight="bold" fill="#94a3b8" letterSpacing="0.5">
+            CONSENSO AI
+          </text>
+        </svg>
       </div>
 
-      <div className="flex flex-col space-y-4 mt-auto">
-        {total === 0 && partyData.length > 0 ? (
-          partyData.map((p) => (
-            <div key={p.partido} className="flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></div>
-                <span className="font-bold text-slate-700">{p.partido}</span>
-              </div>
-              <div className="flex space-x-2">
-                <span className="text-red-600">{p.favor} F</span>
-                <span className="text-slate-400">{p.contra} C</span>
-                <span className="text-amber-600">{p.abstencion} A</span>
-              </div>
-            </div>
-          ))
-        ) : (
-          data.map((item) => (
-            <div key={item.name} className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                <span className="text-sm text-slate-600">{item.name}</span>
-              </div>
-              <div className={`px-3 py-1 rounded-md text-sm font-bold ${item.badgeBg} text-slate-900`}>
-                {item.value}
-              </div>
-            </div>
-          ))
-        )
-        }
+      <div className="mt-auto w-full">
+        <table className="w-full text-sm vote-chart-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            {total === 0 && partyData.length > 0 ? (
+              partyData.map((p) => (
+                <tr key={p.partido} className="border-b border-slate-100 last:border-0" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td className="py-2" style={{ padding: '8px 0' }}>
+                    <div className="flex items-center space-x-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color, width: '8px', height: '8px', borderRadius: '50%' }}></div>
+                      <span className="font-bold text-slate-700">{p.partido}</span>
+                    </div>
+                  </td>
+                  <td className="py-2 text-right" style={{ padding: '8px 0', textAlign: 'right' }}>
+                    <span className="text-red-600 font-medium mr-2">{p.favor} F</span>
+                    <span className="text-slate-400 font-medium mr-2">{p.contra} C</span>
+                    <span className="text-amber-600 font-medium">{p.abstencion} A</span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              data.map((item) => (
+                <tr key={item.name} className="border-b border-slate-100 last:border-0" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td className="py-3" style={{ padding: '12px 0' }}>
+                    <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color, width: '12px', height: '12px', borderRadius: '50%' }}></div>
+                      <span className="text-sm text-slate-600">{item.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 text-right" style={{ padding: '12px 0', textAlign: 'right' }}>
+                    <span className={`px-3 py-1 rounded-md text-sm font-bold ${item.badgeBg} text-slate-900 inline-block`} style={{ padding: '4px 12px', borderRadius: '6px', backgroundColor: item.badgeBg === 'bg-red-50' ? '#fef2f2' : item.badgeBg === 'bg-amber-50' ? '#fffbeb' : '#f1f5f9', display: 'inline-block' }}>
+                      {item.value}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -471,6 +482,9 @@ export default function App() {
         console.error("contentRef.current is null");
         return;
       }
+      
+      // Ensure all fonts are loaded before taking the snapshot
+      await document.fonts.ready;
 
       // Extract and sanitize CSS asynchronously to ensure we capture external stylesheets
       let rawCSS = '';
@@ -531,15 +545,22 @@ export default function App() {
         }
       }
 
+      // Aggressively sanitize rawCSS to prevent html2canvas parsing errors
+      // Replace any CSS property value that contains an unsupported color function with a safe color
+      rawCSS = rawCSS.replace(/:[^;}{]*(?:oklch|oklab|lch|lab|hwb|color\()[^;}{]*/gi, ': #94a3b8');
+
       const opt = {
-        margin:       [15, 15, 20, 15],
+        margin:       [35, 20, 30, 20] as [number, number, number, number],
         filename:     `expediente_${selectedExpediente?.clave_oficial || 'summary'}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
+        image:        { type: 'jpeg' as const, quality: 0.98 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        pagebreak:    { mode: ['css', 'legacy'], avoid: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'tr', '.pdf-avoid-break'] },
         html2canvas:  {
           useCORS: true,
-          allowTaint: true,
+          allowTaint: false,
           scale: 2,
           windowWidth: 1200,
+          logging: false,
           onclone: (clonedDoc: Document) => {
           // 1. Remove all existing style tags and links in the cloned document
           const styles = clonedDoc.querySelectorAll('style');
@@ -556,6 +577,28 @@ export default function App() {
           const newStyle = clonedDoc.createElement('style');
           newStyle.innerHTML = rawCSS;
           clonedDoc.head.appendChild(newStyle);
+          
+          // 2.5 Inject Google Fonts link to ensure correct font metrics
+          const fontLink = clonedDoc.createElement('link');
+          fontLink.rel = 'stylesheet';
+          fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap';
+          clonedDoc.head.appendChild(fontLink);
+
+          // 3. Sanitize inline styles in the cloned document
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach(el => {
+            const element = el as HTMLElement;
+            const styleAttr = element.getAttribute('style');
+            if (styleAttr) {
+              // Only sanitize if it contains unsupported color functions
+              if (/(?:oklch|oklab|lch|lab|hwb|color)\s*\(/.test(styleAttr)) {
+                const sanitizedStyle = styleAttr
+                  .replace(/(?:oklch|oklab|lch|lab|hwb|color)\s*\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/gi, 'rgb(148, 163, 184)')
+                  .replace(/(?:oklch|oklab|lch|lab|hwb|color)\s*\(/gi, 'rgb(');
+                element.setAttribute('style', sanitizedStyle);
+              }
+            }
+          });
 
           // 4. Hide specific buttons instead of all buttons to preserve tabs
           const buttons = clonedDoc.querySelectorAll('button');
@@ -616,55 +659,133 @@ export default function App() {
             * {
               letter-spacing: normal !important;
               word-spacing: normal !important;
-              font-family: sans-serif !important;
-              white-space: normal !important;
+            }
+            
+            .prose * {
+              font-family: "Inter", sans-serif !important;
             }
             
             /* Enhance readability with consistent sizes */
-            .prose p, .prose li, .prose span, p, span, li { 
-              font-size: 18px !important; 
-              line-height: 1.6 !important; 
+            .prose p, .prose li, .prose span { 
+              font-size: 12px !important; 
+              line-height: 1.5 !important; 
               color: #1e293b !important;
               text-align: left !important; /* Justify causes overlapping characters in PDF */
             }
             
-            .prose p { margin-bottom: 24px !important; }
-            .prose li { margin-bottom: 12px !important; }
+            /* Only target specific paragraphs for readability, not all of them */
+            .card-3d > p, .bg-white > p {
+              font-size: 12px !important;
+              line-height: 1.5 !important;
+            }
+            
+            .prose p { margin-bottom: 12px !important; }
+            .prose li { margin-bottom: 6px !important; }
+            
+            /* Style markdown tables generated by AI */
+            .prose table:not(.vote-chart-table) { width: 100% !important; border-collapse: collapse !important; margin-bottom: 16px !important; }
+            .prose table:not(.vote-chart-table) th, .prose table:not(.vote-chart-table) td { border: 1px solid #e2e8f0 !important; padding: 8px !important; text-align: left !important; font-size: 12px !important; }
+            .prose table:not(.vote-chart-table) th { background-color: #f8fafc !important; font-weight: bold !important; color: #0f172a !important; }
             
             /* Make headings stand out more and prevent crowding */
-            h1 { font-size: 32px !important; margin-bottom: 24px !important; color: #8B1A1A !important; font-weight: bold !important; }
+            h1 { font-size: 22px !important; margin-bottom: 12px !important; color: #8B1A1A !important; font-weight: bold !important; }
             h2 { 
-              font-size: 28px !important; 
-              margin-top: 40px !important; 
-              margin-bottom: 24px !important; 
+              font-size: 18px !important; 
+              margin-top: 18px !important; 
+              margin-bottom: 10px !important; 
               border-bottom: 2px solid #8B1A1A !important; 
-              padding-bottom: 12px !important; 
+              padding-bottom: 6px !important; 
               color: #0f172a !important;
               font-weight: bold !important;
             }
-            h3 { font-size: 24px !important; margin-top: 32px !important; margin-bottom: 16px !important; color: #334155 !important; font-weight: 600 !important; }
+            h3 { font-size: 16px !important; margin-top: 16px !important; margin-bottom: 8px !important; color: #334155 !important; font-weight: 600 !important; }
             
             /* Divide sections clearly and prevent object crowding */
-            .card-3d, .bg-white.border { 
-              margin-bottom: 48px !important; 
-              padding: 40px !important; 
-              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; 
-              border: 1px solid #e2e8f0 !important; 
-              border-radius: 24px !important;
-              page-break-inside: avoid !important;
+            .bg-white.border, .card-3d {
               background-color: #ffffff !important;
             }
             
-            /* Add more space between major blocks */
-            .space-y-4 > * + * { margin-top: 24px !important; }
-            .space-y-6 > * + * { margin-top: 32px !important; }
-            .space-y-8 > * + * { margin-top: 48px !important; }
+            /* Prevent awkward page breaks inside small elements */
+            .recharts-wrapper,
+            .relative.pl-8, /* Timeline items */
+            .flex.items-start.space-x-4, /* Evidence items */
+            .w-full.max-w-sm.mx-auto, /* Voting gauge */
+            .vote-chart-container {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
             
-            /* Prevent grid crowding */
-            .grid { gap: 32px !important; }
+            h1, h2, h3, h4, h5, h6 {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
             
-            /* Ensure flex columns have breathing room */
-            .flex-col > * + * { margin-top: 24px !important; }
+            p, li {
+              /* Allow natural page breaks inside paragraphs and lists to avoid huge blank spaces */
+              page-break-inside: auto !important;
+              break-inside: auto !important;
+            }
+            
+            /* Reduce font sizes and spacing for PDF */
+            .prose p, .prose li, .prose table, .text-base {
+              font-size: 12px !important;
+              line-height: 1.5 !important;
+            }
+            .text-sm { font-size: 11px !important; }
+            .text-xs { font-size: 10px !important; }
+            .text-lg { font-size: 14px !important; }
+            .text-xl { font-size: 16px !important; }
+            .text-2xl { font-size: 18px !important; }
+            .text-3xl { font-size: 20px !important; }
+            .text-4xl { font-size: 24px !important; }
+            
+            .space-y-10 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem !important; }
+            .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+            .gap-10 { gap: 1.5rem !important; }
+            .mt-10 { margin-top: 1.5rem !important; }
+            .mb-10 { margin-bottom: 1.5rem !important; }
+            .p-6 { padding: 1.25rem !important; }
+            
+            /* Fix main layout grids for PDF */
+            .pdf-main-grid {
+              display: block !important;
+              width: 100% !important;
+            }
+            .pdf-main-content {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              margin-bottom: 2rem !important;
+            }
+            .pdf-sidebar {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+            .grid-cols-1.lg\\:grid-cols-2 {
+              display: block !important;
+            }
+            .grid-cols-1.lg\\:grid-cols-2 > div {
+              margin-bottom: 1rem !important;
+            }
+            
+            /* Reduce large paddings and margins for PDF to save space */
+            .p-8 { padding: 16px !important; }
+            .mb-8 { margin-bottom: 16px !important; }
+            .mt-10 { margin-top: 20px !important; }
+            .pt-10 { padding-top: 20px !important; }
+            .space-y-10 > :not([hidden]) ~ :not([hidden]) { margin-top: 20px !important; }
+            .gap-10 { gap: 20px !important; }
+            .mt-12 { margin-top: 24px !important; }
+            .mb-12 { margin-bottom: 24px !important; }
+            
+            /* Hide tooltips and interactive elements */
+            .opacity-0, .group-hover\\:opacity-100, .cursor-help {
+              display: none !important;
+            }
             
             /* Make tabs larger and more distinct */
             .flex.space-x-1.bg-slate-100 {
@@ -681,29 +802,28 @@ export default function App() {
               margin: 0 !important;
             }
 
-            /* Fix chart rendering and spacing */
+            /* Fix chart rendering */
             .recharts-responsive-container {
-              height: 400px !important;
-              min-height: 400px !important;
               width: 100% !important;
-              margin-top: 32px !important;
-              margin-bottom: 32px !important;
+              height: 250px !important;
+              position: relative !important;
             }
             .recharts-wrapper {
+              width: 100% !important;
+              height: 100% !important;
               margin: 0 auto !important;
             }
-            .aspect-square {
-              aspect-ratio: auto !important;
-              height: 400px !important;
-              max-height: none !important;
-            }
-            .h-72 {
-              height: 400px !important;
+            .recharts-surface {
+              width: 100% !important;
+              height: 100% !important;
             }
           `;
           clonedDoc.head.appendChild(pdfStyles);
 
-          // Remove chat input area to make the PDF cleaner
+          // Remove chat input area and other excluded elements to make the PDF cleaner
+          const excludedElements = clonedDoc.querySelectorAll('.pdf-exclude');
+          excludedElements.forEach(el => el.remove());
+          
           const chatInputArea = clonedDoc.querySelector('.p-5.bg-white.border-t.border-slate-200');
           if (chatInputArea) chatInputArea.remove();
 
@@ -729,6 +849,18 @@ export default function App() {
                   firstMessage.remove();
                 }
               }
+              
+              // Remove user messages completely
+              const userMessages = messagesContainer.querySelectorAll('.flex.justify-end');
+              userMessages.forEach(msg => msg.remove());
+              
+              // Remove conversational questions from AI messages
+              const aiParagraphs = messagesContainer.querySelectorAll('.prose p');
+              aiParagraphs.forEach(p => {
+                if (p.textContent && (p.textContent.includes('¿Desea') || p.textContent.includes('¿Te gustaría') || p.textContent.includes('¿Quisieras') || p.textContent.includes('¿Te interesa'))) {
+                  p.remove();
+                }
+              });
             }
           }
 
@@ -738,85 +870,120 @@ export default function App() {
 
           // 5. Add Header
           clonedDoc.body.style.backgroundColor = '#ffffff';
-          clonedDoc.body.style.color = '#0f172a'; // slate-900
-          
-          // Force desktop width for consistent layout
+          clonedDoc.body.style.color = '#0f172a'; // slate-900          // Force desktop width for consistent layout
           const clonedContent = clonedDoc.getElementById('pdf-content-wrapper') as HTMLElement;
-          if (clonedContent) {
-            clonedContent.style.width = '1200px';
-            clonedContent.style.maxWidth = '1200px';
-            clonedContent.style.margin = '0 auto';
-            clonedContent.style.padding = '40px 60px'; // Add generous padding for the PDF
-            clonedContent.style.backgroundColor = '#ffffff'; // Ensure white background
-          }
+          const targetElement = clonedContent || clonedDoc.body.firstElementChild || clonedDoc.body;
           
-          const header = clonedDoc.createElement('div');
-          header.style.display = 'flex';
-          header.style.justifyContent = 'space-between';
-          header.style.alignItems = 'center';
-          header.style.padding = '0 0 20px 0';
-          header.style.borderBottom = '2px solid #e2e8f0';
-          header.style.marginBottom = '40px';
-          
-          const titleContainer = clonedDoc.createElement('div');
-          
-          const title = clonedDoc.createElement('h1');
-          title.textContent = 'Reporte de Inteligencia Legislativa';
-          title.style.fontSize = '28px';
-          title.style.fontWeight = '800';
-          title.style.color = '#0f172a';
-          title.style.margin = '0 0 8px 0';
-          title.style.letterSpacing = '-0.02em';
-          
-          const subtitle = clonedDoc.createElement('p');
-          subtitle.textContent = `Generado por LEXA IA • ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`;
-          subtitle.style.fontSize = '14px';
-          subtitle.style.color = '#64748b';
-          subtitle.style.margin = '0';
-          
-          titleContainer.appendChild(title);
-          titleContainer.appendChild(subtitle);
-          header.appendChild(titleContainer);
-          
-          // Add a badge on the right
-          const badge = clonedDoc.createElement('div');
-          badge.textContent = 'LEXA IA';
-          badge.style.backgroundColor = '#f8fafc';
-          badge.style.border = '1px solid #e2e8f0';
-          badge.style.color = '#8B1A1A';
-          badge.style.fontWeight = 'bold';
-          badge.style.padding = '8px 16px';
-          badge.style.borderRadius = '8px';
-          badge.style.fontSize = '14px';
-          badge.style.letterSpacing = '0.05em';
-          
-          header.appendChild(badge);
-          
-          if (clonedContent) {
-            clonedContent.prepend(header);
-          } else {
-            clonedDoc.body.prepend(header);
+          if (targetElement) {
+            (targetElement as HTMLElement).style.width = '1200px';
+            (targetElement as HTMLElement).style.maxWidth = '1200px';
+            (targetElement as HTMLElement).style.margin = '0 auto';
+            (targetElement as HTMLElement).style.padding = '40px 60px'; // Add generous padding for the PDF
+            (targetElement as HTMLElement).style.backgroundColor = '#ffffff'; // Ensure white background
           }
         }
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
-        html2canvas:  { scale: 2, useCORS: true, logging: false }
-      };
+      }
+    };
 
-      const worker = html2pdf().set(opt).from(contentRef.current);
+    const worker = html2pdf().set(opt).from(contentRef.current);
       const pdf = await worker.toPdf().get('pdf');
       
-      // Pagination logic
+      // Pagination and Header/Footer logic
       const totalPages = pdf.internal.getNumberOfPages();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Generate logo as base64 image
+      const generateLogoDataUrl = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 120;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        // Set font
+        ctx.font = '900 72px "Inter", sans-serif';
+        ctx.textBaseline = 'middle';
+
+        // Draw LEXA
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText('LEXA', 10, 60);
+
+        // Measure LEXA
+        const lexaWidth = ctx.measureText('LEXA ').width;
+
+        // Create gradient for IA
+        const gradient = ctx.createLinearGradient(10 + lexaWidth, 0, 10 + lexaWidth + ctx.measureText('IA').width, 0);
+        gradient.addColorStop(0, '#FF8B53');
+        gradient.addColorStop(1, '#EB577A');
+
+        // Draw IA
+        ctx.fillStyle = gradient;
+        ctx.fillText('IA', 10 + lexaWidth, 60);
+
+        return canvas.toDataURL('image/png');
+      };
+      
+      const logoDataUrl = generateLogoDataUrl();
+
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
+        
+        // --- HEADER ---
+        // Background box
+        pdf.setFillColor(248, 250, 252); // slate-50
+        pdf.setDrawColor(226, 232, 240); // slate-200
+        pdf.setLineWidth(0.5);
+        pdf.rect(20, 10, pageWidth - 40, 20, 'FD'); // Fill and Draw
+        
+        // LEXA IA Logo
+        if (logoDataUrl) {
+          pdf.addImage(logoDataUrl, 'PNG', 22, 14, 30, 9);
+        } else {
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(16);
+          pdf.setTextColor(15, 23, 42); // slate-900
+          pdf.text("LEXA", 25, 23);
+          pdf.setTextColor(235, 87, 122); // pink-500
+          pdf.text("IA", 41, 23);
+        }
+        
+        // Divider
+        pdf.setDrawColor(203, 213, 225); // slate-300
+        pdf.setLineWidth(0.5);
+        pdf.line(55, 14, 55, 26);
+        
+        // Reporte Text
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 116, 139); // slate-500
+        pdf.text("REPORTE DE INTELIGENCIA LEGISLATIVA", 60, 19);
+        
+        // Date
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7);
+        pdf.setTextColor(148, 163, 184); // slate-400
+        const dateStr = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        pdf.text(dateStr, 60, 24);
+        
+        // Right side (Expediente / IA)
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(7);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text(selectedExpediente ? "EXPEDIENTE" : "BÚSQUEDA", pageWidth - 25, 18, { align: 'right' });
+        
+        pdf.setFontSize(12);
+        pdf.setTextColor(15, 23, 42);
+        pdf.text(selectedExpediente?.clave_oficial || 'IA', pageWidth - 25, 24, { align: 'right' });
+        
+        // --- FOOTER ---
+        pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
         pdf.setTextColor(150);
         pdf.text(
           `Página ${i} de ${totalPages}`, 
-          pdf.internal.pageSize.getWidth() / 2, 
-          pdf.internal.pageSize.getHeight() - 8, 
+          pageWidth / 2, 
+          pageHeight - 15, 
           { align: 'center' }
         );
       }
@@ -927,9 +1094,8 @@ export default function App() {
           2. El **impacto** proyectado (mencionando el Impacto Score).
           3. Los **actores** clave involucrados.
           4. La **intención de voto esperada** o el resultado de la última votación (simulada basada en el contexto político actual del Edomex).
-          5. Una pregunta final invitando al usuario a profundizar en algún aspecto.
           
-          Sé profesional, analítico y directo. NO incluyas saludos ni introducciones como 'Saludos, soy LEXA IA...'.
+          Sé profesional, analítico y directo. NO incluyas saludos ni introducciones como 'Saludos, soy LEXA IA...'. TAMPOCO incluyas preguntas finales ni ofrezcas más información al usuario. Termina tu respuesta directamente después del análisis.
           
           IMPORTANTE: DEBES incluir al final de tu respuesta un bloque de código JSON exacto con este formato para renderizar una gráfica visual de la intención de voto o resultado:
           \`\`\`json
@@ -1655,7 +1821,7 @@ export default function App() {
               <div className="mt-8 card-3d p-8 border-indigo-100/50 relative">
                 <button 
                   onClick={exportSummaryToPDF}
-                  className="absolute top-4 right-4 p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+                  className="absolute top-4 right-4 p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm pdf-exclude"
                   title="Descargar PDF"
                 >
                   <DownloadIcon className="w-5 h-5 text-slate-600" />
@@ -1808,7 +1974,7 @@ export default function App() {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center space-x-2 text-sm text-slate-500 mb-4">
+        <div className="flex items-center space-x-2 text-sm text-slate-500 mb-4 pdf-exclude">
           <button onClick={() => setSelectedExpediente(null)} className="hover:text-[#8B1A1A] transition-colors">Explorar</button>
           <ChevronRight className="w-4 h-4" />
           <span className="font-medium text-slate-900">{exp.clave_oficial}</span>
@@ -1861,8 +2027,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-10 mt-10 border-t border-slate-200 pt-10">
-            <div className="col-span-2 space-y-10">
+          <div className="grid grid-cols-3 gap-10 mt-10 border-t border-slate-200 pt-10 pdf-main-grid">
+            <div className="col-span-2 space-y-10 pdf-main-content">
               <div>
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shadow-sm">
@@ -1940,7 +2106,7 @@ export default function App() {
                   )}
                 </div>
                 
-                <div className="p-5 bg-white  border-t border-slate-200">
+                <div className="p-5 bg-white border-t border-slate-200 pdf-exclude">
                   <div className="flex items-center space-x-3">
                     <input 
                       type="text" 
@@ -1962,7 +2128,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="col-span-1 space-y-8">
+            <div className="col-span-1 space-y-8 pdf-sidebar">
 
 
               <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
@@ -1973,14 +2139,14 @@ export default function App() {
                 </h3>
                 <div className="space-y-5">
                   {exp.actores.map((actor) => (
-                    <div key={actor.nombre} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                    <div key={actor.nombre} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50 pdf-avoid-break" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #f1f5f9', marginBottom: '12px', pageBreakInside: 'avoid' }}>
                       <span className="text-base font-bold text-slate-900">{actor.nombre}</span>
-                      <div className="flex items-center space-x-2 mt-1.5">
+                      <div className="flex items-center space-x-2 mt-1.5" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{actor.rol}</span>
                         {actor.partido !== 'N/A' && (
                           <>
                             <span className="text-slate-300">•</span>
-                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">{actor.partido}</span>
+                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md" style={{ backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '6px' }}>{actor.partido}</span>
                           </>
                         )}
                       </div>
@@ -1995,20 +2161,20 @@ export default function App() {
                   <FileText className="w-5 h-5 mr-3 text-slate-500" />
                   Iniciativas Relacionadas
                 </h3>
-                <table className="w-full text-left text-sm">
+                <table className="w-full text-left text-sm" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr className="text-slate-400 uppercase text-[10px] tracking-wider">
-                      <th className="pb-2 font-bold">Iniciativa</th>
-                      <th className="pb-2 font-bold text-right">Expediente</th>
+                    <tr className="text-slate-400 uppercase text-[10px] tracking-wider" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <th className="pb-2 font-bold" style={{ paddingBottom: '12px', textAlign: 'left' }}>Iniciativa</th>
+                      <th className="pb-2 font-bold text-right" style={{ paddingBottom: '12px', textAlign: 'right' }}>Expediente</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {expedientes
                       .filter(e => e.id !== exp.id)
                       .map((relatedExp) => (
-                        <tr key={relatedExp.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedExpediente(relatedExp)}>
-                          <td className="py-3 pr-4 text-slate-700 leading-tight">{relatedExp.titulo}</td>
-                          <td className="py-3 font-bold text-indigo-700 text-right whitespace-nowrap">{relatedExp.clave_oficial}</td>
+                        <tr key={relatedExp.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedExpediente(relatedExp)} style={{ borderBottom: '1px solid #f1f5f9', pageBreakInside: 'avoid' }}>
+                          <td className="py-3 pr-4 text-slate-700 leading-tight" style={{ padding: '12px 16px 12px 0' }}>{relatedExp.titulo}</td>
+                          <td className="py-3 font-bold text-indigo-700 text-right whitespace-nowrap" style={{ padding: '12px 0', textAlign: 'right' }}>{relatedExp.clave_oficial}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -2557,45 +2723,54 @@ export default function App() {
                   {selectedVote.desglose_partidos && (
                     <div className="border-t border-slate-200 pt-6">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Desglose por Partido</h4>
-                      <div className="space-y-4">
-                        {selectedVote.desglose_partidos.map((partido: any) => (
-                          <div key={partido.partido} className="flex items-center text-sm">
-                            <div className="w-20 font-bold text-slate-700 flex items-center">
-                              <div className="w-2.5 h-2.5 rounded-full mr-3 shadow-sm" style={{ backgroundColor: partido.color }}></div>
-                              {partido.partido}
-                            </div>
-                            <div className="flex-1 flex items-center space-x-1 h-8 bg-slate-100 rounded-lg overflow-hidden mx-4 ">
-                              {partido.favor > 0 && (
-                                <div 
-                                  style={{ width: `${(partido.favor / (partido.favor + partido.contra + partido.abstencion)) * 100}%` }} 
-                                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 flex items-center justify-center text-xs text-white font-bold"
-                                >
-                                  {partido.favor}
-                                </div>
-                              )}
-                              {partido.contra > 0 && (
-                                <div 
-                                  style={{ width: `${(partido.contra / (partido.favor + partido.contra + partido.abstencion)) * 100}%` }} 
-                                  className="h-full bg-gradient-to-r from-red-500 to-red-400 flex items-center justify-center text-xs text-white font-bold"
-                                >
-                                  {partido.contra}
-                                </div>
-                              )}
-                              {partido.abstencion > 0 && (
-                                <div 
-                                  style={{ width: `${(partido.abstencion / (partido.favor + partido.contra + partido.abstencion)) * 100}%` }} 
-                                  className="h-full bg-gradient-to-r from-slate-400 to-slate-300 flex items-center justify-center text-xs text-white font-bold"
-                                >
-                                  {partido.abstencion}
-                                </div>
-                              )}
-                            </div>
-                            <div className="w-12 text-right text-sm font-mono font-bold text-slate-500">
-                              {partido.favor + partido.contra + partido.abstencion}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {selectedVote.desglose_partidos.map((partido: any) => {
+                            const totalPartido = partido.favor + partido.contra + partido.abstencion;
+                            return (
+                              <tr key={partido.partido} className="border-b border-slate-100 last:border-0">
+                                <td className="py-3 w-32">
+                                  <div className="font-bold text-slate-700 flex items-center">
+                                    <div className="w-2.5 h-2.5 rounded-full mr-3 shadow-sm" style={{ backgroundColor: partido.color }}></div>
+                                    {partido.partido}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center space-x-1 h-8 bg-slate-100 rounded-lg overflow-hidden w-full">
+                                    {partido.favor > 0 && (
+                                      <div 
+                                        style={{ width: `${(partido.favor / totalPartido) * 100}%` }} 
+                                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 flex items-center justify-center text-xs text-white font-bold"
+                                      >
+                                        {partido.favor}
+                                      </div>
+                                    )}
+                                    {partido.contra > 0 && (
+                                      <div 
+                                        style={{ width: `${(partido.contra / totalPartido) * 100}%` }} 
+                                        className="h-full bg-gradient-to-r from-red-500 to-red-400 flex items-center justify-center text-xs text-white font-bold"
+                                      >
+                                        {partido.contra}
+                                      </div>
+                                    )}
+                                    {partido.abstencion > 0 && (
+                                      <div 
+                                        style={{ width: `${(partido.abstencion / totalPartido) * 100}%` }} 
+                                        className="h-full bg-gradient-to-r from-slate-400 to-slate-300 flex items-center justify-center text-xs text-white font-bold"
+                                      >
+                                        {partido.abstencion}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 w-16 text-right font-mono font-bold text-slate-500">
+                                  {totalPartido}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                       <div className="flex justify-center space-x-4 mt-4 text-[10px] text-slate-400">
                         <div className="flex items-center"><div className="w-2 h-2 bg-emerald-500/80 rounded mr-1"></div> A favor</div>
                         <div className="flex items-center"><div className="w-2 h-2 bg-red-500/80 rounded mr-1"></div> En contra</div>
