@@ -1248,23 +1248,17 @@ export default function App() {
 
       <div className="flex items-center space-x-4 w-auto justify-end">
         <a 
-          href="https://legislacion.edomex.gob.mx/" 
+          href="https://www.congresoedomex.gob.mx/" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="hidden md:flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200"
+          className="flex items-center px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200 group"
+          title="Congreso del Estado de México"
         >
-          <svg className="w-8 h-8 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 22h16" />
-            <path d="M4 18h16" />
-            <rect x="6" y="10" width="2" height="8" />
-            <rect x="11" y="10" width="2" height="8" />
-            <rect x="16" y="10" width="2" height="8" />
-            <polygon points="12 2 4 10 20 10" />
-          </svg>
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">Poder Legislativo</span>
-            <span className="text-sm font-black text-slate-800 leading-tight">Estado de México</span>
-          </div>
+          <img 
+            src="/congreso_logo_horizontal.png" 
+            alt="Congreso Estado de México" 
+            className="h-8 md:h-12 w-auto object-contain"
+          />
         </a>
 
         {user ? (
@@ -1295,6 +1289,8 @@ export default function App() {
       </div>
     </header>
   );
+
+
 
   const renderDashboard = () => (
     <div className="space-y-12 max-w-5xl mx-auto pt-8 pb-16 animate-in fade-in duration-500">
@@ -2203,6 +2199,39 @@ export default function App() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="card-3d card-3d-hover p-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
+                <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center uppercase tracking-wider mt-1">
+                  <FileText className="w-5 h-5 mr-3 text-slate-500" />
+                  Documentos
+                </h3>
+                <div className="space-y-4">
+                  {exp.documentos && exp.documentos.length > 0 ? (
+                    exp.documentos.map((doc: any) => (
+                      <a 
+                        key={doc.id} 
+                        href={doc.url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex flex-col bg-slate-50 p-4 rounded-xl border border-slate-100/50 hover:bg-red-50 hover:border-red-100 transition-colors cursor-pointer group pdf-avoid-break"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-900 group-hover:text-[#8B1A1A] transition-colors">{doc.tipo.replace('_', ' ')}</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1.5">{doc.fecha}</span>
+                          </div>
+                          <div className="bg-white p-2 rounded-lg shadow-sm group-hover:bg-[#8B1A1A] transition-colors">
+                            <FileDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                          </div>
+                        </div>
+                      </a>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">No hay documentos adjuntos.</p>
+                  )}
                 </div>
               </div>
 
