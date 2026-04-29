@@ -699,6 +699,8 @@ export default function App() {
               line-height: 1.2 !important;
               margin: 0 !important;
               padding: 0 !important;
+              -webkit-line-clamp: unset !important;
+              display: block !important;
             }
             
             /* Make headings stand out more and prevent crowding */
@@ -1246,17 +1248,23 @@ export default function App() {
 
       <div className="flex items-center space-x-4 w-auto justify-end">
         <a 
-          href="https://www.congresoedomex.gob.mx/" 
+          href="https://legislacion.edomex.gob.mx/" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="hidden md:flex items-center px-2 py-1 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200"
+          className="hidden md:flex items-center space-x-2 px-3 py-1.5 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200"
         >
-          <img 
-            src="https://www.congresoedomex.gob.mx/storage/images/IMAGOTIPOHorizontal.png" 
-            alt="Congreso Estado de México" 
-            className="h-12 object-contain"
-            referrerPolicy="no-referrer"
-          />
+          <svg className="w-8 h-8 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 22h16" />
+            <path d="M4 18h16" />
+            <rect x="6" y="10" width="2" height="8" />
+            <rect x="11" y="10" width="2" height="8" />
+            <rect x="16" y="10" width="2" height="8" />
+            <polygon points="12 2 4 10 20 10" />
+          </svg>
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">Poder Legislativo</span>
+            <span className="text-sm font-black text-slate-800 leading-tight">Estado de México</span>
+          </div>
         </a>
 
         {user ? (
@@ -2087,6 +2095,35 @@ export default function App() {
                 </div>
               </div>
 
+              {/* YouTube Video Section */}
+              {exp.video_youtube?.id && (
+                <div className="mt-10 pt-10 border-t border-slate-200 pdf-exclude">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shadow-sm">
+                      <Youtube className="w-5 h-5 text-red-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Grabación de Sesión</h3>
+                  </div>
+                  <div className="aspect-video w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${exp.video_youtube.id}`}
+                      title={exp.video_youtube.titulo || "Video YouTube"}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                  {exp.video_youtube.titulo && (
+                    <div className="mt-4 flex justify-between items-center text-sm">
+                      <p className="font-bold text-slate-700">{exp.video_youtube.titulo}</p>
+                      <p className="text-slate-500 font-medium">📽️ {exp.video_youtube.vistas} vistas</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Chat Section */}
               <div className="mt-12 card-3d overflow-hidden flex flex-col h-[600px] chat-section relative bg-white">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#8B1A1A] to-red-500"></div>
@@ -2153,14 +2190,14 @@ export default function App() {
                 </h3>
                 <div className="space-y-5">
                   {exp.actores.map((actor) => (
-                    <div key={actor.nombre} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50 pdf-avoid-break" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #f1f5f9', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div key={actor.nombre} className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-100/50 pdf-avoid-break">
                       <span className="text-base font-bold text-slate-900">{actor.nombre}</span>
-                      <div className="flex items-center space-x-2 mt-1.5" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                      <div className="flex items-center space-x-2 mt-1.5">
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{actor.rol}</span>
                         {actor.partido !== 'N/A' && (
                           <>
                             <span className="text-slate-300">•</span>
-                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md" style={{ backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '6px' }}>{actor.partido}</span>
+                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">{actor.partido}</span>
                           </>
                         )}
                       </div>
@@ -2175,11 +2212,11 @@ export default function App() {
                   <FileText className="w-5 h-5 mr-3 text-slate-500" />
                   Iniciativas Relacionadas
                 </h3>
-                <table className="w-full text-left text-sm related-initiatives-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="w-full text-left text-sm related-initiatives-table">
                   <thead>
-                    <tr className="text-slate-400 uppercase text-[10px] tracking-wider" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <th className="pb-2 font-bold" style={{ paddingBottom: '12px', textAlign: 'left' }}>Iniciativa</th>
-                      <th className="pb-2 font-bold text-right" style={{ paddingBottom: '12px', textAlign: 'right' }}>Expediente</th>
+                    <tr className="text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                      <th className="pb-3 font-bold">Iniciativa</th>
+                      <th className="pb-3 font-bold text-right">Expediente</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -2187,11 +2224,11 @@ export default function App() {
                       .filter(e => e.id !== exp.id)
                       .slice(0, 4)
                       .map((relatedExp) => (
-                        <tr key={relatedExp.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedExpediente(relatedExp)} style={{ borderBottom: '1px solid #f1f5f9', pageBreakInside: 'avoid' }}>
-                          <td className="py-1 pr-4 text-slate-700 leading-tight" style={{ padding: '4px 16px 4px 0' }}>
-                            <div className="text-xs">{relatedExp.titulo.replace(/\s+/g, ' ').trim()}</div>
+                        <tr key={relatedExp.id} className="hover:bg-slate-50 cursor-pointer transition-colors pdf-avoid-break" onClick={() => setSelectedExpediente(relatedExp)}>
+                          <td className="py-3 pr-4 text-slate-700 leading-tight">
+                            <div className="line-clamp-2">{relatedExp.titulo.replace(/\n/g, ' ').trim()}</div>
                           </td>
-                          <td className="py-1 font-bold text-indigo-700 text-right whitespace-nowrap" style={{ padding: '4px 0', textAlign: 'right' }}>{relatedExp.clave_oficial}</td>
+                          <td className="py-3 font-bold text-indigo-700 text-right whitespace-nowrap">{relatedExp.clave_oficial}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -2729,6 +2766,24 @@ export default function App() {
                   {selectedVote.resumen_ia_votacion}
                 </p>
               </div>
+
+              {/* Video from Vote Session */}
+              {selectedVote.video_url && (
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Video de la Sesión</h3>
+                  <div className="aspect-video w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={selectedVote.video_url}
+                      title="Video Votación"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                </div>
+              )}
 
               {/* Voting Results */}
               <div>
