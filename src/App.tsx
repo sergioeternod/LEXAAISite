@@ -13,6 +13,8 @@ import {
   ShieldAlert, 
   BookOpen,
   ChevronRight,
+  ChevronDown,
+  Play,
   Filter,
   Download,
   Clock,
@@ -252,8 +254,71 @@ const MarkdownComponents = {
 
 const COLORS = ['#B3282D', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
+  return (
+    <div className="min-h-screen relative w-full bg-[#f8f9fa] overflow-x-hidden">
+      {/* 
+        Dado que la imagen se compartió en el chat y no en los archivos, 
+        usamos de fondo una estructura que espera que subas la imagen a la carpeta public 
+        como "landing.png" para que encaje perfecto.
+      */}
+      <img 
+        src="/congreso.png" 
+        alt="Congreso Edomex Landing" 
+        className="w-full h-auto object-top"
+        onError={(e) => {
+          // Fallback visual si la imagen no está en public/congreso.png
+          (e.target as HTMLImageElement).style.display = 'none';
+        }}
+      />
+      
+      {/* Fallback si no está la imagen */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center -z-10 text-slate-400">
+        <p>Por favor, sube la captura de pantalla a la carpeta <b>public/</b> con el nombre <b>congreso.png</b></p>
+      </div>
+
+      {/* Header flotante transparente para el logo de Lexa - posicionado relativo al ancho para escalar con la imagen */}
+      <div 
+        className="absolute z-50 flex items-center justify-center"
+        style={{ 
+          top: '2.0vw',    /* Ajuste vertical según la escala de la imagen (aprox centro del menú) */
+          right: '8.5vw'   /* Ajuste horizontal (a la derecha de "Directorio") */
+        }}
+      >
+         <button 
+           onClick={onEnter}
+           className="flex items-center justify-center hover:scale-105 hover:-translate-y-0.5 transition-all cursor-pointer group px-1 py-0.5"
+           title="Ir a Lexa AI"
+         >
+           <img 
+             src="/lexa-logo.png" 
+             alt="Lexa IA" 
+             className="object-contain drop-shadow-sm"
+             style={{ height: '0.9vw', minHeight: '8px', maxHeight: '16px' }}
+             onError={(e) => {
+               // Fallback text in case the image isn't uploaded yet
+               (e.target as HTMLImageElement).style.display = 'none';
+               // Remove earlier fallbacks to prevent duplicates
+               const parent = (e.target as HTMLImageElement).parentElement;
+               if (parent) {
+                 const oldFallback = parent.querySelector('.fallback-logo');
+                 if (oldFallback) oldFallback.remove();
+               }
+               const fallback = document.createElement('span');
+               fallback.className = 'fallback-logo font-black text-[#1a202c] tracking-tight group-hover:text-[#8B1A1A] transition-colors drop-shadow-sm';
+               fallback.style.fontSize = '0.9vw'; // Modificado para que se vea la reduccion
+               fallback.innerHTML = 'LEXA <span class="text-[#ff7e67]">IA</span>';
+               (e.target as HTMLImageElement).parentElement?.appendChild(fallback);
+             }}
+           />
+         </button>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState('landing');
   const [selectedExpediente, setSelectedExpediente] = useState<any>(null);
   const [selectedVote, setSelectedVote] = useState<any>(null);
   const [filterParty, setFilterParty] = useState<string>('Todos');
@@ -2697,6 +2762,10 @@ export default function App() {
       </div>
     </div>
   );
+
+  if (currentView === 'landing') {
+    return <LandingPage onEnter={() => setCurrentView('dashboard')} />;
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-paper)] flex flex-col font-sans selection:bg-[#8B1A1A]/20 selection:text-[#8B1A1A]">
