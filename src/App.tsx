@@ -1292,6 +1292,7 @@ export default function App() {
 
 
 
+
   const renderDashboard = () => (
     <div className="space-y-12 max-w-5xl mx-auto pt-8 pb-16 animate-in fade-in duration-500">
       {/* Hero Section */}
@@ -1929,7 +1930,6 @@ export default function App() {
                           src={legisladorData[leg.id]?.foto ? encodeURI(legisladorData[leg.id].foto) : `https://picsum.photos/seed/${leg.id}/100/100`} 
                           alt={leg.nombre} 
                           className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
                         />
                       </div>
                       <div>
@@ -2344,7 +2344,6 @@ export default function App() {
                         src={legisladorData[legisladores[displayDistrict - 1].id]?.foto || "https://picsum.photos/seed/legislator/200/200"} 
                         alt={legisladores[displayDistrict - 1].nombre} 
                         className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md mb-4" 
-                        referrerPolicy="no-referrer" 
                       />
                       <p className="font-bold text-xl">{legisladores[displayDistrict - 1].nombre}</p>
                       <p className="text-slate-500 text-lg">{legisladores[displayDistrict - 1].partido}</p>
@@ -2541,7 +2540,7 @@ export default function App() {
           <div className="p-10 flex flex-col md:flex-row gap-10 items-start pl-12">
             <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl overflow-hidden border-4 border-white shadow-sm flex-shrink-0 relative group">
               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"></div>
-              <img src={selectedLegislator.foto || "https://picsum.photos/seed/legislator/200/200"} alt={selectedLegislator.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <img src={selectedLegislator.foto || "https://picsum.photos/seed/legislator/200/200"} alt={selectedLegislator.nombre} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/legislator/200/200"; }} />
             </div>
             <div className="flex-1 w-full">
               <div className="flex justify-between items-start">
@@ -2735,21 +2734,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[var(--color-paper)] flex flex-col font-sans selection:bg-[#8B1A1A]/20 selection:text-[#8B1A1A]">
       {renderTopNav()}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Subtle background decoration */}
-        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent pointer-events-none -z-10"></div>
-        <div className="flex-1 p-8 overflow-y-auto">
-          <div id="pdf-content-wrapper" ref={contentRef} className="max-w-6xl mx-auto">
-            {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
-            {currentView === 'explorar' && !selectedExpediente && !selectedLegislator && renderExplorar()}
-            {currentView === 'alertas' && !selectedExpediente && !selectedLegislator && renderAlertas()}
-            {currentView === 'mapa' && !selectedExpediente && !selectedLegislator && renderMapa()}
-            {currentView === 'perfil' && !selectedExpediente && !selectedLegislator && renderPerfil()}
-            {selectedExpediente && renderExpedienteDetail()}
-            {selectedLegislator && renderLegisladorDetail()}
+        <main className="flex-1 flex flex-col overflow-hidden relative">
+          {/* Subtle background decoration */}
+          <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent pointer-events-none -z-10"></div>
+          <div className="flex-1 p-8 overflow-y-auto">
+            <div id="pdf-content-wrapper" ref={contentRef} className="max-w-6xl mx-auto">
+              {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
+              {currentView === 'explorar' && !selectedExpediente && !selectedLegislator && renderExplorar()}
+              {currentView === 'alertas' && !selectedExpediente && !selectedLegislator && renderAlertas()}
+              {currentView === 'mapa' && !selectedExpediente && !selectedLegislator && renderMapa()}
+              {currentView === 'perfil' && !selectedExpediente && !selectedLegislator && renderPerfil()}
+              {selectedExpediente && renderExpedienteDetail()}
+              {selectedLegislator && renderLegisladorDetail()}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
 
       {/* Vote Details Modal */}
       {selectedVote && (
@@ -2953,7 +2952,6 @@ export default function App() {
                     src={legisladorData[selectedLegislator.id]?.foto ? encodeURI(legisladorData[selectedLegislator.id].foto) : `https://picsum.photos/seed/${selectedLegislator.id}/100/100`} 
                     alt={selectedLegislator.nombre} 
                     className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
                   />
                 </div>
                 <div>
