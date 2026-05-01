@@ -3,7 +3,8 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
-import congresoBackground from './assets/congreso.png';
+import congresoBackground from './assets/congreso_compressed.webp';
+import congresoLogoHorizontal from './assets/congreso_logo_horizontal.png';
 import { 
   LayoutDashboard, 
   Search, 
@@ -263,10 +264,14 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         usamos de fondo una estructura que espera que subas la imagen a la carpeta public 
         como "landing.png" para que encaje perfecto.
       */}
-      <img 
-        src={congresoBackground} 
-        alt="Congreso Edomex Landing" 
-        className="w-full h-auto object-top"
+      <img
+        src={`${congresoBackground}?t=${Date.now()}`}
+        alt="Congreso Edomex Landing"
+        className="w-full h-auto object-top relative"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.opacity = '0.5';
+          console.error("Image load failed fallback:", e);
+        }}
       />
       
       {/* Fallback si no está la imagen */}
@@ -1297,7 +1302,7 @@ export default function App() {
           title="Congreso del Estado de México"
         >
           <img 
-            src="/congreso_logo_horizontal.png" 
+            src={congresoLogoHorizontal} 
             alt="Congreso Estado de México" 
             className="h-8 md:h-12 w-auto object-contain"
           />
