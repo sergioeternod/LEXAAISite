@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
+import congresoImg from './assets/congreso.png';
 import { 
   LayoutDashboard, 
   Search, 
@@ -263,12 +264,13 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         como "landing.png" para que encaje perfecto.
       */}
       <img 
-        src="/congreso.png" 
+        src={congresoImg} 
         alt="Congreso Edomex Landing" 
         className="w-full h-auto object-top"
         onError={(e) => {
-          // Fallback visual si la imagen no está en public/congreso.png
-          (e.target as HTMLImageElement).style.display = 'none';
+          console.error("Failed to load congreso.png");
+          // Dejamos que se muestre el icono de imagen rota si falla, 
+          // para poder depurar mejor en red.
         }}
       />
       
