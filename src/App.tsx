@@ -287,27 +287,7 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
            className="flex items-center justify-center hover:scale-105 hover:-translate-y-0.5 transition-all cursor-pointer group px-1 py-0.5"
            title="Ir a Lexa AI"
          >
-           <img 
-             src="/lexa-logo.png" 
-             alt="Lexa IA" 
-             className="object-contain drop-shadow-sm"
-             style={{ height: '0.9vw', minHeight: '8px', maxHeight: '16px' }}
-             onError={(e) => {
-               // Fallback text in case the image isn't uploaded yet
-               (e.target as HTMLImageElement).style.display = 'none';
-               // Remove earlier fallbacks to prevent duplicates
-               const parent = (e.target as HTMLImageElement).parentElement;
-               if (parent) {
-                 const oldFallback = parent.querySelector('.fallback-logo');
-                 if (oldFallback) oldFallback.remove();
-               }
-               const fallback = document.createElement('span');
-               fallback.className = 'fallback-logo font-black text-[#1a202c] tracking-tight group-hover:text-[#8B1A1A] transition-colors drop-shadow-sm';
-               fallback.style.fontSize = '0.9vw'; // Modificado para que se vea la reduccion
-               fallback.innerHTML = 'LEXA <span class="text-[#ff7e67]">IA</span>';
-               (e.target as HTMLImageElement).parentElement?.appendChild(fallback);
-             }}
-           />
+           <span className="font-black text-[#1a202c] tracking-tight group-hover:text-[#8B1A1A] transition-colors drop-shadow-sm" style={{ fontSize: '0.9vw' }}>LEXA <span className="text-[#ff7e67]">IA</span></span>
          </button>
       </div>
     </div>
