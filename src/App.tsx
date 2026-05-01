@@ -1327,43 +1327,10 @@ export default function App() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group">
-          <div>
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Última votación relevante</h3>
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                <FileText className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-lg font-bold text-slate-900 mb-4 line-clamp-2 leading-tight">
-              Reforma al Artículo 4 Constitucional en materia de bienestar
-            </p>
-          </div>
-          <div className="mt-4 pt-6 border-t border-slate-100/50 flex items-end justify-between">
-            <div className="text-4xl font-mono font-light text-emerald-600 tracking-tighter">68%</div>
-            <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">A FAVOR</div>
-          </div>
-        </div>
-
-        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group">
-          <div>
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aprobada</h3>
-            </div>
-            <p className="text-lg font-bold text-slate-900 mb-4 line-clamp-2 leading-tight">
-              Iniciativa con proyecto de decreto por el que se expide la Ley General de Aguas
-            </p>
-          </div>
-          <div className="mt-4 pt-6 border-t border-slate-100/50 flex items-end justify-between">
-            <div className="text-4xl font-mono font-light text-slate-900 tracking-tighter">82%</div>
-            <div className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">CONSENSO</div>
-          </div>
-        </div>
-
-        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mt-16">
+        <div className="card-3d card-3d-hover p-8 flex flex-col justify-between group max-w-2xl mx-auto w-full">
           <div className="flex justify-between items-start mb-6">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tendencias</h3>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tendencias de búsqueda</h3>
             <div className="p-2.5 bg-red-50 text-[#8B1A1A] rounded-xl">
               <TrendingUp className="w-5 h-5" />
             </div>
@@ -1463,7 +1430,7 @@ export default function App() {
         </div>
 
         <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-3xl">
-          <h3 className="text-xl font-bold text-slate-900 mb-8">Distribución por Sector</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-8">Distribución por Sector: Iniciativas y Dictámenes</h3>
           <div className="h-72 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               {/* @ts-ignore */}
@@ -1479,7 +1446,7 @@ export default function App() {
                   isAnimationActive={false}
                 >
                   {kpis.sectoresTop.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={['#dc2626', '#facc15', '#16a34a', '#2563eb', '#ea580c', '#06b6d4'][index]} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
