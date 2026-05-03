@@ -267,12 +267,12 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
       <img
         src={congresoImg}
         alt="Congreso Edomex Landing"
-        className="w-full h-auto object-top relative"
+        className="w-full h-auto object-top relative z-10"
       />
       
       {/* Fallback si no está la imagen */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center -z-10 text-slate-400">
-        <p>Por favor, sube la captura de pantalla a la carpeta <b>public/</b> con el nombre <b>congreso2.png</b></p>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-0">
+        <p>Hubo un problema al cargar la imagen. Súbela nuevamente como congreso2.png</p>
       </div>
 
       {/* Header flotante transparente para el logo de Lexa - posicionado relativo al ancho para escalar con la imagen */}
