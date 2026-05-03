@@ -3,7 +3,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
-import congresoLogoHorizontal from './assets/congreso_logo_horizontal.png';
 import { landingBase64, logoBase64 } from './assets/landing_image';
 import { 
   LayoutDashboard, 
