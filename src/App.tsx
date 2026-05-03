@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import congresoLogoHorizontal from './assets/congreso_logo_horizontal.png';
+import congresoImg from './assets/congreso2.png';
 import { 
   LayoutDashboard, 
   Search, 
@@ -264,9 +265,12 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         como "landing.png" para que encaje perfecto.
       */}
       <img
-        src="/congreso2.png"
+        src={congresoImg}
         alt="Congreso Edomex Landing"
         className="w-full h-auto object-top relative z-10"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
       />
       
       {/* Header flotante transparente para el logo de Lexa - posicionado relativo al ancho para escalar con la imagen */}
