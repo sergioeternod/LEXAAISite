@@ -3073,15 +3073,22 @@ export default function App() {
                 <div className="mb-10">
                   <h3 className="text-xl font-bold text-slate-900 mb-6">Iniciativas Generadas</h3>
                   <div className="grid grid-cols-1 gap-4">
-                    {selectedLegislator.iniciativas_generadas.map((expId: string) => {
-                      const exp = expedientes.find(e => e.id === expId);
-                      return exp ? (
-                        <div key={exp.id} className="card-3d p-4 flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-800">{exp.titulo}</span>
-                          <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded">{exp.estado_actual}</span>
-                        </div>
-                      ) : null;
-                    })}
+                      {selectedLegislator.iniciativas_generadas.map((expId: string) => {
+                        const exp = expedientes.find(e => e.id === expId);
+                        return exp ? (
+                          <div 
+                            key={exp.id} 
+                            className="card-3d p-4 flex items-center justify-between cursor-pointer hover:border-[#8B1A1A]/30 transition-all group"
+                            onClick={() => {
+                              setSelectedExpediente(exp);
+                              setCurrentView('explorar');
+                            }}
+                          >
+                            <span className="text-sm font-medium text-slate-800 group-hover:text-[#8B1A1A] transition-colors">{exp.titulo}</span>
+                            <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded">{exp.estado_actual}</span>
+                          </div>
+                        ) : null;
+                      })}
                   </div>
                 </div>
               )}
@@ -3099,14 +3106,34 @@ export default function App() {
                   <tbody className="divide-y divide-slate-100/50">
                     {(selectedLegislator.historial_votos || []).map((voto: any, idx: number) => {
                       const votacionInfo = votaciones.find(v => v.id === voto.votacion_id);
+                      const relatedExp = votacionInfo ? expedientes.find(e => e.clave_oficial === votacionInfo.expediente) : null;
+                      
                       return (
                         <tr key={idx} className="hover:bg-white transition-colors">
                           <td className="px-6 py-4 text-slate-500 whitespace-nowrap font-medium">
                             {votacionInfo ? votacionInfo.fecha : 'N/A'}
                           </td>
-                          <td className="px-6 py-4 font-bold text-slate-800">
-                            {votacionInfo ? votacionInfo.titulo : 'Votación no encontrada'}
-                            {votacionInfo && <div className="text-xs text-slate-400 font-mono mt-1 bg-white/50 inline-block px-2 py-0.5 rounded border border-slate-200">{votacionInfo.expediente}</div>}
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              {relatedExp ? (
+                                <button 
+                                  onClick={() => {
+                                    setSelectedExpediente(relatedExp);
+                                    setCurrentView('explorar');
+                                  }}
+                                  className="text-left font-bold text-slate-800 hover:text-[#8B1A1A] transition-colors"
+                                >
+                                  {votacionInfo?.titulo}
+                                </button>
+                              ) : (
+                                <span className="font-bold text-slate-800">{votacionInfo ? votacionInfo.titulo : 'Votacion no encontrada'}</span>
+                              )}
+                              {votacionInfo && (
+                                <div className="text-xs text-slate-400 font-mono mt-1 bg-white/50 inline-block px-2 py-0.5 rounded border border-slate-200 w-fit">
+                                  {votacionInfo.expediente}
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span className={`inline-flex px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest border shadow-sm ${
