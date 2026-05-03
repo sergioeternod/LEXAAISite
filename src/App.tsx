@@ -51,7 +51,14 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  GithubAuthProvider,
+  signOut, 
+  onAuthStateChanged, 
+  User 
+} from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const calculateExpectedVoteByParty = (claveOficial: string) => {
@@ -332,6 +339,12 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
+      
+      // Si el usuario está autenticado y está en la landing, lo movemos al dashboard automáticamente
+      if (currentUser && currentView === 'landing') {
+        setCurrentView('dashboard');
+      }
+
       if (currentUser) {
         try {
           const userRef = doc(db, 'users', currentUser.uid);
@@ -372,11 +385,16 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
+  const handleLogin = async (providerType: 'google' | 'github' = 'google') => {
+    const provider = providerType === 'google' 
+      ? new GoogleAuthProvider() 
+      : new GithubAuthProvider();
+    
+    if (providerType === 'google') {
+      (provider as GoogleAuthProvider).setCustomParameters({
+        prompt: 'select_account'
+      });
+    }
     
     try {
       await signInWithPopup(auth, provider);
@@ -1081,7 +1099,18 @@ export default function App() {
         throw new Error("API Key de Gemini no configurada. Por favor, configúrala en el panel de Secretos.");
       }
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${q}'. Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a la bancada de Morena liderada por Francisco Vázquez si es relevante al tema. Excluye estrictamente cualquier insulto, ataque político o alusión personal. 
+      const prompt = `Actúa como un analista legislativo experto del Congreso del Estado de México (Edomex). Analiza las versiones estenográficas (simuladas basadas en tu conocimiento general) sobre el tema legal o palabra clave: '${q}'. 
+      
+      Integrantes clave de la Junta de Coordinación Política (JUCOPO) de la LXII Legislatura:
+      - Morena: Francisco Vázquez Rodríguez (Presidente)
+      - PRI: Elías Rescala Jiménez
+      - PAN: Pablo Fernández de Cevallos González
+      - PVEM: José Alberto Couttolenc Buentello
+      - PT: Óscar González Yáñez
+      - MC: Juan Manuel Zepeda Hernández
+      - PRD: Omar Ortega Álvarez
+
+      Identifica las opiniones de los diputados locales participantes respecto a este tema, prestando especial atención a los líderes mencionados si su postura es relevante. Excluye estrictamente cualquier insulto, ataque político o alusión personal. 
       
       Presenta un resumen estructurado. Para el análisis de posturas, DEBES usar una tabla Markdown correctamente formateada con saltos de línea, exactamente con esta estructura:
 
@@ -1206,7 +1235,17 @@ export default function App() {
       Resumen Ejecutivo: ${selectedExpediente.resumen_ia.ejecutivo}
       Evidencia clave: ${selectedExpediente.resumen_ia.evidencia ? selectedExpediente.resumen_ia.evidencia.map((e: any) => e.texto).join(" | ") : 'No especificada'}
       
-      Responde a las preguntas del usuario basándote en esta información. Presta especial atención a detallar el impacto (basado en el Impacto Score) y los actores involucrados cuando se te pregunte. Sé profesional, analítico, objetivo y conciso. NO incluyas saludos ni introducciones como 'Saludos, soy LEXA IA...'. Considera el contexto político del Estado de México y sus principales actores (como Francisco Vázquez, coordinador de Morena) si es relevante. Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.
+      Responde a las preguntas del usuario basándote en esta información. Presta especial atención a detallar el impacto (basado en el Impacto Score) y los actores involucrados cuando se te pregunte. Sé profesional, analítico, objetivo y conciso. NO incluyas saludos ni introducciones como 'Saludos, soy LEXA IA...'. 
+      Considera el contexto político del Estado de México y sus principales actores (coordinadores de bancada):
+      - Morena: Francisco Vázquez Rodríguez
+      - PRI: Elías Rescala Jiménez
+      - PAN: Pablo Fernández de Cevallos González
+      - PVEM: José Alberto Couttolenc Buentello
+      - PT: Óscar González Yáñez
+      - MC: Juan Manuel Zepeda Hernández
+      - PRD: Omar Ortega Álvarez
+      
+      Si te preguntan algo fuera del contexto de este expediente, indícalo cortésmente.
       
       IMPORTANTE: Si en tu respuesta mencionas resultados de votaciones o tendencias/expectativas de votos, DEBES incluir un bloque de código JSON con este formato para que el sistema renderice una gráfica visual:
       \`\`\`json
@@ -1285,11 +1324,11 @@ export default function App() {
 
       <div className="flex items-center space-x-4 w-auto justify-end">
         <a 
-          href="https://www.congresoedomex.gob.mx/" 
+          href="https://www.secretariadeasuntosparlamentarios.gob.mx/" 
           target="_blank" 
           rel="noopener noreferrer"
           className="flex items-center px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200 group"
-          title="Congreso del Estado de México"
+          title="Secretaría de Asuntos Parlamentarios"
         >
           <img 
             src={logoBase64} 
@@ -1319,9 +1358,20 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <button onClick={handleLogin} className="text-sm font-medium text-[#8B1A1A] hover:text-[#701515] transition-colors whitespace-nowrap">
-            Iniciar Sesión
-          </button>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => handleLogin('github')} 
+              className="px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-all flex items-center space-x-2"
+            >
+              <span>GitHub</span>
+            </button>
+            <button 
+              onClick={() => handleLogin('google')} 
+              className="text-sm font-medium text-[#8B1A1A] hover:text-[#701515] transition-colors whitespace-nowrap"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
         )}
       </div>
     </header>
@@ -2391,9 +2441,14 @@ export default function App() {
           <UserCircle className="w-20 h-20 text-slate-300 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-slate-900 mb-3">Inicia sesión para ver tu perfil</h2>
           <p className="text-slate-500 mb-8 max-w-lg mx-auto text-lg leading-relaxed">Guarda expedientes, sigue a legisladores y configura alertas personalizadas sobre los temas que te interesan.</p>
-          <button onClick={handleLogin} className="px-8 py-4 bg-[#8B1A1A] hover:bg-[#7A1315] hover:shadow-sm  text-white font-bold tracking-wide rounded-2xl transition-all shadow-sm text-lg">
-            Iniciar Sesión con Google
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button onClick={() => handleLogin('google')} className="w-full sm:w-auto px-8 py-4 bg-[#8B1A1A] hover:bg-[#7A1315] hover:shadow-sm  text-white font-bold tracking-wide rounded-2xl transition-all shadow-sm text-lg">
+              Iniciar Sesión con Google
+            </button>
+            <button onClick={() => handleLogin('github')} className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 hover:shadow-sm  text-white font-bold tracking-wide rounded-2xl transition-all shadow-sm text-lg">
+              Iniciar Sesión con GitHub
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-10">
@@ -2651,7 +2706,7 @@ export default function App() {
                     </div>
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg">{new Date(alerta.fecha).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-slate-600 text-base leading-relaxed mb-4">{alerta.mensaje}</p>
+                  <p className="text-slate-600 text-sm leading-relaxed mb-4">{alerta.mensaje}</p>
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100/50">
                     {exp ? (
                       <button 
@@ -2679,14 +2734,14 @@ export default function App() {
           )})}
         </div>
 
-        <div className="space-y-8">
-          <div className="card-3d p-8 relative overflow-hidden">
+        <div className="space-y-6">
+          <div className="card-3d p-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-slate-200"></div>
-            <h3 className="text-xl font-bold text-slate-900 mb-5 flex items-center">
-              <Search className="w-6 h-6 mr-3 text-slate-400" />
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+              <Search className="w-5 h-5 mr-3 text-slate-400" />
               Alertas por Palabra Clave
             </h3>
-            <p className="text-base text-slate-600 mb-6 leading-relaxed">
+            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
               Recibe notificaciones cuando se publiquen nuevos expedientes que contengan estas palabras clave.
             </p>
             
@@ -2705,25 +2760,25 @@ export default function App() {
                 type="text" 
                 name="keyword"
                 placeholder="Ej. Medio Ambiente, Presupuesto..." 
-                className="flex-1 px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm transition-all placeholder:text-slate-400"
+                className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] shadow-sm transition-all placeholder:text-slate-400"
               />
-              <button type="submit" className="px-8 py-3.5 bg-slate-800 text-white rounded-2xl text-sm font-bold tracking-wide hover:from-slate-700 hover:to-slate-800 hover:shadow-sm  transition-all whitespace-nowrap">
-                Agregar Alerta
+              <button type="submit" className="px-6 py-2.5 bg-slate-800 text-white rounded-2xl text-xs font-bold tracking-wide hover:from-slate-700 hover:to-slate-800 hover:shadow-sm  transition-all whitespace-nowrap">
+                Agregar
               </button>
             </form>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {alertKeywords.length === 0 ? (
-                <span className="text-sm text-slate-400 italic">No hay palabras clave configuradas.</span>
+                <span className="text-xs text-slate-400 italic">No hay palabras clave configuradas.</span>
               ) : (
                 alertKeywords.map((keyword, idx) => (
-                  <span key={idx} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 shadow-sm group">
+                  <span key={idx} className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 shadow-sm group">
                     {keyword}
                     <button 
                       onClick={() => toggleAlertKeyword(keyword)}
-                      className="ml-3 text-slate-400 hover:text-red-500 focus:outline-none bg-slate-50 rounded-full p-1 group-hover:bg-red-50 transition-colors"
+                      className="ml-2 text-slate-400 hover:text-red-500 focus:outline-none bg-slate-50 rounded-full p-1 group-hover:bg-red-50 transition-colors"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))

@@ -259,13 +259,13 @@ export const votaciones = [
       { partido: "PRD", favor: 0, contra: 0, abstencion: 0, color: "#FFCC00" }
     ],
     detalle_legisladores: [
-      { nombre: "Francisco Vázquez", partido: "Morena", voto: "pendiente", avatar: "FV", color: "#8B0000" },
-      { nombre: "Elías Rescala", partido: "PRI", voto: "pendiente", avatar: "ER", color: "#A50000" },
-      { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "pendiente", avatar: "PF", color: "#0057A0" },
-      { nombre: "José Couttolenc", partido: "PVEM", voto: "pendiente", avatar: "JC", color: "#50B747" },
-      { nombre: "Azucena Cisneros", partido: "Morena", voto: "pendiente", avatar: "AC", color: "#8B0000" },
-      { nombre: "Juan Zepeda", partido: "MC", voto: "pendiente", avatar: "JZ", color: "#FF8200" },
-      { nombre: "Trinidad Franco", partido: "PT", voto: "pendiente", avatar: "TF", color: "#800080" }
+      { nombre: "Francisco Vázquez Rodríguez", partido: "Morena", voto: "pendiente", avatar: "FV", color: "#8B0000" },
+      { nombre: "Elías Rescala Jiménez", partido: "PRI", voto: "pendiente", avatar: "ER", color: "#A50000" },
+      { nombre: "Pablo Fernández de Cevallos González", partido: "PAN", voto: "pendiente", avatar: "PF", color: "#0057A0" },
+      { nombre: "José Alberto Couttolenc Buentello", partido: "PVEM", voto: "pendiente", avatar: "JC", color: "#50B747" },
+      { nombre: "Azucena Cisneros Coss", partido: "Morena", voto: "pendiente", avatar: "AC", color: "#8B0000" },
+      { nombre: "Juan Manuel Zepeda Hernández", partido: "MC", voto: "pendiente", avatar: "JZ", color: "#FF8200" },
+      { nombre: "Trinidad Franco Arpero", partido: "PT", voto: "pendiente", avatar: "TF", color: "#800080" }
     ]
   },
   {
@@ -288,13 +288,13 @@ export const votaciones = [
       { partido: "PAN", favor: 0, contra: 10, abstencion: 0, color: "#0057A0" }
     ],
     detalle_legisladores: [
-      { nombre: "Francisco Vázquez", partido: "Morena", voto: "favor", avatar: "FV", color: "#8B0000" },
-      { nombre: "José Couttolenc", partido: "PVEM", voto: "favor", avatar: "JC", color: "#50B747" },
-      { nombre: "Pablo Fernández de Cevallos", partido: "PAN", voto: "contra", avatar: "PF", color: "#0057A0" },
-      { nombre: "Elías Rescala", partido: "PRI", voto: "abstencion", avatar: "ER", color: "#A50000" },
-      { nombre: "Azucena Cisneros", partido: "Morena", voto: "favor", avatar: "AC", color: "#8B0000" },
-      { nombre: "Juan Zepeda", partido: "MC", voto: "contra", avatar: "JZ", color: "#FF8200" },
-      { nombre: "Trinidad Franco", partido: "PT", voto: "favor", avatar: "TF", color: "#D9131C" }
+      { nombre: "Francisco Vázquez Rodríguez", partido: "Morena", voto: "favor", avatar: "FV", color: "#8B0000" },
+      { nombre: "José Alberto Couttolenc Buentello", partido: "PVEM", voto: "favor", avatar: "JC", color: "#50B747" },
+      { nombre: "Pablo Fernández de Cevallos González", partido: "PAN", voto: "contra", avatar: "PF", color: "#0057A0" },
+      { nombre: "Elías Rescala Jiménez", partido: "PRI", voto: "abstencion", avatar: "ER", color: "#A50000" },
+      { nombre: "Azucena Cisneros Coss", partido: "Morena", voto: "favor", avatar: "AC", color: "#8B0000" },
+      { nombre: "Juan Manuel Zepeda Hernández", partido: "MC", voto: "contra", avatar: "JZ", color: "#FF8200" },
+      { nombre: "Trinidad Franco Arpero", partido: "PT", voto: "favor", avatar: "TF", color: "#D9131C" }
     ]
   }
 ];
