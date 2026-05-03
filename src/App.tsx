@@ -340,11 +340,6 @@ export default function App() {
       setUser(currentUser);
       setIsAuthReady(true);
       
-      // Si el usuario está autenticado y está en la landing, lo movemos al dashboard automáticamente
-      if (currentUser && currentView === 'landing') {
-        setCurrentView('dashboard');
-      }
-
       if (currentUser) {
         try {
           const userRef = doc(db, 'users', currentUser.uid);
