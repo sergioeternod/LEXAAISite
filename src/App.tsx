@@ -267,15 +267,7 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         src="/congreso2.png"
         alt="Congreso Edomex Landing"
         className="w-full h-auto object-top relative z-10"
-        onError={(e) => {
-          e.currentTarget.style.display = 'none';
-        }}
       />
-      
-      {/* Mensaje si la imagen no se encuentra en /public */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-0">
-        <p>Por favor, sube la captura de pantalla a la carpeta <b>public/</b> con el nombre <b>congreso2.png</b></p>
-      </div>
       
       {/* Header flotante transparente para el logo de Lexa - posicionado relativo al ancho para escalar con la imagen */}
       <div 
