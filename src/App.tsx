@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import congresoLogoHorizontal from './assets/congreso_logo_horizontal.png';
+import { landingBase64, logoBase64 } from './assets/landing_image';
 import { 
   LayoutDashboard, 
   Search, 
@@ -264,7 +265,7 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         como "landing.png" para que encaje perfecto.
       */}
       <img
-        src="/landing.png"
+        src={landingBase64}
         alt="Congreso Edomex Landing"
         className="w-full h-auto object-top relative z-10"
       />
@@ -1292,7 +1293,7 @@ export default function App() {
           title="Congreso del Estado de México"
         >
           <img 
-            src={congresoLogoHorizontal} 
+            src={logoBase64} 
             alt="Congreso Estado de México" 
             className="h-8 md:h-12 w-auto object-contain"
           />
