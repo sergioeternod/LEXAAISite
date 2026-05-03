@@ -270,11 +270,6 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         className="w-full h-auto object-top relative z-10"
       />
       
-      {/* Fallback si no está la imagen */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-0">
-        <p>Hubo un problema al cargar la imagen. Súbela nuevamente como congreso2.png</p>
-      </div>
-
       {/* Header flotante transparente para el logo de Lexa - posicionado relativo al ancho para escalar con la imagen */}
       <div 
         className="absolute z-50 flex items-center justify-center"
