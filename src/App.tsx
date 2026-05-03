@@ -3,7 +3,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
-import congresoBackground from './assets/congreso_compressed.webp';
 import congresoLogoHorizontal from './assets/congreso_logo_horizontal.png';
 import { 
   LayoutDashboard, 
@@ -265,13 +264,9 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
         como "landing.png" para que encaje perfecto.
       */}
       <img
-        src={`${congresoBackground}?t=${Date.now()}`}
+        src="/congreso.png"
         alt="Congreso Edomex Landing"
         className="w-full h-auto object-top relative"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.opacity = '0.5';
-          console.error("Image load failed fallback:", e);
-        }}
       />
       
       {/* Fallback si no está la imagen */}
@@ -368,7 +363,7 @@ export default function App() {
             setAlertKeywords(data.alertKeywords || []);
           }
         } catch (error: any) {
-          console.error("Error fetching user data:", error);
+          console.error("Error fetching user data:", error instanceof Error ? error.message : String(error));
           alert(`Error al cargar tu perfil: ${error.message}`);
         }
       } else {
@@ -391,7 +386,7 @@ export default function App() {
     try {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      console.error("Error signing in:", error);
+      console.error("Error signing in:", error instanceof Error ? error.message : String(error));
       
       if (error.code === 'auth/unauthorized-domain') {
         const currentDomain = window.location.hostname;
@@ -408,7 +403,7 @@ export default function App() {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error signing out", error);
+      console.error("Error signing out:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -426,7 +421,7 @@ export default function App() {
       });
       setUserHistory(prev => [...prev, newEntry]);
     } catch (error) {
-      console.error("Error tracking history", error);
+      console.error("Error tracking history:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -438,7 +433,7 @@ export default function App() {
         interests: arrayUnion(topic)
       });
     } catch (error) {
-      console.error("Error tracking interest", error);
+      console.error("Error tracking interest:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -458,7 +453,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { savedExpedientes: newSaved });
     } catch (error) {
-      console.error("Error saving expediente", error);
+      console.error("Error saving expediente:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -478,7 +473,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { subscribedExpedientes: newSubscribed });
     } catch (error) {
-      console.error("Error subscribing to expediente", error);
+      console.error("Error subscribing to expediente:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -498,7 +493,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { alertKeywords: newAlerts });
     } catch (error) {
-      console.error("Error toggling alert keyword", error);
+      console.error("Error toggling alert keyword:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -518,7 +513,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { savedLegisladores: newSaved });
     } catch (error) {
-      console.error("Error saving legislador", error);
+      console.error("Error saving legislador:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -555,7 +550,7 @@ export default function App() {
             }
           }
         } catch (e) {
-          console.warn('Cannot access cssRules for stylesheet', sheet.href, e);
+          console.warn('Cannot access cssRules for stylesheet', sheet.href);
         }
       }
 
@@ -572,7 +567,7 @@ export default function App() {
               }
             }
           } catch (e) {
-            console.warn('Cannot access cssRules for adopted stylesheet', e);
+            console.warn('Cannot access cssRules for adopted stylesheet');
           }
         }
       }
@@ -588,7 +583,7 @@ export default function App() {
             rawCSS += cssText + '\n';
           }
         } catch (e) {
-          console.warn('Could not fetch stylesheet', link.href, e);
+          console.warn('Could not fetch stylesheet', link.href);
         }
       }
 
@@ -1060,7 +1055,7 @@ export default function App() {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Error generating PDF:", error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -1117,7 +1112,7 @@ export default function App() {
 
       setAiSearchResults(response.text || "No se pudo generar un análisis.");
     } catch (error: any) {
-      console.error("Error generating AI search:", error);
+      console.error("Error generating AI search:", error instanceof Error ? error.message : String(error));
       setAiSearchResults(error.message || "Hubo un error al generar el análisis. Por favor, intenta de nuevo.");
     } finally {
       setIsAiSearchLoading(false);
@@ -1176,7 +1171,7 @@ export default function App() {
             text: response.text || `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}.`
           }]);
         } catch (error: any) {
-          console.error("Error generating initial summary:", error);
+          console.error("Error generating initial summary:", error instanceof Error ? error.message : String(error));
           setChatMessages([{
             role: 'model',
             text: `Hola, soy LEXA. Estoy lista para responder tus dudas sobre el expediente ${selectedExpediente.clave_oficial}. (${error.message || 'Hubo un error al generar el resumen automático'}).`
@@ -1242,7 +1237,7 @@ export default function App() {
 
       setChatMessages(prev => [...prev, { role: 'model', text: response.text || 'No pude generar una respuesta.' }]);
     } catch (error: any) {
-      console.error("Error calling Gemini:", error);
+      console.error("Error calling Gemini:", error instanceof Error ? error.message : String(error));
       setChatMessages(prev => [...prev, { role: 'model', text: error.message || 'Ocurrió un error al consultar a LEXA IA. Por favor, intenta de nuevo.' }]);
     } finally {
       setIsChatLoading(false);
@@ -2554,7 +2549,7 @@ export default function App() {
           <div className="p-10 flex flex-col md:flex-row gap-10 items-start pl-12">
             <div className="w-32 h-32 md:w-48 md:h-48 rounded-3xl overflow-hidden border-4 border-white shadow-sm flex-shrink-0 relative group">
               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"></div>
-              <img src={selectedLegislator.foto || "https://picsum.photos/seed/legislator/200/200"} alt={selectedLegislator.nombre} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/legislator/200/200"; }} />
+              <img src={selectedLegislator.foto || "https://picsum.photos/seed/legislator/200/200"} alt={selectedLegislator.nombre} className="w-full h-full object-cover" onError={(e) => { const target = e.target as HTMLImageElement; if (target.src !== "https://picsum.photos/seed/legislator/200/200") { target.src = "https://picsum.photos/seed/legislator/200/200"; } }} />
             </div>
             <div className="flex-1 w-full">
               <div className="flex justify-between items-start">

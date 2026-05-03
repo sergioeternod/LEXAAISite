@@ -7,6 +7,7 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [react(), tailwindcss()],
     build: {
+      chunkSizeWarningLimit: 3000,
       rollupOptions: {
         input: {
           main: './index.html',

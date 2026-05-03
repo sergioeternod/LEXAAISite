@@ -40,7 +40,7 @@ const EdomexMap: React.FC<EdomexMapProps> = ({ onDistrictSelect, onLegislatorSel
         setGeoData(data);
       })
       .catch((error) => {
-        console.error('Error loading GeoJSON:', error);
+        console.error('Error loading GeoJSON:', error instanceof Error ? error.message : String(error));
         setError(error.message);
       });
   }, []);
