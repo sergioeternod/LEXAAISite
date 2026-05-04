@@ -37,9 +37,16 @@ import {
   Sparkles,
   ExternalLink,
   Youtube,
-  Eye
+  Eye,
+  Target,
+  ShieldCheck,
+  FileEdit,
+  PenTool,
+  Zap,
+  Database
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
+import { motion, AnimatePresence } from 'framer-motion';
 import EdomexMap from './components/EdomexMap';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -291,6 +298,163 @@ const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
          >
            <span className="font-black text-[#1a202c] tracking-tight group-hover:text-[#8B1A1A] transition-colors drop-shadow-sm" style={{ fontSize: '0.9vw' }}>LEXA <span className="text-[#ff7e67]">IA</span></span>
          </button>
+      </div>
+    </div>
+  );
+};
+
+const CopilotTool = () => {
+  const [activeTool, setActiveTool] = useState<'factibilidad' | 'constitucionalidad' | 'redaccion'>('factibilidad');
+  const [draft, setDraft] = useState('');
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+
+  const runAnalysis = async () => {
+    if (!draft.trim()) return;
+    setLoadingAnalysis(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      
+      let promptText = "";
+      if (activeTool === 'factibilidad') {
+        promptText = `Actúa como un experto en técnica legislativa del Congreso del Edomex. Analiza el siguiente borrador de iniciativa: "${draft}". 
+        Identifica objeciones comunes que ha tenido este tipo de legislación en el pasado (histórico de rechazos), problemas de factibilidad presupuestal o técnica, y sugiere correcciones para hacerlo más "viable".`;
+      } else if (activeTool === 'constitucionalidad') {
+        promptText = `Actúa como un constitucionalista experto del Estado de México. Revisa el siguiente borrador legislativo: "${draft}". 
+        Verifica su alineación con la Constitución Federal de México y la Constitución del Estado de México. Indica si hay riesgos de controversias constitucionales o si invade competencias federales.`;
+      } else {
+        promptText = `Actúa como un copiloto de redacción para legisladores. Ayuda a refinar, mejorar el lenguaje jurídico y estructurar mejor la siguiente propuesta: "${draft}". Hazla sonar profesional y robusta.`;
+      }
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: promptText,
+      });
+
+      setAnalysis(response.text);
+    } catch (error) {
+      console.error("Error in copilot analysis:", error);
+      setAnalysis("Lo siento, hubo un error al procesar tu solicitud. Por favor intenta de nuevo.");
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
+
+  return (
+    <div className="space-y-10 max-w-5xl mx-auto">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center space-x-3 mb-2">
+            <span className="p-2 bg-amber-50 rounded-xl">
+              <Sparkles className="w-6 h-6 text-amber-500" />
+            </span>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Copiloto Legislativo</h2>
+          </div>
+          <p className="text-slate-500 text-lg">Optimiza tus iniciativas con inteligencia artificial y control constitucional.</p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="md:col-span-1 space-y-3">
+          <button 
+            onClick={() => { setActiveTool('factibilidad'); setAnalysis(null); }}
+            className={`w-full text-left p-4 rounded-2xl flex items-center space-x-3 transition-all ${activeTool === 'factibilidad' ? 'bg-white border-2 border-[#8B1A1A] shadow-md' : 'bg-slate-100 hover:bg-white border-2 border-transparent'}`}
+          >
+            <Target className={`w-5 h-5 ${activeTool === 'factibilidad' ? 'text-[#8B1A1A]' : 'text-slate-400'}`} />
+            <div className="flex flex-col">
+              <span className={`text-sm font-bold ${activeTool === 'factibilidad' ? 'text-slate-900' : 'text-slate-500'}`}>Factibilidad</span>
+              <span className="text-[10px] text-slate-400">Corrección de objeciones</span>
+            </div>
+          </button>
+          <button 
+            onClick={() => { setActiveTool('constitucionalidad'); setAnalysis(null); }}
+            className={`w-full text-left p-4 rounded-2xl flex items-center space-x-3 transition-all ${activeTool === 'constitucionalidad' ? 'bg-white border-2 border-[#8B1A1A] shadow-md' : 'bg-slate-100 hover:bg-white border-2 border-transparent'}`}
+          >
+            <ShieldCheck className={`w-5 h-5 ${activeTool === 'constitucionalidad' ? 'text-[#8B1A1A]' : 'text-slate-400'}`} />
+            <div className="flex flex-col">
+              <span className={`text-sm font-bold ${activeTool === 'constitucionalidad' ? 'text-slate-900' : 'text-slate-500'}`}>Constitucional</span>
+              <span className="text-[10px] text-slate-400">Control preventivo</span>
+            </div>
+          </button>
+          <button 
+            onClick={() => { setActiveTool('redaccion'); setAnalysis(null); }}
+            className={`w-full text-left p-4 rounded-2xl flex items-center space-x-3 transition-all ${activeTool === 'redaccion' ? 'bg-white border-2 border-[#8B1A1A] shadow-md' : 'bg-slate-100 hover:bg-white border-2 border-transparent'}`}
+          >
+            <FileEdit className={`w-5 h-5 ${activeTool === 'redaccion' ? 'text-[#8B1A1A]' : 'text-slate-400'}`} />
+            <div className="flex flex-col">
+              <span className={`text-sm font-bold ${activeTool === 'redaccion' ? 'text-slate-900' : 'text-slate-500'}`}>Redacción AI</span>
+              <span className="text-[10px] text-slate-400">Copiloto creativo</span>
+            </div>
+          </button>
+        </div>
+
+        <div className="md:col-span-3 space-y-6">
+          <div className="card-3d p-8">
+            <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+              {activeTool === 'factibilidad' && <><Target className="w-5 h-5 mr-3 text-emerald-500" /> Analizador de Factibilidad Legislativa</>}
+              {activeTool === 'constitucionalidad' && <><ShieldCheck className="w-5 h-5 mr-3 text-indigo-500" /> Verificador Constitucional</>}
+              {activeTool === 'redaccion' && <><PenTool className="w-5 h-5 mr-3 text-amber-500" /> Copiloto de Redacción</>}
+            </h4>
+            
+            <div className="relative">
+              <textarea 
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={activeTool === 'factibilidad' ? "Pega aquí el draft de tu iniciativa para analizar puntos de conflicto histórico..." : "Escribe o pega el texto jurídico aquí..."}
+                className="w-full h-48 px-6 py-5 bg-slate-50 border border-slate-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#8B1A1A]/20 focus:border-[#8B1A1A] transition-all mb-4 resize-none"
+              />
+              <button 
+                onClick={runAnalysis}
+                disabled={loadingAnalysis || !draft.trim()}
+                className="absolute bottom-8 right-4 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold flex items-center space-x-2 shadow-lg hover:shadow-xl hover:bg-slate-800 disabled:opacity-50 transition-all"
+              >
+                {loadingAnalysis ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                <span>{activeTool === 'factibilidad' ? 'Analizar Factibilidad' : activeTool === 'constitucionalidad' ? 'Verificar Constitución' : 'Refinar Texto'}</span>
+              </button>
+            </div>
+
+            {analysis && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 p-8 bg-[#8B1A1A]/5 border border-[#8B1A1A]/10 rounded-2xl relative"
+              >
+                <div className="flex items-start space-x-4">
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <Zap className="w-5 h-5 text-[#8B1A1A]" />
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-bold text-slate-900 mb-3 uppercase text-[10px] tracking-widest text-[#8B1A1A]">Resultado del Análisis LEXA IA</h5>
+                    <div className="markdown-body prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed">
+                      <Markdown>{analysis}</Markdown>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center space-x-4 shadow-sm">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Database className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900">Base Histórica</div>
+                <div className="text-[10px] text-slate-400">Acceso a todas las legislaturas</div>
+              </div>
+            </div>
+            <div className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center space-x-4 shadow-sm">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <BookOpen className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900">Doctrina Jurídica</div>
+                <div className="text-[10px] text-slate-400">Jurisprudencias actualizadas</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1299,6 +1463,13 @@ export default function App() {
           className={`px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ${currentView === 'explorar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
         >
           Historial
+        </button>
+        <button 
+          onClick={() => { setCurrentView('copilot'); setSelectedExpediente(null); }} 
+          className={`px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${currentView === 'copilot' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span>Copiloto</span>
         </button>
         <button 
           onClick={() => { setCurrentView('alertas'); setSelectedExpediente(null); }}
@@ -2653,6 +2824,9 @@ export default function App() {
     );
   };
 
+  const renderCopilot = () => <CopilotTool />;
+
+
   const renderAlertas = () => (
     <div className="space-y-8 max-w-6xl mx-auto w-full pb-16 animate-in fade-in duration-300">
       <div className="flex justify-between items-end mb-8">
@@ -2799,6 +2973,7 @@ export default function App() {
             <div id="pdf-content-wrapper" ref={contentRef} className="max-w-6xl mx-auto">
               {currentView === 'dashboard' && !selectedExpediente && !selectedLegislator && renderDashboard()}
               {currentView === 'explorar' && !selectedExpediente && !selectedLegislator && renderExplorar()}
+              {currentView === 'copilot' && !selectedExpediente && !selectedLegislator && renderCopilot()}
               {currentView === 'alertas' && !selectedExpediente && !selectedLegislator && renderAlertas()}
               {currentView === 'mapa' && !selectedExpediente && !selectedLegislator && renderMapa()}
               {currentView === 'perfil' && !selectedExpediente && !selectedLegislator && renderPerfil()}
